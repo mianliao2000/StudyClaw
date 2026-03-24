@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getAIProvider } from "@/lib/ai/provider";
+import type { ProjectChatMessage } from "@prisma/client";
 import {
   PLANNING_SYSTEM_PROMPT,
   TUTORING_SYSTEM_PROMPT,
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
 
   const aiMessages: AIMessage[] = [
     { role: "system", content: systemPrompt },
-    ...thread.messages.map((m) => ({
+    ...thread.messages.map((m: ProjectChatMessage) => ({
       role: m.role as AIMessage["role"],
       content: m.content,
     })),
