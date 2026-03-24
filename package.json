@@ -5,11 +5,11 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate --config prisma.config.ts && next build",
     "start": "next start",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate --config prisma.config.ts",
     "lint": "eslint",
-    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
     "start:railway": "pnpm db:migrate:deploy && next start"
   },
   "dependencies": {
