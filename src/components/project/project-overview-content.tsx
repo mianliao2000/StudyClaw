@@ -69,23 +69,26 @@ export function ProjectOverviewContent({
   const displayGoals = lang === "en" && goalsEn?.length ? goalsEn : goals;
 
   function getChapterContentItems(ch: Chapter) {
-    return ch.subchapters.flatMap((sub) => {
-      const byType = (type: string) => sub.contents.find((c) => c.contentType === type);
+    return ch.subchapters.flatMap((sub: Subchapter) => {
+      const byType = (type: string) =>
+        sub.contents.find((c: ContentItem) => c.contentType === type);
       return (["main", "summary", "quiz"] as const)
         .map((type) => byType(type))
         .filter(Boolean)
-        .map((c) => ({ id: c!.id, contentType: c!.contentType }));
+        .map((c: ContentItem | undefined) => ({ id: c!.id, contentType: c!.contentType }));
     });
   }
 
   function isChapterPending(ch: Chapter) {
-    const items = ch.subchapters.flatMap((s) => s.contents);
-    return items.length > 0 && items.every((c) => c.status === "pending");
+    const items = ch.subchapters.flatMap((s: Subchapter) => s.contents);
+    return items.length > 0 && items.every((c: ContentItem) => c.status === "pending");
   }
 
   function isChapterGenerating(ch: Chapter) {
-    const items = ch.subchapters.flatMap((s) => s.contents);
-    return items.some((c) => c.status === "pending" || c.status === "generating");
+    const items = ch.subchapters.flatMap((s: Subchapter) => s.contents);
+    return items.some(
+      (c: ContentItem) => c.status === "pending" || c.status === "generating"
+    );
   }
 
   const firstChapter = chapters[0];
@@ -159,7 +162,10 @@ export function ProjectOverviewContent({
               </div>
               <div>
                 <div className="text-2xl font-bold text-[oklch(0.72_0.15_60)]">
-                  {chapters.reduce((s, ch) => s + ch.subchapters.length, 0)}
+                  {chapters.reduce(
+                    (sum: number, ch: Chapter) => sum + ch.subchapters.length,
+                    0
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">{t("project.sections")}</p>
               </div>

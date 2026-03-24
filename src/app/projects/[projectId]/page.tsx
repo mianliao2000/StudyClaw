@@ -55,8 +55,13 @@ export default async function ProjectPage({
   const goals: string[] = project.goals ? JSON.parse(project.goals) : [];
   const goalsEn: string[] = project.goalsEn ? JSON.parse(project.goalsEn) : [];
   const totalItems = project.chapters.reduce(
-    (sum, ch) =>
-      sum + ch.subchapters.reduce((s, sub) => s + sub.contents.length, 0),
+    (sum: number, ch: ProjectChapter) =>
+      sum +
+      ch.subchapters.reduce(
+        (subchapterSum: number, sub: ProjectSubchapter) =>
+          subchapterSum + sub.contents.length,
+        0
+      ),
     0
   );
 
