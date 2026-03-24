@@ -7,7 +7,10 @@ const dbUrl = process.env.DATABASE_URL || `file:${defaultDbPath}`;
 
 export default defineConfig({
   schema: path.join(__dirname, "schema.prisma"),
-  migrate: {
+  migrations: {
+    path: path.join(__dirname, "migrations"),
+  },
+  datasource: {
     url: dbUrl,
   },
   adapter: () => new PrismaBetterSqlite3({ url: dbUrl }),
