@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { t, type Lang, type TranslationKey } from "./translations";
 
 type Theme = "dark" | "light";
@@ -22,21 +22,21 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("zh");
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [lang, setLangState] = useState<Lang>(() => {
+    if (typeof window === "undefined") return "zh";
+    const savedLang = localStorage.getItem("lang");
+    return savedLang === "en" ? "en" : "zh";
+  });
+
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "dark";
+    return localStorage.getItem("theme") === "light" ? "light" : "dark";
+  });
 
   useEffect(() => {
-    const savedLang = localStorage.getItem("lang") as Lang | null;
-    if (savedLang === "zh" || savedLang === "en") setLangState(savedLang);
-
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    if (savedTheme === "light") {
-      setThemeState("light");
-      document.documentElement.classList.remove("dark");
-    } else {
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   const setLang = (l: Lang) => {
     setLangState(l);
@@ -54,7 +54,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t: (key) => t(key, lang), theme, setTheme }}>
+    <LanguageContext.Provider
+      value={{ lang, setLang, t: (key) => t(key, lang), theme, setTheme }}
+    >
       {children}
     </LanguageContext.Provider>
   );
