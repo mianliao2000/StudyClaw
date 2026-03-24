@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateContentById } from "@/lib/ai/generate-content";
@@ -61,7 +62,7 @@ export async function PUT(req: Request) {
   let updated;
   try {
     // 事务：更新项目 + 创建章节结构 + 创建内容占位
-    updated = await prisma.$transaction(async (tx) => {
+    updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 更新项目信息
       await tx.learningProject.update({
         where: { id: projectId },
