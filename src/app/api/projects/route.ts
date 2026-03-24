@@ -58,92 +58,96 @@ export async function PUT(req: Request) {
     return new Response("Project not found", { status: 404 });
   }
 
-  // 事务：更新项目 + 创建章节结构 + 创建内容占位
-  const updated = await prisma.$transaction(async (tx) => {
-    // 更新项目信息
-    await tx.learningProject.update({
-      where: { id: projectId },
-      data: {
-        title: plan.title,
-        titleEn: plan.titleEn,
-        topic: plan.topic,
-        topicEn: plan.topicEn,
-        description: plan.description,
-        descriptionEn: plan.descriptionEn,
-        goals: JSON.stringify(plan.goals),
-        goalsEn: plan.goalsEn ? JSON.stringify(plan.goalsEn) : null,
-        status: "active",
-      },
-    });
-
-    // 创建章节和子章节
-    for (let ci = 0; ci < plan.chapters.length; ci++) {
-      const ch = plan.chapters[ci];
-      const chapter = await tx.chapter.create({
+  let updated;
+  try {
+    // 事务：更新项目 + 创建章节结构 + 创建内容占位
+    updated = await prisma.$transaction(async (tx) => {
+      // 更新项目信息
+      await tx.learningProject.update({
+        where: { id: projectId },
         data: {
-          projectId,
-          title: ch.title,
-          titleEn: ch.titleEn,
-          orderIndex: ci,
+          title: plan.title,
+          titleEn: plan.titleEn,
+          topic: plan.topic,
+          topicEn: plan.topicEn,
+          description: plan.description,
+          descriptionEn: plan.descriptionEn,
+          goals: JSON.stringify(plan.goals),
+          goalsEn: plan.goalsEn ? JSON.stringify(plan.goalsEn) : null,
+          status: "active",
         },
       });
 
-      for (let si = 0; si < ch.subchapters.length; si++) {
-        const sub = ch.subchapters[si];
-        const subchapter = await tx.subchapter.create({
+      // 创建章节和子章节
+      for (let ci = 0; ci < plan.chapters.length; ci++) {
+        const ch = plan.chapters[ci];
+        const chapter = await tx.chapter.create({
           data: {
-            chapterId: chapter.id,
-            title: sub.title,
-            titleEn: sub.titleEn,
-            orderIndex: si,
-            learningObjective: sub.learningObjective,
-            learningObjectiveEn: sub.learningObjectiveEn,
+            projectId,
+            title: ch.title,
+            titleEn: ch.titleEn,
+            orderIndex: ci,
           },
         });
 
-        // 创建三种内容占位
-        const isFirst = ci === 0 && si === 0;
-        for (const contentType of ["main", "summary", "quiz"]) {
-          await tx.lessonContent.create({
+        for (let si = 0; si < ch.subchapters.length; si++) {
+          const sub = ch.subchapters[si];
+          const subchapter = await tx.subchapter.create({
             data: {
-              subchapterId: subchapter.id,
-              contentType,
-              status: isFirst ? "pending" : "pending",
+              chapterId: chapter.id,
+              title: sub.title,
+              titleEn: sub.titleEn,
+              orderIndex: si,
+              learningObjective: sub.learningObjective,
+              learningObjectiveEn: sub.learningObjectiveEn,
+            },
+          });
+
+          for (const contentType of ["main", "summary", "quiz"]) {
+            await tx.lessonContent.create({
+              data: {
+                subchapterId: subchapter.id,
+                contentType,
+                status: "pending",
+              },
+            });
+          }
+
+          await tx.projectChatThread.create({
+            data: {
+              projectId,
+              mode: "tutoring",
+              relatedSubchapterId: subchapter.id,
             },
           });
         }
-
-        // 为每个子章节创建辅导聊天线程
-        await tx.projectChatThread.create({
-          data: {
-            projectId,
-            mode: "tutoring",
-            relatedSubchapterId: subchapter.id,
-          },
-        });
       }
-    }
 
-    // 创建进度状态
-    await tx.progressState.create({
-      data: { projectId },
-    });
+      await tx.progressState.create({
+        data: { projectId },
+      });
 
-    return tx.learningProject.findUnique({
-      where: { id: projectId },
-      include: {
-        chapters: {
-          orderBy: { orderIndex: "asc" },
-          include: {
-            subchapters: {
-              orderBy: { orderIndex: "asc" },
-              include: { contents: true },
+      return tx.learningProject.findUnique({
+        where: { id: projectId },
+        include: {
+          chapters: {
+            orderBy: { orderIndex: "asc" },
+            include: {
+              subchapters: {
+                orderBy: { orderIndex: "asc" },
+                include: { contents: true },
+              },
             },
           },
         },
-      },
+      });
     });
-  });
+  } catch (error) {
+    console.error("Project save error:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to save project plan";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   // Fire background generation for chapter 1 (don't await — return immediately)
   if (updated && updated.chapters.length > 0) {

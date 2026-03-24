@@ -1,7 +1,11 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getAIProvider } from "@/lib/ai/provider";
-import { PLANNING_SYSTEM_PROMPT, TUTORING_SYSTEM_PROMPT, fillTemplate } from "@/lib/ai/prompts";
+import {
+  PLANNING_SYSTEM_PROMPT,
+  TUTORING_SYSTEM_PROMPT,
+  fillTemplate,
+} from "@/lib/ai/prompts";
 import type { AIMessage } from "@/lib/ai/provider";
 
 export async function POST(req: Request) {
@@ -12,7 +16,6 @@ export async function POST(req: Request) {
 
   const { threadId, message, mode, context, model, reasoning } = await req.json();
 
-  // 获取或创建聊天线程
   let thread;
   if (threadId) {
     thread = await prisma.projectChatThread.findUnique({
@@ -25,12 +28,10 @@ export async function POST(req: Request) {
     return new Response("Thread not found", { status: 404 });
   }
 
-  // 保存用户消息
   await prisma.projectChatMessage.create({
     data: { threadId: thread.id, role: "user", content: message },
   });
 
-  // 构建 AI 消息
   let systemPrompt = PLANNING_SYSTEM_PROMPT;
   if (mode === "tutoring" && context) {
     systemPrompt = fillTemplate(TUTORING_SYSTEM_PROMPT, {
@@ -53,15 +54,11 @@ export async function POST(req: Request) {
 
   try {
     const provider = getAIProvider();
-    const aiOptions = { model, reasoning };
-    const stream = await provider.chat(aiMessages, aiOptions);
-
-    // 收集完整响应并保存
+    const stream = await provider.chat(aiMessages, { model, reasoning });
     const [streamForClient, streamForSave] = stream.tee();
     const decoder = new TextDecoder();
 
-    // 后台保存完整响应
-    (async () => {
+    void (async () => {
       const reader = streamForSave.getReader();
       let fullResponse = "";
       while (true) {
@@ -69,9 +66,10 @@ export async function POST(req: Request) {
         if (done) break;
         fullResponse += decoder.decode(value);
       }
+
       await prisma.projectChatMessage.create({
         data: {
-          threadId: thread!.id,
+          threadId: thread.id,
           role: "assistant",
           content: fullResponse,
         },
@@ -83,9 +81,15 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("AI chat error:", error);
-    return new Response(
-      JSON.stringify({ error: "AI 服务暂时不可用，请检查配置" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "AI service is temporarily unavailable. Please check the server configuration.";
+
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

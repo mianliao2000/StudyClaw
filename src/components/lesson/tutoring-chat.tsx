@@ -59,7 +59,16 @@ export function TutoringChat({
           }),
         });
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          let errorMessage = t("tutor.error");
+          try {
+            const data = (await res.json()) as { error?: string };
+            if (data.error) errorMessage = data.error;
+          } catch {
+            // Ignore malformed error responses and keep the fallback message.
+          }
+          throw new Error(errorMessage);
+        }
 
         const reader = res.body!.getReader();
         const decoder = new TextDecoder();
@@ -81,13 +90,16 @@ export function TutoringChat({
             )
           );
         }
-      } catch {
+      } catch (error) {
         setMessages((prev) => [
           ...prev,
           {
             id: crypto.randomUUID(),
             role: "assistant",
-            content: t("tutor.error"),
+            content:
+              error instanceof Error && error.message
+                ? error.message
+                : t("tutor.error"),
             createdAt: new Date(),
           },
         ]);

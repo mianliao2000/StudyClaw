@@ -22,6 +22,65 @@ export default function PlanPage() {
   const [model, setModel] = useState("gpt-5.4-mini");
   const [reasoning, setReasoning] = useState("medium");
 
+  const extractPlan = (fullText: string): PlanStructure | null => {
+    let jsonStr: string | null = null;
+
+    const jsonFenceMatch = fullText.match(/```json\s*([\s\S]*?)```/i);
+    if (jsonFenceMatch) jsonStr = jsonFenceMatch[1];
+
+    if (!jsonStr) {
+      const fenceMatch = fullText.match(/```\s*([\s\S]*?)```/);
+      if (fenceMatch && fenceMatch[1].trim().startsWith("{")) {
+        jsonStr = fenceMatch[1];
+      }
+    }
+
+    if (!jsonStr) {
+      const start = fullText.indexOf("{");
+      const end = fullText.lastIndexOf("}");
+      if (start !== -1 && end > start) {
+        jsonStr = fullText.slice(start, end + 1);
+      }
+    }
+
+    if (!jsonStr) return null;
+
+    try {
+      const plan = JSON.parse(jsonStr) as PlanStructure;
+      if (plan.title && Array.isArray(plan.chapters)) {
+        return plan;
+      }
+    } catch (error) {
+      console.error("[Plan] JSON parse failed:", error);
+    }
+
+    return null;
+  };
+
+  const createProjectFromPlan = useCallback(
+    async (plan: PlanStructure) => {
+      const putRes = await fetch("/api/projects", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, plan }),
+      });
+
+      if (!putRes.ok) {
+        let errorMessage = "Failed to save generated plan";
+        try {
+          const data = (await putRes.json()) as { error?: string };
+          if (data.error) errorMessage = data.error;
+        } catch {
+          // Ignore malformed error responses and keep the fallback message.
+        }
+        throw new Error(errorMessage);
+      }
+
+      router.push(`/projects/${projectId}`);
+    },
+    [projectId, router]
+  );
+
   useEffect(() => {
     fetch(`/api/projects/${projectId}/thread`)
       .then((r) => r.json())
@@ -69,7 +128,16 @@ export default function PlanPage() {
           }),
         });
 
-        if (!res.ok) throw new Error("Chat failed");
+        if (!res.ok) {
+          let errorMessage = "Chat failed";
+          try {
+            const data = (await res.json()) as { error?: string };
+            if (data.error) errorMessage = data.error;
+          } catch {
+            // Ignore malformed error responses and keep the fallback message.
+          }
+          throw new Error(errorMessage);
+        }
 
         const reader = res.body!.getReader();
         const decoder = new TextDecoder();
@@ -96,40 +164,24 @@ export default function PlanPage() {
           setPlanReady(true);
         }
 
-        // Try to extract plan JSON (multiple strategies)
-        let jsonStr: string | null = null;
-        const m1 = fullText.match(/```json\s*([\s\S]*?)```/);
-        if (m1) jsonStr = m1[1];
-        if (!jsonStr) {
-          const m2 = fullText.match(/```\s*([\s\S]*?)```/);
-          if (m2 && m2[1].trim().startsWith("{")) jsonStr = m2[1];
-        }
-        if (!jsonStr) {
-          const start = fullText.indexOf("{");
-          const end = fullText.lastIndexOf("}");
-          if (start !== -1 && end > start) jsonStr = fullText.slice(start, end + 1);
+        const plan = extractPlan(fullText);
+        if (plan) {
+          await createProjectFromPlan(plan);
+          return;
         }
 
-        if (jsonStr) {
-          try {
-            const plan = JSON.parse(jsonStr) as PlanStructure;
-            if (plan.title && plan.chapters) {
-              setIsCreating(true);
-              const putRes = await fetch("/api/projects", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ projectId, plan }),
-              });
-              if (putRes.ok) {
-                router.push(`/projects/${projectId}`);
-                return;
-              }
-              setIsCreating(false);
-            }
-          } catch {
-            console.error("[Plan] JSON parse failed, raw:", jsonStr?.slice(0, 200));
-            setIsCreating(false);
-          }
+        if (text === "[GENERATE_PLAN]") {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content:
+                "课程结构生成失败了。请再点击一次“创建课程”，如果还是不行，我可以继续帮你排查模型返回格式。",
+              createdAt: new Date(),
+            },
+          ]);
+          setIsCreating(false);
         }
       } catch (error) {
         console.error(error);
@@ -138,7 +190,10 @@ export default function PlanPage() {
           {
             id: crypto.randomUUID(),
             role: "assistant",
-            content: t("tutor.error"),
+            content:
+              error instanceof Error && error.message
+                ? error.message
+                : t("tutor.error"),
             createdAt: new Date(),
           },
         ]);
@@ -147,13 +202,13 @@ export default function PlanPage() {
         setIsLoading(false);
       }
     },
-    [threadId, model, reasoning, t, projectId, router]
+    [threadId, model, reasoning, t, createProjectFromPlan]
   );
 
   const handleCreateCourse = async () => {
     if (!threadId || isLoading || isCreating) return;
     setIsCreating(true);
-    handleSend("[GENERATE_PLAN]");
+    await handleSend("[GENERATE_PLAN]");
   };
 
   const suggestions =
