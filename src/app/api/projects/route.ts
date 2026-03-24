@@ -1,9 +1,13 @@
-import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateContentById } from "@/lib/ai/generate-content";
 import { NextResponse } from "next/server";
 import type { PlanStructure } from "@/types";
+
+type ProjectTransactionClient = Pick<
+  typeof prisma,
+  "learningProject" | "chapter" | "subchapter" | "lessonContent" | "projectChatThread" | "progressState"
+>;
 
 // POST /api/projects - 创建新项目（规划阶段）
 export async function POST(req: Request) {
@@ -62,7 +66,7 @@ export async function PUT(req: Request) {
   let updated;
   try {
     // 事务：更新项目 + 创建章节结构 + 创建内容占位
-    updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    updated = await prisma.$transaction(async (tx: ProjectTransactionClient) => {
       // 更新项目信息
       await tx.learningProject.update({
         where: { id: projectId },
