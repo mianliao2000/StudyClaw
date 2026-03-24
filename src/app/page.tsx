@@ -1,65 +1,123 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { BookOpen, Brain, Target, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Header } from "@/components/layout/header";
+import { useLanguage } from "@/lib/i18n";
+
+export default function HomePage() {
+  const { t, lang } = useLanguage();
+
+  const features = [
+    {
+      icon: MessageSquare,
+      titleKey: "home.feature1.title" as const,
+      descKey: "home.feature1.desc" as const,
+      color: "text-[oklch(0.78_0.16_175)]",
+      bg: "bg-[oklch(0.78_0.16_175_/_10%)]",
+    },
+    {
+      icon: BookOpen,
+      titleKey: "home.feature2.title" as const,
+      descKey: "home.feature2.desc" as const,
+      color: "text-[oklch(0.68_0.18_300)]",
+      bg: "bg-[oklch(0.68_0.18_300_/_10%)]",
+    },
+    {
+      icon: Brain,
+      titleKey: "home.feature3.title" as const,
+      descKey: "home.feature3.desc" as const,
+      color: "text-[oklch(0.72_0.15_60)]",
+      bg: "bg-[oklch(0.72_0.15_60_/_10%)]",
+    },
+    {
+      icon: Target,
+      titleKey: "home.feature4.title" as const,
+      descKey: "home.feature4.desc" as const,
+      color: "text-[oklch(0.65_0.15_140)]",
+      bg: "bg-[oklch(0.65_0.15_140_/_10%)]",
+    },
+  ];
+
+  const topics =
+    lang === "zh"
+      ? ["计算机体系结构", "AI Agent 开发", "MATLAB/Simulink", "电力电子学", "React 全栈开发", "系统设计", "Python 数据分析", "嵌入式系统"]
+      : ["Computer Architecture", "AI Agent Dev", "MATLAB/Simulink", "Power Electronics", "React Full-Stack", "System Design", "Python Data Analysis", "Embedded Systems"];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <>
+      <Header />
+      <main className="flex-1 relative">
+        <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
+
+        <section className="relative container mx-auto px-4 pt-24 pb-20 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-sm text-primary mb-8">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+            </span>
+            {t("home.badge")}
+          </div>
+
+          <h1 className="text-5xl font-bold tracking-tight sm:text-6xl gradient-text leading-tight pb-2">
+            {t("home.title")}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            {t("home.subtitle")}
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <div className="mt-10 flex gap-4 justify-center">
+            <Link href="/dashboard">
+              <Button size="lg" className="px-8 animate-pulse-glow">
+                {t("home.start")}
+              </Button>
+            </Link>
+            <Link href="/about">
+              <Button variant="outline" size="lg" className="px-8">
+                {t("home.learnMore")}
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        <section className="relative container mx-auto px-4 pb-20">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((f, i) => (
+              <div
+                key={f.titleKey}
+                className="group rounded-xl border border-border/50 bg-card/50 p-6 glow-border glow-border-hover transition-all duration-300 hover:-translate-y-1"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                <div className={`inline-flex p-3 rounded-lg ${f.bg} mb-4`}>
+                  <f.icon className={`h-6 w-6 ${f.color}`} />
+                </div>
+                <h3 className="font-semibold mb-1">{t(f.titleKey)}</h3>
+                <p className="text-sm text-muted-foreground">{t(f.descKey)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="relative container mx-auto px-4 pb-20">
+          <h2 className="text-2xl font-bold text-center mb-8">
+            {t("home.topicsTitle")}
+          </h2>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {topics.map((topic) => (
+              <span
+                key={topic}
+                className="px-4 py-2 rounded-full border border-border/50 bg-secondary/50 text-sm hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-default"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        </section>
       </main>
-    </div>
+
+      <footer className="relative border-t border-border/50 py-6 text-center text-sm text-muted-foreground">
+        {t("home.footer")}
+      </footer>
+    </>
   );
 }

@@ -1,0 +1,149 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── NextAuth 标准表 ───────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  projects      LearningProject[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── 学习项目模型 ──────────────────────────────────────────
+
+model LearningProject {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  titleEn       String?
+  topic         String
+  topicEn       String?
+  description   String?
+  descriptionEn String?
+  goals         String?
+  goalsEn       String?
+  status        String   @default("planning") // planning | active | completed | archived
+  chapters      Chapter[]
+  chatThreads   ProjectChatThread[]
+  progress      ProgressState?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Chapter {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     LearningProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  titleEn     String?
+  orderIndex  Int
+  subchapters Subchapter[]
+}
+
+model Subchapter {
+  id                   String          @id @default(cuid())
+  chapterId            String
+  chapter              Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  title                String
+  titleEn              String?
+  orderIndex           Int
+  learningObjective    String?
+  learningObjectiveEn  String?
+  contents             LessonContent[]
+  chatThreads          ProjectChatThread[]
+}
+
+model LessonContent {
+  id           String     @id @default(cuid())
+  subchapterId String
+  subchapter   Subchapter @relation(fields: [subchapterId], references: [id], onDelete: Cascade)
+  contentType  String     // main | summary | quiz
+  lang         String     @default("zh") // zh | en
+  body         String     @default("")
+  status       String     @default("pending") // pending | generating | ready | error
+  version      Int        @default(1)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([subchapterId, contentType, lang])
+}
+
+model ProjectChatThread {
+  id                  String    @id @default(cuid())
+  projectId           String
+  project             LearningProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  mode                String    // planning | tutoring
+  relatedSubchapterId String?
+  relatedSubchapter   Subchapter? @relation(fields: [relatedSubchapterId], references: [id])
+  messages            ProjectChatMessage[]
+  createdAt           DateTime  @default(now())
+}
+
+model ProjectChatMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    ProjectChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  role      String   // user | assistant | system
+  content   String
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model ProgressState {
+  id                  String   @id @default(cuid())
+  projectId           String   @unique
+  project             LearningProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  currentChapterId    String?
+  currentSubchapterId String?
+  completedItems      String?  @default("[]")
+  completionPercent   Float    @default(0)
+  lastVisitedAt       DateTime @default(now())
+}
