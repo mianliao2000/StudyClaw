@@ -22,20 +22,20 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === "undefined") return "zh";
-    const savedLang = localStorage.getItem("lang");
-    return savedLang === "en" ? "en" : "zh";
-  });
-
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "dark";
-    return localStorage.getItem("theme") === "light" ? "light" : "dark";
-  });
+  const [lang, setLangState] = useState<Lang>("zh");
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
+    const savedLang = localStorage.getItem("lang") === "en" ? "en" : "zh";
+    setLangState(savedLang);
+
+    const savedTheme = localStorage.getItem("theme") === "light" ? "light" : "dark";
+    setThemeState(savedTheme);
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   const setLang = (l: Lang) => {

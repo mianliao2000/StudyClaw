@@ -50,7 +50,12 @@ export default async function ProjectPage({
   });
 
   if (!project) redirect("/dashboard");
-  if (project.status === "planning") redirect(`/projects/${projectId}/plan`);
+  if (project.status === "planning") {
+    if (project.chapters.length > 0) {
+      redirect(`/projects/${projectId}/review`);
+    }
+    redirect(`/projects/${projectId}/plan`);
+  }
 
   const goals: string[] = project.goals ? JSON.parse(project.goals) : [];
   const goalsEn: string[] = project.goalsEn ? JSON.parse(project.goalsEn) : [];

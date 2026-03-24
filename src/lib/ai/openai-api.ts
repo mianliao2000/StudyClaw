@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { AIProvider, AIMessage } from "./provider";
+import { createThinkTagStreamSanitizer, stripThinkTags } from "./response-cleaning";
 
 export class OpenAIAPIProvider implements AIProvider {
   private client: OpenAI;
@@ -49,13 +50,21 @@ export class OpenAIAPIProvider implements AIProvider {
     });
 
     const encoder = new TextEncoder();
+    const sanitizer = createThinkTagStreamSanitizer();
     return new ReadableStream({
       async start(controller) {
         for await (const chunk of response) {
           const text = chunk.choices[0]?.delta?.content || "";
           if (text) {
-            controller.enqueue(encoder.encode(text));
+            const cleaned = sanitizer.push(text);
+            if (cleaned) {
+              controller.enqueue(encoder.encode(cleaned));
+            }
           }
+        }
+        const remaining = sanitizer.flush();
+        if (remaining) {
+          controller.enqueue(encoder.encode(remaining));
         }
         controller.close();
       },
@@ -67,6 +76,6 @@ export class OpenAIAPIProvider implements AIProvider {
       model: this.defaultModel,
       messages,
     });
-    return response.choices[0]?.message?.content || "";
+    return stripThinkTags(response.choices[0]?.message?.content || "");
   }
 }

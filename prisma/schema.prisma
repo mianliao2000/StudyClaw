@@ -120,6 +120,7 @@ model ProjectChatThread {
   projectId           String
   project             LearningProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
   mode                String    // planning | tutoring
+  conversationLanguage String?
   relatedSubchapterId String?
   relatedSubchapter   Subchapter? @relation(fields: [relatedSubchapterId], references: [id])
   messages            ProjectChatMessage[]

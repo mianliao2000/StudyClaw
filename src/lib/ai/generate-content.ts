@@ -7,6 +7,16 @@ import {
   fillTemplate,
 } from "@/lib/ai/prompts";
 
+const SUMMARY_CHAPTER_TITLE_ZH = "课程总结";
+const SUMMARY_CHAPTER_TITLE_EN = "Course Summary";
+
+function isCourseSummaryChapter(chapter: { title: string; titleEn?: string | null }) {
+  return (
+    chapter.title === SUMMARY_CHAPTER_TITLE_ZH ||
+    chapter.titleEn === SUMMARY_CHAPTER_TITLE_EN
+  );
+}
+
 function parseBilingualOutput(result: string): { zh: string; en: string } {
   const zhMatch = result.match(/---LANG:zh---\s*([\s\S]*?)(?:---LANG:en---|$)/);
   const enMatch = result.match(/---LANG:en---\s*([\s\S]*?)$/);
@@ -45,6 +55,7 @@ export async function generateContentById(contentId: string): Promise<{ zh: stri
     const project = content.subchapter.chapter.project;
     const chapter = content.subchapter.chapter;
     const subchapter = content.subchapter;
+    const isSummaryChapter = isCourseSummaryChapter(chapter);
 
     let prompt: string;
     const vars = {
@@ -56,7 +67,43 @@ export async function generateContentById(contentId: string): Promise<{ zh: stri
       lessonContent: "",
     };
 
+    let courseWideLessonContent = "";
+    if (isSummaryChapter) {
+      const courseMainContents = await prisma.lessonContent.findMany({
+        where: {
+          contentType: "main",
+          lang: "zh",
+          status: "ready",
+          subchapter: {
+            chapter: {
+              projectId: project.id,
+              title: { not: SUMMARY_CHAPTER_TITLE_ZH },
+            },
+          },
+        },
+        include: {
+          subchapter: {
+            include: {
+              chapter: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      courseWideLessonContent = courseMainContents
+        .map(
+          (item) =>
+            `# ${item.subchapter.chapter.title} / ${item.subchapter.title}\n${item.body}`
+        )
+        .join("\n\n")
+        .slice(0, 12000);
+    }
+
     if (content.contentType === "main") {
+      if (isSummaryChapter) {
+        vars.lessonContent = courseWideLessonContent;
+      }
       prompt = fillTemplate(CONTENT_GENERATION_PROMPT, vars);
     } else {
       const mainContent = await prisma.lessonContent.findFirst({
@@ -76,7 +123,10 @@ export async function generateContentById(contentId: string): Promise<{ zh: stri
         throw new Error("Main content not ready");
       }
 
-      vars.lessonContent = mainContent.body;
+      vars.lessonContent =
+        isSummaryChapter && courseWideLessonContent
+          ? courseWideLessonContent
+          : mainContent.body;
       prompt =
         content.contentType === "summary"
           ? fillTemplate(SUMMARY_GENERATION_PROMPT, vars)

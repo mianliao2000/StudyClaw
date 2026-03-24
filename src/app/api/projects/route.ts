@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { generateContentById } from "@/lib/ai/generate-content";
 import { NextResponse } from "next/server";
 import type { PlanStructure } from "@/types";
 
@@ -14,15 +13,45 @@ type ProjectTransactionClient = Pick<
   | "progressState"
 >;
 
-type GeneratedContent = {
-  id: string;
-  contentType: string;
-  lang: string;
-};
+const SUMMARY_CHAPTER_TITLE_ZH = "课程总结";
+const SUMMARY_CHAPTER_TITLE_EN = "Course Summary";
 
-type GeneratedSubchapter = {
-  contents: GeneratedContent[];
-};
+function ensureCourseSummaryChapter(plan: PlanStructure): PlanStructure {
+  const filteredChapters = plan.chapters.filter(
+    (chapter) =>
+      chapter.title !== SUMMARY_CHAPTER_TITLE_ZH &&
+      chapter.titleEn !== SUMMARY_CHAPTER_TITLE_EN
+  );
+
+  return {
+    ...plan,
+    chapters: [
+      ...filteredChapters,
+      {
+        title: SUMMARY_CHAPTER_TITLE_ZH,
+        titleEn: SUMMARY_CHAPTER_TITLE_EN,
+        subchapters: [
+          {
+            title: "总结回顾",
+            titleEn: "Course Review",
+            learningObjective:
+              "系统回顾整门课程的核心概念、关键方法、常见误区与实践重点。",
+            learningObjectiveEn:
+              "Review the full course, including core concepts, key methods, common pitfalls, and practical priorities.",
+          },
+          {
+            title: "综合测验",
+            titleEn: "Comprehensive Quiz",
+            learningObjective:
+              "通过覆盖整门课程范围的综合测验，检验你对整体知识体系的掌握情况。",
+            learningObjectiveEn:
+              "Validate your understanding of the entire course with a comprehensive quiz that spans the full curriculum.",
+          },
+        ],
+      },
+    ],
+  };
+}
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -65,6 +94,7 @@ export async function PUT(req: Request) {
 
   const { projectId, plan }: { projectId: string; plan: PlanStructure } =
     await req.json();
+  const normalizedPlan = ensureCourseSummaryChapter(plan);
 
   const project = await prisma.learningProject.findFirst({
     where: { id: projectId, userId: session.user.id },
@@ -78,23 +108,33 @@ export async function PUT(req: Request) {
   try {
     updated = await prisma.$transaction(
       async (tx: ProjectTransactionClient) => {
+        await tx.projectChatThread.deleteMany({
+          where: { projectId, mode: "tutoring" },
+        });
+
+        await tx.chapter.deleteMany({
+          where: { projectId },
+        });
+
         await tx.learningProject.update({
           where: { id: projectId },
           data: {
-            title: plan.title,
-            titleEn: plan.titleEn,
-            topic: plan.topic,
-            topicEn: plan.topicEn,
-            description: plan.description,
-            descriptionEn: plan.descriptionEn,
-            goals: JSON.stringify(plan.goals),
-            goalsEn: plan.goalsEn ? JSON.stringify(plan.goalsEn) : null,
-            status: "active",
+            title: normalizedPlan.title,
+            titleEn: normalizedPlan.titleEn,
+            topic: normalizedPlan.topic,
+            topicEn: normalizedPlan.topicEn,
+            description: normalizedPlan.description,
+            descriptionEn: normalizedPlan.descriptionEn,
+            goals: JSON.stringify(normalizedPlan.goals),
+            goalsEn: normalizedPlan.goalsEn
+              ? JSON.stringify(normalizedPlan.goalsEn)
+              : null,
+            status: "planning",
           },
         });
 
-        for (let ci = 0; ci < plan.chapters.length; ci++) {
-          const ch = plan.chapters[ci];
+        for (let ci = 0; ci < normalizedPlan.chapters.length; ci++) {
+          const ch = normalizedPlan.chapters[ci];
           const chapter = await tx.chapter.create({
             data: {
               projectId,
@@ -137,8 +177,15 @@ export async function PUT(req: Request) {
           }
         }
 
-        await tx.progressState.create({
-          data: { projectId },
+        await tx.progressState.upsert({
+          where: { projectId },
+          update: {
+            currentChapterId: null,
+            currentSubchapterId: null,
+            completedItems: "[]",
+            completionPercent: 0,
+          },
+          create: { projectId },
         });
 
         return tx.learningProject.findUnique({
@@ -162,32 +209,6 @@ export async function PUT(req: Request) {
     const message =
       error instanceof Error ? error.message : "Failed to save project plan";
     return NextResponse.json({ error: message }, { status: 500 });
-  }
-
-  if (updated && updated.chapters.length > 0) {
-    const firstChapter = updated.chapters[0];
-    const contentIds: string[] = firstChapter.subchapters.flatMap(
-      (sub: GeneratedSubchapter) =>
-        (["main", "summary", "quiz"] as const)
-          .map((type) => {
-            const content = sub.contents.find(
-              (item: GeneratedContent) =>
-                item.contentType === type && item.lang === "zh"
-            );
-            return content?.id;
-          })
-          .filter((id): id is string => Boolean(id))
-    );
-
-    void (async () => {
-      for (const id of contentIds) {
-        try {
-          await generateContentById(id);
-        } catch (error) {
-          console.error(`Background generation failed for ${id}:`, error);
-        }
-      }
-    })();
   }
 
   return NextResponse.json(updated);

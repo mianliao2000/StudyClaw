@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Zap, Globe, Sun, Moon } from "lucide-react";
+import { Globe, Sun, Moon } from "lucide-react";
 import { UserMenu } from "./user-menu";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
@@ -15,11 +16,16 @@ export function Header() {
     <header className="sticky top-0 z-50 glass border-b border-border/50">
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-accent/30" />
       <div className="container flex h-14 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold group">
-          <div className="p-1 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Zap className="h-4 w-4 text-primary" />
-          </div>
-          <span className="gradient-text font-bold">StudyClaw</span>
+        <Link href="/" className="flex items-center gap-2 group">
+          <Image
+            src="/studyclaw-logo.png"
+            alt="StudyClaw"
+            width={40}
+            height={40}
+            className="h-9 w-9 object-contain"
+            priority
+          />
+          <span className="gradient-text font-bold text-lg">StudyClaw</span>
         </Link>
 
         <nav className="flex items-center gap-3">

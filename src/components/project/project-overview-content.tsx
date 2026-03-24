@@ -84,51 +84,46 @@ export function ProjectOverviewContent({
     return items.length > 0 && items.every((c: ContentItem) => c.status === "pending");
   }
 
-  function isChapterGenerating(ch: Chapter) {
-    const items = ch.subchapters.flatMap((s: Subchapter) => s.contents);
-    return items.some(
-      (c: ContentItem) => c.status === "pending" || c.status === "generating"
-    );
-  }
-
   const firstChapter = chapters[0];
-  const isFirstChapterGenerating = firstChapter && isChapterGenerating(firstChapter);
+  const firstLessonMain = firstChapter?.subchapters[0]?.contents.find(
+    (content: ContentItem) => content.contentType === "main"
+  );
+  const isInitialLessonGenerating = firstLessonMain?.status === "generating";
 
-  // Auto-refresh every 5s when chapter 1 content is being generated
   useEffect(() => {
-    if (!isFirstChapterGenerating) return;
+    if (!isInitialLessonGenerating) return;
     const timer = setInterval(() => router.refresh(), 5000);
     return () => clearInterval(timer);
-  }, [isFirstChapterGenerating, router]);
+  }, [isInitialLessonGenerating, router]);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold gradient-text">{displayTitle}</h1>
-        <p className="text-muted-foreground mt-1">{displayDescription}</p>
+        <h1 className="gradient-text text-2xl font-bold">{displayTitle}</h1>
+        <p className="mt-1 text-muted-foreground">{displayDescription}</p>
       </div>
 
-      {isFirstChapterGenerating && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-8 flex items-center justify-between">
+      {isInitialLessonGenerating && (
+        <div className="mb-8 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-4">
           <div className="flex items-center gap-3">
-            <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">
               {lang === "en"
-                ? "Generating chapter 1 content in the background..."
-                : "正在后台生成第一章内容，完成后自动更新..."}
+                ? "Generating chapter 1 section 1 main content in the background..."
+                : "正在后台生成第一章第一节的正文内容，完成后会自动刷新..."}
             </p>
           </div>
           <Link
-            href={`/projects/${projectId}/plan`}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-4"
+            href={`/projects/${projectId}/review`}
+            className="ml-4 flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3 w-3" />
-            {lang === "en" ? "Back to plan" : "返回规划"}
+            {lang === "en" ? "Back to review" : "返回确认计划"}
           </Link>
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 mb-8">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2">
         <Card className="border-border/50 bg-card/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -140,7 +135,7 @@ export function ProjectOverviewContent({
               {Math.round(progress?.completionPercent || 0)}%
             </div>
             <Progress value={progress?.completionPercent || 0} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {totalItems} {t("project.units")}
             </p>
           </CardContent>
@@ -177,19 +172,19 @@ export function ProjectOverviewContent({
       {goals.length > 0 && (
         <Card className="mb-8 border-border/50 bg-card/50">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Target className="h-4 w-4 text-primary" />
               {t("project.goals")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-1">
-              {displayGoals.map((g, i) => (
-                <li key={i} className="text-sm flex items-start gap-2">
-                  <span className="text-primary/60 font-mono text-xs mt-0.5">
-                    {String(i + 1).padStart(2, "0")}
+              {displayGoals.map((goal, index) => (
+                <li key={index} className="flex items-start gap-2 text-sm">
+                  <span className="mt-0.5 font-mono text-xs text-primary/60">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                  {g}
+                  {goal}
                 </li>
               ))}
             </ul>
@@ -198,45 +193,61 @@ export function ProjectOverviewContent({
       )}
 
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
           <BookOpen className="h-5 w-5 text-primary" />
           {t("project.toc")}
         </h2>
-        {chapters.map((ch, chIdx) => {
-          const chapterPending = isChapterPending(ch);
-          const showInlineButton = chapterPending && chIdx > 0; // ch1 auto-generates
+
+        {chapters.map((chapter, chapterIndex) => {
+          const chapterPending = isChapterPending(chapter);
+          const showInlineButton = chapterPending && chapterIndex > 0;
 
           return (
-            <Card key={ch.id} className="border-border/50 bg-card/50">
+            <Card key={chapter.id} className="border-border/50 bg-card/50">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{lang === "en" && ch.titleEn ? ch.titleEn : ch.title}</CardTitle>
+                  <CardTitle className="text-base">
+                    <span className="text-primary/70 font-mono text-sm mr-2">
+                      {lang === "en" ? `Ch ${chapterIndex + 1}` : `第${chapterIndex + 1}章`}
+                    </span>
+                    {lang === "en" && chapter.titleEn ? chapter.titleEn : chapter.title}
+                  </CardTitle>
+
                   {showInlineButton && (
                     <GenerateChapterButton
-                      chapterTitle={ch.title}
-                      contentItems={getChapterContentItems(ch)}
+                      chapterTitle={chapter.title}
+                      contentItems={getChapterContentItems(chapter)}
                       variant="inline"
                     />
                   )}
                 </div>
               </CardHeader>
+
               <CardContent>
                 <div className="space-y-1">
-                  {ch.subchapters.map((sub) => (
+                  {chapter.subchapters.map((subchapter, subIndex) => (
                     <Link
-                      key={sub.id}
-                      href={`/projects/${projectId}/chapters/${ch.id}/subchapters/${sub.id}/main`}
-                      className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent/50 transition-colors text-sm"
+                      key={subchapter.id}
+                      href={`/projects/${projectId}/chapters/${chapter.id}/subchapters/${subchapter.id}/main`}
+                      className="flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent/50"
                     >
-                      <span>{lang === "en" && sub.titleEn ? sub.titleEn : sub.title}</span>
+                      <span>
+                        <span className="text-primary/60 font-mono text-xs mr-2">
+                          {chapterIndex + 1}.{subIndex + 1}
+                        </span>
+                        {lang === "en" && subchapter.titleEn ? subchapter.titleEn : subchapter.title}
+                      </span>
+
                       <div className="flex gap-1">
-                        {sub.contents.map((c) => (
+                        {subchapter.contents.map((content) => (
                           <Badge
-                            key={c.id}
-                            variant={c.status === "ready" ? "default" : "outline"}
+                            key={content.id}
+                            variant={content.status === "ready" ? "default" : "outline"}
                             className="text-[10px]"
                           >
-                            {badgeKeys[c.contentType] ? t(badgeKeys[c.contentType]) : c.contentType}
+                            {badgeKeys[content.contentType]
+                              ? t(badgeKeys[content.contentType])
+                              : content.contentType}
                           </Badge>
                         ))}
                       </div>

@@ -30,6 +30,7 @@ export async function GET(
 
   return NextResponse.json({
     threadId: thread.id,
+    conversationLanguage: thread.conversationLanguage,
     messages: thread.messages,
   });
 }

@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
 import type { AIProvider, AIMessage, AIOptions } from "./provider";
+import { stripThinkTags } from "./response-cleaning";
 
 const BRIDGE_SCRIPT = process.env.CHATGPT_BRIDGE_SCRIPT;
 
@@ -55,7 +56,7 @@ export class ChatGPTOAuthProvider implements AIProvider {
           if (result.error_message) {
             reject(new Error(result.error_message));
           } else {
-            resolve(result.content || "");
+            resolve(stripThinkTags(result.content || ""));
           }
         } catch {
           reject(new Error(`Bridge output parse error: ${stdout}`));

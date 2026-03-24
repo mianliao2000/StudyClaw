@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { LessonContent } from "@/components/lesson/lesson-content";
-import { TutoringChat } from "@/components/lesson/tutoring-chat";
+import { LearningPageShell } from "@/components/lesson/learning-page-shell";
 import { SubchapterHeader } from "@/components/lesson/subchapter-header";
 
 type SubchapterContentItem = {
@@ -41,7 +41,11 @@ export default async function MainContentPage({
       contents: true,
       chatThreads: {
         where: { mode: "tutoring" },
-        include: { messages: { orderBy: { createdAt: "asc" } } },
+        select: {
+          id: true,
+          conversationLanguage: true,
+          messages: { orderBy: { createdAt: "asc" } },
+        },
       },
     },
   });
@@ -68,45 +72,46 @@ export default async function MainContentPage({
   const thread = subchapter.chatThreads[0];
 
   return (
-    <div className="flex h-full">
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-3xl mx-auto">
-          <SubchapterHeader
-            contentType="main"
-            chapterTitle={subchapter.chapter.title}
-            subchapterTitle={subchapter.title}
-            learningObjective={subchapter.learningObjective}
-          />
-          <LessonContent
-            contentId={mainContent!.id}
-            body={mainContent!.body}
-            bodyEn={mainEn?.body}
-            status={mainContent!.status}
-            contentType="main"
-          />
+    <LearningPageShell
+      content={
+        <div className="p-6">
+          <div className="max-w-3xl mx-auto">
+            <SubchapterHeader
+              contentType="main"
+              chapterTitle={subchapter.chapter.title}
+              subchapterTitle={subchapter.title}
+              learningObjective={subchapter.learningObjective}
+            />
+            <LessonContent
+              contentId={mainContent.id}
+              body={mainContent.body}
+              bodyEn={mainEn?.body}
+              status={mainContent.status}
+              contentType="main"
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="w-80 border-l flex flex-col">
-        <TutoringChat
-          threadId={thread?.id}
-          projectTitle={subchapter.chapter.project.title}
-          chapterTitle={subchapter.chapter.title}
-          subchapterTitle={subchapter.title}
-          learningObjective={subchapter.learningObjective || ""}
-          lessonContent={
-            mainContent!.status === "ready" ? mainContent!.body : ""
-          }
-          initialMessages={
+      }
+      tutoring={{
+          threadId: thread?.id,
+          projectId,
+          chapterId,
+          subchapterId,
+          projectTitle: subchapter.chapter.project.title,
+          chapterTitle: subchapter.chapter.title,
+          subchapterTitle: subchapter.title,
+          learningObjective: subchapter.learningObjective || "",
+          lessonContent: mainContent.status === "ready" ? mainContent.body : "",
+          conversationLanguage:
+            thread?.conversationLanguage as "zh" | "en" | null | undefined,
+          initialMessages:
             thread?.messages.map((m: TutoringThreadMessage) => ({
               id: m.id,
               role: m.role as "user" | "assistant" | "system",
               content: m.content,
               createdAt: m.createdAt,
-            })) || []
-          }
-        />
-      </div>
-    </div>
+            })) || [],
+      }}
+    />
   );
 }

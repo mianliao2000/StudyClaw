@@ -124,6 +124,7 @@ const translations = {
   // Misc
   "misc.chapter": { zh: "章", en: "ch" },
   "misc.section": { zh: "节", en: "sec" },
+  "misc.creatingProject": { zh: "正在创建项目并启动对话...", en: "Creating project and starting conversation..." },
   "misc.badgeMain": { zh: "文", en: "L" },
   "misc.badgeSummary": { zh: "结", en: "S" },
   "misc.badgeQuiz": { zh: "测", en: "Q" },

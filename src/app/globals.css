@@ -176,8 +176,27 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px oklch(0.75 0.15 180 / 10%); }
-  50% { box-shadow: 0 0 40px oklch(0.75 0.15 180 / 25%); }
+  0%, 100% { box-shadow: 0 0 8px oklch(0.75 0.18 170 / 40%), 0 0 20px oklch(0.75 0.18 170 / 20%); }
+  50% { box-shadow: 0 0 16px oklch(0.75 0.18 170 / 65%), 0 0 40px oklch(0.75 0.18 170 / 35%); }
+}
+
+@keyframes assistant-option-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes assistant-option-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(1 0 0 / 0), 0 0 0 0 oklch(0.75 0.15 180 / 0);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 0 1px oklch(1 0 0 / 0.08), 0 0 22px 0 oklch(0.75 0.15 180 / 0.3);
+    filter: brightness(1.04);
+  }
 }
 
 .animate-float {
@@ -186,6 +205,11 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.assistant-option-breathe {
+  animation: assistant-option-breathe 2.4s ease-in-out 0.55s infinite;
+  will-change: box-shadow, filter;
 }
 
 /* Cursor pointer for all interactive elements */
