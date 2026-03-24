@@ -3,6 +3,26 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ProjectOverviewContent } from "@/components/project/project-overview-content";
 
+type ProjectContentItem = {
+  id: string;
+  contentType: string;
+  status: string;
+};
+
+type ProjectSubchapter = {
+  id: string;
+  title: string;
+  titleEn: string | null;
+  contents: ProjectContentItem[];
+};
+
+type ProjectChapter = {
+  id: string;
+  title: string;
+  titleEn: string | null;
+  subchapters: ProjectSubchapter[];
+};
+
 export default async function ProjectPage({
   params,
 }: {
@@ -47,15 +67,15 @@ export default async function ProjectPage({
       titleEn={project.titleEn}
       description={project.description}
       descriptionEn={project.descriptionEn}
-      chapters={project.chapters.map((ch) => ({
+      chapters={project.chapters.map((ch: ProjectChapter) => ({
         id: ch.id,
         title: ch.title,
         titleEn: ch.titleEn,
-        subchapters: ch.subchapters.map((sub) => ({
+        subchapters: ch.subchapters.map((sub: ProjectSubchapter) => ({
           id: sub.id,
           title: sub.title,
           titleEn: sub.titleEn,
-          contents: sub.contents.map((c) => ({
+          contents: sub.contents.map((c: ProjectContentItem) => ({
             id: c.id,
             contentType: c.contentType,
             status: c.status,

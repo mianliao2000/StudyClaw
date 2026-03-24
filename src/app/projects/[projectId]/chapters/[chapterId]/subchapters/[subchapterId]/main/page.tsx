@@ -5,6 +5,21 @@ import { LessonContent } from "@/components/lesson/lesson-content";
 import { TutoringChat } from "@/components/lesson/tutoring-chat";
 import { SubchapterHeader } from "@/components/lesson/subchapter-header";
 
+type SubchapterContentItem = {
+  id: string;
+  body: string;
+  status: string;
+  contentType: string;
+  lang: string;
+};
+
+type TutoringThreadMessage = {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: Date;
+};
+
 export default async function MainContentPage({
   params,
 }: {
@@ -36,14 +51,18 @@ export default async function MainContentPage({
   }
 
   const mainZh = subchapter.contents.find(
-    (c) => c.contentType === "main" && c.lang === "zh"
+    (c: SubchapterContentItem) => c.contentType === "main" && c.lang === "zh"
   );
   const mainEn = subchapter.contents.find(
-    (c) => c.contentType === "main" && c.lang === "en"
+    (c: SubchapterContentItem) => c.contentType === "main" && c.lang === "en"
   );
 
   // Fall back to first "main" if no zh-specific one exists
-  const mainContent = mainZh ?? subchapter.contents.find((c) => c.contentType === "main");
+  const mainContent =
+    mainZh ??
+    subchapter.contents.find(
+      (c: SubchapterContentItem) => c.contentType === "main"
+    );
   if (!mainContent) redirect(`/projects/${projectId}`);
 
   const thread = subchapter.chatThreads[0];
@@ -79,7 +98,7 @@ export default async function MainContentPage({
             mainContent!.status === "ready" ? mainContent!.body : ""
           }
           initialMessages={
-            thread?.messages.map((m) => ({
+            thread?.messages.map((m: TutoringThreadMessage) => ({
               id: m.id,
               role: m.role as "user" | "assistant" | "system",
               content: m.content,

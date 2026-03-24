@@ -4,6 +4,14 @@ import { prisma } from "@/lib/db";
 import { QuizView } from "@/components/lesson/quiz-view";
 import { SubchapterHeader } from "@/components/lesson/subchapter-header";
 
+type SubchapterContentItem = {
+  id: string;
+  body: string;
+  status: string;
+  contentType: string;
+  lang: string;
+};
+
 export default async function QuizPage({
   params,
 }: {
@@ -31,12 +39,14 @@ export default async function QuizPage({
   }
 
   const quizZh = subchapter.contents.find(
-    (c) => c.contentType === "quiz" && c.lang === "zh"
+    (c: SubchapterContentItem) => c.contentType === "quiz" && c.lang === "zh"
   );
   const quizEn = subchapter.contents.find(
-    (c) => c.contentType === "quiz" && c.lang === "en"
+    (c: SubchapterContentItem) => c.contentType === "quiz" && c.lang === "en"
   );
-  const quiz = quizZh ?? subchapter.contents.find((c) => c.contentType === "quiz");
+  const quiz =
+    quizZh ??
+    subchapter.contents.find((c: SubchapterContentItem) => c.contentType === "quiz");
   if (!quiz) redirect(`/projects/${projectId}`);
 
   return (

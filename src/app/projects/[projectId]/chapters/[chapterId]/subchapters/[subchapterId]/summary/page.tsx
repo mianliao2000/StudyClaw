@@ -4,6 +4,14 @@ import { prisma } from "@/lib/db";
 import { LessonContent } from "@/components/lesson/lesson-content";
 import { SubchapterHeader } from "@/components/lesson/subchapter-header";
 
+type SubchapterContentItem = {
+  id: string;
+  body: string;
+  status: string;
+  contentType: string;
+  lang: string;
+};
+
 export default async function SummaryPage({
   params,
 }: {
@@ -31,12 +39,18 @@ export default async function SummaryPage({
   }
 
   const summaryZh = subchapter.contents.find(
-    (c) => c.contentType === "summary" && c.lang === "zh"
+    (c: SubchapterContentItem) =>
+      c.contentType === "summary" && c.lang === "zh"
   );
   const summaryEn = subchapter.contents.find(
-    (c) => c.contentType === "summary" && c.lang === "en"
+    (c: SubchapterContentItem) =>
+      c.contentType === "summary" && c.lang === "en"
   );
-  const summary = summaryZh ?? subchapter.contents.find((c) => c.contentType === "summary");
+  const summary =
+    summaryZh ??
+    subchapter.contents.find(
+      (c: SubchapterContentItem) => c.contentType === "summary"
+    );
   if (!summary) redirect(`/projects/${projectId}`);
 
   return (
