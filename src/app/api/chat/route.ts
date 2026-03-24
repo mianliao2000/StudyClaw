@@ -1,13 +1,17 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getAIProvider } from "@/lib/ai/provider";
-import type { ProjectChatMessage } from "@prisma/client";
 import {
   PLANNING_SYSTEM_PROMPT,
   TUTORING_SYSTEM_PROMPT,
   fillTemplate,
 } from "@/lib/ai/prompts";
 import type { AIMessage } from "@/lib/ai/provider";
+
+type StoredChatMessage = {
+  role: string;
+  content: string;
+};
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -46,7 +50,7 @@ export async function POST(req: Request) {
 
   const aiMessages: AIMessage[] = [
     { role: "system", content: systemPrompt },
-    ...thread.messages.map((m: ProjectChatMessage) => ({
+    ...thread.messages.map((m: StoredChatMessage) => ({
       role: m.role as AIMessage["role"],
       content: m.content,
     })),
