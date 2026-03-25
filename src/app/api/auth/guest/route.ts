@@ -24,13 +24,17 @@ export async function POST() {
       },
     });
 
+    const useSecureCookies =
+      process.env.AUTH_URL?.startsWith("https://") ||
+      process.env.NODE_ENV === "production";
+    const sessionCookieName = `${useSecureCookies ? "__Secure-" : ""}authjs.session-token`;
     const cookieStore = await cookies();
-    cookieStore.set("authjs.session-token", sessionToken, {
+    cookieStore.set(sessionCookieName, sessionToken, {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
       expires,
-      secure: process.env.NODE_ENV === "production",
+      secure: useSecureCookies,
     });
 
     return Response.json({ success: true });

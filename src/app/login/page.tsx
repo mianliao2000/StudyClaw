@@ -11,14 +11,20 @@ export default function LoginPage() {
   const { t } = useLanguage();
   const router = useRouter();
   const [guestLoading, setGuestLoading] = useState(false);
+  const [guestError, setGuestError] = useState<string | null>(null);
 
   async function handleGuestLogin() {
     setGuestLoading(true);
+    setGuestError(null);
     try {
       const res = await fetch("/api/auth/guest", { method: "POST" });
       if (res.ok) {
         router.push("/dashboard");
+        router.refresh();
+        return;
       }
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setGuestError(data?.error ?? "Guest login failed.");
     } finally {
       setGuestLoading(false);
     }
@@ -76,6 +82,10 @@ export default function LoginPage() {
               <User className="mr-2 h-4 w-4" />
               {guestLoading ? "..." : t("login.guest")}
             </Button>
+
+            {guestError ? (
+              <p className="text-sm text-destructive text-center">{guestError}</p>
+            ) : null}
           </div>
         </div>
       </div>
