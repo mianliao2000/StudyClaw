@@ -7,12 +7,12 @@ const translations = {
 
   // Homepage
   "home.badge": {
-    zh: "AI 驱动的个人化学习",
+    zh: "AI 驱动的个性化学习",
     en: "AI-Powered Personalized Learning",
   },
   "home.title": { zh: "你的 AI 学习搭档", en: "Your AI Learning Partner" },
   "home.subtitle": {
-    zh: "告诉 AI 你想学什么，它会为你规划课程、生成教材、辅导学习。从规划到精通，一站式个人化学习体验。",
+    zh: "告诉 AI 你想学什么，它会为你规划课程、生成教材、辅导学习。从规划到精通，一站式个性化学习体验。",
     en: "Tell AI what you want to learn. It plans courses, generates materials, and tutors you. From planning to mastery - one-stop personalized learning.",
   },
   "home.start": { zh: "开始学习", en: "Start Learning" },
@@ -46,7 +46,7 @@ const translations = {
   // Dashboard
   "dash.title": { zh: "我的学习项目", en: "My Projects" },
   "dash.subtitle": {
-    zh: "管理你的个人化学习计划",
+    zh: "管理你的个性化学习计划",
     en: "Manage your personalized learning plans",
   },
   "dash.new": { zh: "新建项目", en: "New Project" },
@@ -76,7 +76,7 @@ const translations = {
     en: 'Keep chatting to refine the plan. The "Create Course" button will light up when AI is ready.',
   },
   "plan.readyBanner": {
-    zh: "课程计划已就绪！点击右上角「创建课程」按钮生成你的个人化课程",
+    zh: "课程计划已就绪！点击右上角「创建课程」按钮生成你的个性化课程",
     en: 'Your course plan is ready! Click "Create Course" above to generate your personalized course.',
   },
   "plan.placeholder": { zh: "告诉 AI 你想学什么...", en: "Tell AI what you want to learn..." },

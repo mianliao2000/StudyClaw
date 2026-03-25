@@ -5,8 +5,8 @@ import { LanguageProvider } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pandora AI - 个人化 AI 学习平台",
-  description: "AI 驱动的个人化学习规划与辅导平台",
+  title: "Pandora AI - 个性化 AI 学习平台",
+  description: "AI 驱动的个性化学习规划与辅导平台",
 };
 
 export default function RootLayout({
