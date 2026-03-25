@@ -72,6 +72,6 @@ export async function POST(
   }
 
   return NextResponse.json({
-    redirectTo: `/projects/${projectId}/chapters/${firstChapter.id}/subchapters/${firstSubchapter.id}/main`,
+    redirectTo: `/projects/${projectId}`,
   });
 }
