@@ -171,8 +171,8 @@ export default function HomePage() {
           <div>{t("home.footer")}</div>
           <div>
             {lang === "zh"
-              ? "作者 / Created by Mian Liao & Vivian Yang"
-              : "Created by Mian Liao & Vivian Yang"}
+              ? "作者 / Created by Jackson Liao"
+              : "Created by Jackson Liao"}
           </div>
         </div>
       </footer>

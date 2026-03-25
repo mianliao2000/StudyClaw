@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Globe, Sun, Moon } from "lucide-react";
-import { UserMenu } from "./user-menu";
-import { GuestBanner } from "./guest-banner";
+import { Globe, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
+import { GuestBanner } from "./guest-banner";
+import { UserMenu } from "./user-menu";
 
 export function Header() {
   const { data: session } = useSession();
@@ -49,6 +49,7 @@ export function Header() {
                 <Moon className="h-4 w-4" />
               )}
             </Button>
+
             <Button
               variant="ghost"
               size="sm"
@@ -60,6 +61,7 @@ export function Header() {
                 {lang === "zh" ? "EN" : "中"}
               </span>
             </Button>
+
             {session ? (
               <>
                 <Link href="/dashboard">

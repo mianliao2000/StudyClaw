@@ -10,7 +10,9 @@ import { useLanguage } from "@/lib/i18n";
 interface Project {
   id: string;
   title: string;
+  titleEn: string | null;
   topic: string;
+  topicEn: string | null;
   status: string;
   updatedAt: Date;
   chapters: { subchapters: unknown[] }[];

@@ -47,7 +47,9 @@ interface ProjectCardProps {
   project: {
     id: string;
     title: string;
+    titleEn: string | null;
     topic: string;
+    topicEn: string | null;
     status: string;
     updatedAt: Date;
     chapters: { subchapters: unknown[] }[];
@@ -84,6 +86,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
   };
 
   const dateLocale = lang === "zh" ? "zh-CN" : "en-US";
+  const projectTitle = lang === "en" ? project.titleEn || project.title : project.title;
+  const projectTopic = lang === "en" ? project.topicEn || project.topic : project.topic;
 
   return (
     <>
@@ -115,14 +119,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between pr-8">
               <CardTitle className="text-base line-clamp-1">
-                {project.title}
+                {projectTitle}
               </CardTitle>
               <Badge variant={statusVariants[project.status]}>
                 {statusKeys[project.status] ? t(statusKeys[project.status]) : project.status}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {project.topic}
+              {projectTopic}
             </p>
           </CardHeader>
           <CardContent>

@@ -39,7 +39,7 @@ const translations = {
   },
   "home.topicsTitle": { zh: "你可以学习任何复杂主题", en: "Learn Any Complex Topic" },
   "home.footer": {
-    zh: "Pandora AI - AI 驱动的个人化学习平台",
+    zh: "Pandora AI - AI 驱动的个性化学习平台",
     en: "Pandora AI - AI-Powered Personalized Learning Platform",
   },
 
