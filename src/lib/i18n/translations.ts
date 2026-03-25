@@ -82,6 +82,9 @@ const translations = {
   "login.title": { zh: "StudyClaw", en: "StudyClaw" },
   "login.subtitle": { zh: "使用你的账号登录以继续", en: "Sign in to continue" },
   "login.google": { zh: "使用 Google 登录", en: "Sign in with Google" },
+  "login.guest": { zh: "游客试用", en: "Try as Guest" },
+  "guest.banner": { zh: "你正在以游客身份试用，数据不会被保存。", en: "You're in guest mode. Data won't be saved." },
+  "guest.loginLink": { zh: "登录以保存进度", en: "Log in to save progress" },
 
   // Model selector
   "model.model": { zh: "模型:", en: "Model:" },

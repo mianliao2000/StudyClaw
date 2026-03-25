@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Globe, Sun, Moon } from "lucide-react";
 import { UserMenu } from "./user-menu";
+import { GuestBanner } from "./guest-banner";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 
@@ -13,6 +14,8 @@ export function Header() {
   const { lang, setLang, theme, setTheme } = useLanguage();
 
   return (
+    <>
+    <GuestBanner />
     <header className="sticky top-0 z-50 glass border-b border-border/50">
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-accent/30" />
       <div className="container flex h-14 items-center justify-between px-4">
@@ -64,5 +67,6 @@ export function Header() {
         </nav>
       </div>
     </header>
+    </>
   );
 }

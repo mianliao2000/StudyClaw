@@ -61,7 +61,7 @@ export default async function ProjectLayout({
           chapters={project.chapters as ChapterWithSubchapters[]}
           completedItems={completedItems}
         />
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 min-w-0 overflow-auto">{children}</main>
       </div>
     </div>
   );
