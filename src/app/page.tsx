@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, Brain, MessageSquare, Target } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Brain,
+  MessageSquare,
+  Target,
+} from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
@@ -120,7 +126,9 @@ export default function HomePage() {
                   <feature.icon className={`h-6 w-6 ${feature.color}`} />
                 </div>
                 <h3 className="mb-1 font-semibold">{t(feature.titleKey)}</h3>
-                <p className="text-sm text-muted-foreground">{t(feature.descKey)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t(feature.descKey)}
+                </p>
               </div>
             ))}
           </div>

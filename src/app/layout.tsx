@@ -5,7 +5,7 @@ import { LanguageProvider } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "StudyClaw - 个人化 AI 学习平台",
+  title: "Pandora AI - 个人化 AI 学习平台",
   description: "AI 驱动的个人化学习规划与辅导平台",
 };
 
@@ -15,8 +15,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className="dark h-full antialiased" suppressHydrationWarning>
-      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+    <html
+      lang="zh-CN"
+      className="dark h-full antialiased"
+      suppressHydrationWarning
+    >
+      <body
+        className="min-h-full flex flex-col font-sans"
+        suppressHydrationWarning
+      >
         <SessionProvider>
           <LanguageProvider>
             <TooltipProvider>{children}</TooltipProvider>

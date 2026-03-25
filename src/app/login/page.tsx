@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Zap, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 
@@ -38,9 +39,16 @@ export default function LoginPage() {
         <div className="rounded-xl border border-border/50 bg-card/80 p-8 glow-border glass">
           <div className="text-center mb-8">
             <div className="inline-flex p-3 rounded-xl bg-primary/10 mb-4">
-              <Zap className="h-8 w-8 text-primary" />
+              <Image
+                src="/Box_Logo.png"
+                alt="Pandora AI"
+                width={32}
+                height={32}
+                className="h-8 w-8 object-contain"
+                priority
+              />
             </div>
-            <h1 className="text-xl font-bold gradient-text">StudyClaw</h1>
+            <h1 className="text-xl font-bold gradient-text">Pandora AI</h1>
             <p className="text-sm text-muted-foreground mt-2">
               {t("login.subtitle")}
             </p>
