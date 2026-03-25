@@ -100,19 +100,21 @@ export function ProjectSidebar({
               {expanded[chapter.id] && (
                 <div className="ml-3 border-l pl-2">
                   {chapter.subchapters.map((subchapter) => (
-                    <div key={subchapter.id} className="mb-0.5">
-                      <p className="px-2 py-1 text-xs font-medium text-muted-foreground line-clamp-1">
-                        <span className="mr-1.5 text-primary/60 font-mono">
+                    <div key={subchapter.id} className="mb-2">
+                      <div className="grid grid-cols-[auto,1fr] items-start gap-x-2 px-2 py-1">
+                        <span className="pt-0.5 text-[11px] font-mono text-primary/60">
                           {formatSubchapterLabel(
                             chapter.orderIndex,
                             subchapter.orderIndex
                           )}
                         </span>
-                        {lang === "en" && subchapter.titleEn
-                          ? subchapter.titleEn
-                          : subchapter.title}
-                      </p>
-                      <div className="space-y-0.5">
+                        <p className="text-xs font-medium leading-5 text-muted-foreground break-words">
+                          {lang === "en" && subchapter.titleEn
+                            ? subchapter.titleEn
+                            : subchapter.title}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5 pl-1">
                         {(["main", "summary", "quiz"] as const).map((type) => {
                           const Icon = contentIcons[type];
                           const contentItem = subchapter.contents.find(
