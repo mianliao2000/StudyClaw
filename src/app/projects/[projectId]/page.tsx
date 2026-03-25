@@ -13,6 +13,7 @@ type ProjectSubchapter = {
   id: string;
   title: string;
   titleEn: string | null;
+  orderIndex: number;
   contents: ProjectContentItem[];
 };
 
@@ -20,6 +21,7 @@ type ProjectChapter = {
   id: string;
   title: string;
   titleEn: string | null;
+  orderIndex: number;
   subchapters: ProjectSubchapter[];
 };
 
@@ -81,10 +83,12 @@ export default async function ProjectPage({
         id: ch.id,
         title: ch.title,
         titleEn: ch.titleEn,
+        orderIndex: ch.orderIndex,
         subchapters: ch.subchapters.map((sub: ProjectSubchapter) => ({
           id: sub.id,
           title: sub.title,
           titleEn: sub.titleEn,
+          orderIndex: sub.orderIndex,
           contents: sub.contents.map((c: ProjectContentItem) => ({
             id: c.id,
             contentType: c.contentType,

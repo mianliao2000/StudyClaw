@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { GenerateChapterButton } from "@/components/project/generate-chapter-button";
 import { useLanguage } from "@/lib/i18n";
+import { formatChapterLabel, formatSubchapterLabel } from "@/lib/course-labels";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -21,6 +22,7 @@ interface Subchapter {
   id: string;
   title: string;
   titleEn?: string | null;
+  orderIndex: number;
   contents: ContentItem[];
 }
 
@@ -28,6 +30,7 @@ interface Chapter {
   id: string;
   title: string;
   titleEn?: string | null;
+  orderIndex: number;
   subchapters: Subchapter[];
 }
 
@@ -65,23 +68,28 @@ export function ProjectOverviewContent({
   const { t, lang } = useLanguage();
   const router = useRouter();
   const displayTitle = lang === "en" && titleEn ? titleEn : title;
-  const displayDescription = lang === "en" && descriptionEn ? descriptionEn : description;
+  const displayDescription =
+    lang === "en" && descriptionEn ? descriptionEn : description;
   const displayGoals = lang === "en" && goalsEn?.length ? goalsEn : goals;
 
-  function getChapterContentItems(ch: Chapter) {
-    return ch.subchapters.flatMap((sub: Subchapter) => {
+  function getChapterContentItems(chapter: Chapter) {
+    return chapter.subchapters.flatMap((subchapter: Subchapter) => {
       const byType = (type: string) =>
-        sub.contents.find((c: ContentItem) => c.contentType === type);
+        subchapter.contents.find((content: ContentItem) => content.contentType === type);
+
       return (["main", "summary", "quiz"] as const)
         .map((type) => byType(type))
         .filter(Boolean)
-        .map((c: ContentItem | undefined) => ({ id: c!.id, contentType: c!.contentType }));
+        .map((content: ContentItem | undefined) => ({
+          id: content!.id,
+          contentType: content!.contentType,
+        }));
     });
   }
 
-  function isChapterPending(ch: Chapter) {
-    const items = ch.subchapters.flatMap((s: Subchapter) => s.contents);
-    return items.length > 0 && items.every((c: ContentItem) => c.status === "pending");
+  function isChapterPending(chapter: Chapter) {
+    const items = chapter.subchapters.flatMap((subchapter: Subchapter) => subchapter.contents);
+    return items.length > 0 && items.every((content: ContentItem) => content.status === "pending");
   }
 
   const firstChapter = chapters[0];
@@ -158,7 +166,7 @@ export function ProjectOverviewContent({
               <div>
                 <div className="text-2xl font-bold text-[oklch(0.72_0.15_60)]">
                   {chapters.reduce(
-                    (sum: number, ch: Chapter) => sum + ch.subchapters.length,
+                    (sum: number, chapter: Chapter) => sum + chapter.subchapters.length,
                     0
                   )}
                 </div>
@@ -207,10 +215,12 @@ export function ProjectOverviewContent({
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">
-                    <span className="text-primary/70 font-mono text-sm mr-2">
-                      {lang === "en" ? `Ch ${chapterIndex + 1}` : `第${chapterIndex + 1}章`}
-                    </span>
-                    {lang === "en" && chapter.titleEn ? chapter.titleEn : chapter.title}
+                    {formatChapterLabel(
+                      chapter.title,
+                      chapter.titleEn,
+                      chapter.orderIndex,
+                      lang
+                    )}
                   </CardTitle>
 
                   {showInlineButton && (
@@ -225,17 +235,22 @@ export function ProjectOverviewContent({
 
               <CardContent>
                 <div className="space-y-1">
-                  {chapter.subchapters.map((subchapter, subIndex) => (
+                  {chapter.subchapters.map((subchapter) => (
                     <Link
                       key={subchapter.id}
                       href={`/projects/${projectId}/chapters/${chapter.id}/subchapters/${subchapter.id}/main`}
                       className="flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent/50"
                     >
                       <span>
-                        <span className="text-primary/60 font-mono text-xs mr-2">
-                          {chapterIndex + 1}.{subIndex + 1}
+                        <span className="mr-2 font-mono text-xs text-primary/60">
+                          {formatSubchapterLabel(
+                            chapter.orderIndex,
+                            subchapter.orderIndex
+                          )}
                         </span>
-                        {lang === "en" && subchapter.titleEn ? subchapter.titleEn : subchapter.title}
+                        {lang === "en" && subchapter.titleEn
+                          ? subchapter.titleEn
+                          : subchapter.title}
                       </span>
 
                       <div className="flex gap-1">

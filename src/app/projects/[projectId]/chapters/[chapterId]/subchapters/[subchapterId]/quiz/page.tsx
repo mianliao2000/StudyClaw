@@ -75,7 +75,11 @@ export default async function QuizPage({
             <SubchapterHeader
               contentType="quiz"
               chapterTitle={subchapter.chapter.title}
+              chapterTitleEn={subchapter.chapter.titleEn}
+              chapterOrderIndex={subchapter.chapter.orderIndex}
               subchapterTitle={subchapter.title}
+              subchapterTitleEn={subchapter.titleEn}
+              subchapterOrderIndex={subchapter.orderIndex}
             />
             <QuizView
               contentId={quiz.id}

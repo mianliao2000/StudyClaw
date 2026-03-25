@@ -161,7 +161,11 @@ export default function HomePage() {
       <footer className="relative border-t border-border/50 py-8">
         <div className="container mx-auto flex flex-col gap-2 px-4 text-center text-sm text-muted-foreground">
           <div>{t("home.footer")}</div>
-          <div>{lang === "zh" ? "作者 / Created by Mian Liao" : "Created by Mian Liao"}</div>
+          <div>
+            {lang === "zh"
+              ? "作者 / Created by Mian Liao & Vivian Yang"
+              : "Created by Mian Liao & Vivian Yang"}
+          </div>
         </div>
       </footer>
 

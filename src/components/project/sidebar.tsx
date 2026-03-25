@@ -14,6 +14,7 @@ import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
+import { formatChapterLabel, formatSubchapterLabel } from "@/lib/course-labels";
 import type { ChapterWithSubchapters } from "@/types";
 
 interface ProjectSidebarProps {
@@ -34,9 +35,9 @@ export function ProjectSidebar({
   const { t, lang } = useLanguage();
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const map: Record<string, boolean> = {};
-    chapters.forEach((ch) => {
-      map[ch.id] = ch.subchapters.some((s) =>
-        pathname.includes(s.id)
+    chapters.forEach((chapter) => {
+      map[chapter.id] = chapter.subchapters.some((subchapter) =>
+        pathname.includes(subchapter.id)
       );
     });
     if (!Object.values(map).some(Boolean) && chapters.length > 0) {
@@ -63,22 +64,6 @@ export function ProjectSidebar({
     quiz: "sidebar.quiz" as const,
   };
 
-  const getChapterLabel = (
-    chapterTitle: string,
-    chapterTitleEn: string | null | undefined,
-    chapterIndex: number
-  ) => {
-    const isSummaryChapter =
-      chapterTitle === "课程总结" || chapterTitleEn === "Course Summary";
-
-    if (lang === "en") {
-      const baseTitle = chapterTitleEn || chapterTitle;
-      return isSummaryChapter ? baseTitle : `Chapter ${chapterIndex + 1}: ${baseTitle}`;
-    }
-
-    return isSummaryChapter ? chapterTitle : `第${chapterIndex + 1}章：${chapterTitle}`;
-  };
-
   return (
     <aside className="w-64 shrink-0 border-r border-border/50 bg-sidebar flex flex-col h-full">
       <div className="p-4 border-b">
@@ -91,7 +76,7 @@ export function ProjectSidebar({
 
       <ScrollArea className="flex-1 min-h-0">
         <nav className="p-2">
-          {chapters.map((chapter, chapterIndex) => (
+          {chapters.map((chapter) => (
             <div key={chapter.id} className="mb-1">
               <button
                 onClick={() => toggleChapter(chapter.id)}
@@ -103,30 +88,40 @@ export function ProjectSidebar({
                   <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                 )}
                 <span className="line-clamp-2">
-                  {getChapterLabel(chapter.title, chapter.titleEn, chapterIndex)}
+                  {formatChapterLabel(
+                    chapter.title,
+                    chapter.titleEn,
+                    chapter.orderIndex,
+                    lang
+                  )}
                 </span>
               </button>
 
               {expanded[chapter.id] && (
                 <div className="ml-3 border-l pl-2">
-                  {chapter.subchapters.map((sub, subIndex) => (
-                    <div key={sub.id} className="mb-0.5">
+                  {chapter.subchapters.map((subchapter) => (
+                    <div key={subchapter.id} className="mb-0.5">
                       <p className="px-2 py-1 text-xs font-medium text-muted-foreground line-clamp-1">
                         <span className="mr-1.5 text-primary/60 font-mono">
-                          {chapterIndex + 1}.{subIndex + 1}
+                          {formatSubchapterLabel(
+                            chapter.orderIndex,
+                            subchapter.orderIndex
+                          )}
                         </span>
-                        {lang === "en" && sub.titleEn ? sub.titleEn : sub.title}
+                        {lang === "en" && subchapter.titleEn
+                          ? subchapter.titleEn
+                          : subchapter.title}
                       </p>
                       <div className="space-y-0.5">
                         {(["main", "summary", "quiz"] as const).map((type) => {
                           const Icon = contentIcons[type];
-                          const contentItem = sub.contents.find(
-                            (c) => c.contentType === type
+                          const contentItem = subchapter.contents.find(
+                            (content) => content.contentType === type
                           );
                           const isCompleted =
                             contentItem &&
                             completedItems.includes(contentItem.id);
-                          const href = `/projects/${projectId}/chapters/${chapter.id}/subchapters/${sub.id}/${type}`;
+                          const href = `/projects/${projectId}/chapters/${chapter.id}/subchapters/${subchapter.id}/${type}`;
                           const isActive = pathname === href;
 
                           return (

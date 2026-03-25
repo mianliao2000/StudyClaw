@@ -79,7 +79,11 @@ export default async function SummaryPage({
             <SubchapterHeader
               contentType="summary"
               chapterTitle={subchapter.chapter.title}
+              chapterTitleEn={subchapter.chapter.titleEn}
+              chapterOrderIndex={subchapter.chapter.orderIndex}
               subchapterTitle={subchapter.title}
+              subchapterTitleEn={subchapter.titleEn}
+              subchapterOrderIndex={subchapter.orderIndex}
             />
             <LessonContent
               contentId={summary.id}
