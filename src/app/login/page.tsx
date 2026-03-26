@@ -40,7 +40,7 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <div className="inline-flex p-3 rounded-xl bg-primary/10 mb-4">
               <Image
-                src="/Box_Logo.png"
+                src="/Box_Logo2.png"
                 alt="Pandora AI"
                 width={32}
                 height={32}
