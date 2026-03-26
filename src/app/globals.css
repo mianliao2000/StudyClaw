@@ -226,3 +226,48 @@ a[href] {
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 60px 60px;
 }
+
+.lesson-markdown > :first-child {
+  margin-top: 0;
+}
+
+.lesson-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.lesson-markdown p {
+  @apply my-3 text-[0.98rem] leading-7 text-foreground/90;
+}
+
+.lesson-markdown h3 {
+  @apply mt-6 mb-3 text-base font-semibold tracking-tight text-foreground sm:text-lg;
+}
+
+.lesson-markdown h4 {
+  @apply mt-5 mb-2 text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground;
+}
+
+.lesson-markdown ul,
+.lesson-markdown ol {
+  @apply my-3 pl-5 text-foreground/90;
+}
+
+.lesson-markdown li {
+  @apply my-1.5 leading-7;
+}
+
+.lesson-markdown li > p {
+  @apply my-1;
+}
+
+.lesson-markdown code {
+  @apply rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground;
+}
+
+.lesson-markdown pre {
+  @apply my-4 overflow-x-auto rounded-2xl border border-border/70 bg-muted/70 p-4;
+}
+
+.lesson-markdown pre code {
+  @apply bg-transparent p-0;
+}

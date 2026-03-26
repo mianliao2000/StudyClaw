@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Header } from "@/components/layout/header";
+import { ProjectLayoutShell } from "@/components/project/project-layout-shell";
 import { ProjectSidebar } from "@/components/project/sidebar";
 import type { ChapterWithSubchapters } from "@/types";
 
@@ -54,15 +55,18 @@ export default async function ProjectLayout({
   return (
     <div className="flex flex-col h-screen">
       <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <ProjectSidebar
-          projectTitle={project.title}
-          projectTitleEn={project.titleEn ?? undefined}
-          chapters={project.chapters as ChapterWithSubchapters[]}
-          completedItems={completedItems}
-        />
-        <main className="flex-1 min-w-0 overflow-auto">{children}</main>
-      </div>
+      <ProjectLayoutShell
+        sidebar={
+          <ProjectSidebar
+            projectTitle={project.title}
+            projectTitleEn={project.titleEn ?? undefined}
+            chapters={project.chapters as ChapterWithSubchapters[]}
+            completedItems={completedItems}
+          />
+        }
+      >
+        {children}
+      </ProjectLayoutShell>
     </div>
   );
 }

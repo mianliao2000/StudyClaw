@@ -28,16 +28,23 @@ export function LearningPageShell({
   tutoring,
 }: LearningPageShellProps) {
   const [isAssistantExpanded, setIsAssistantExpanded] = useState(false);
+  const [isAssistantHidden, setIsAssistantHidden] = useState(false);
 
   return (
     <LearningWorkspace
       content={content}
       isAssistantExpanded={isAssistantExpanded}
+      isAssistantHidden={isAssistantHidden}
+      onShowAssistant={() => setIsAssistantHidden(false)}
       assistant={
         <TutoringChat
           {...tutoring}
           isExpanded={isAssistantExpanded}
           onToggleExpanded={() => setIsAssistantExpanded((prev) => !prev)}
+          onHide={() => {
+            setIsAssistantExpanded(false);
+            setIsAssistantHidden(true);
+          }}
         />
       }
     />

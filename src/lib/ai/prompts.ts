@@ -119,7 +119,7 @@ Your responsibilities:
 - Offer short practice questions if the user asks.`;
 }
 
-export const CONTENT_GENERATION_PROMPT = `You are a professional course writer. Generate high-quality lesson content from the following information.
+export const CONTENT_GENERATION_PROMPT = `You are a professional course writer creating self-learning lesson content.
 
 Project: {projectTitle}
 Topic: {topic}
@@ -134,28 +134,83 @@ Generate both Chinese and English versions using these separators:
 ---LANG:en---
 (English Markdown content here)
 
-Each version must include:
-- concept explanation
-- key terminology
-- practical examples
-- code examples when relevant
-- diagram descriptions in text
+1. Required lesson structure
+Each language version must follow this exact Markdown structure:
+## What this section is about
+## Why it matters
+## How this connects to the course
+## Intuitive explanation
+## Core concepts
+## Common misunderstandings
+## Minimal examples for understanding
+## Real-world or engineering scenarios
+## What this prepares you for next
+## Key takeaway
 
-The content should be suitable for self-learning, clear, and professional.`;
+2. Teaching principles
+- Write like a thoughtful course instructor, not a marketing article, FAQ answer, or coding tutorial.
+- Prioritize intuition, conceptual clarity, and mental models over implementation details.
+- Match the explanation depth to the learner's likely stage in this course. Do not suddenly jump to expert-level wording or assumptions.
+- Treat this section as one step in a larger learning journey, not as an isolated encyclopedia entry.
+- Every section must directly support the learning objective.
+- Prefer analogies, concrete scenarios, comparisons, and simple thought experiments.
+- Do not include direct code examples, full code snippets, or programming exercises.
+- If a process truly needs procedural explanation, use plain-language steps or extremely light pseudo-steps instead of real code.
+- For each major concept, include at least one "minimal understandable example" that makes the idea easier to grasp without using code.
+- Avoid generic filler such as "this is important" unless you immediately explain why in a concrete way.
+- Avoid repeating the chapter title or section title unnecessarily.
+- Help the learner understand what this idea is, why it matters, how to think about it, and where it appears in practice.
 
-export const SUMMARY_GENERATION_PROMPT = `Based on the lesson content below, generate a concise learning summary.
+3. Formatting constraints
+- Do not use a level-1 heading (#). Start at level-2 headings (##) only.
+- Use exactly the section order above. Do not insert extra top-level sections.
+- Do not skip sections, even if a section is brief.
+- Keep most paragraphs to 2-4 sentences.
+- Avoid very long walls of text. Break ideas into shorter paragraphs when needed.
+- Use bullet lists only for short comparisons, misconceptions, or concise takeaways.
+- Avoid nested bullet lists.
+- In "Minimal examples for understanding", prefer 2-3 very small examples rather than one long explanation.
+- Use at most one table, and only when comparing 2 or more concepts would genuinely improve clarity.
+- Do not use tables for decorative layout.
+- Use bold text sparingly, only for truly important terms.
+- Do not use blockquotes, horizontal rules, or long numbered procedures unless clearly necessary.
+- Keep Chinese and English versions aligned in structure and meaning.
+
+The content should feel intuitive, structured, and professional.`;
+
+export const SUMMARY_GENERATION_PROMPT = `You are a professional course writer creating a study summary for a self-learning lesson.
 
 Lesson content:
 {lessonContent}
 
-Generate both Chinese and English versions:
+Generate both Chinese and English versions using these exact separators:
 
 ---LANG:zh---
-(Chinese summary with 3-5 key points, key terms, and a one-sentence takeaway in Markdown)
+(Chinese Markdown summary)
 ---LANG:en---
-(English summary with 3-5 key points, key terms, and a one-sentence takeaway in Markdown)`;
+(English Markdown summary)
 
-export const QUIZ_GENERATION_PROMPT = `Based on the lesson content below, generate a quiz.
+Each language version must follow this exact structure:
+## Core ideas
+- 3 to 5 concise bullets that capture the main concepts
+## Key terms
+- 3 to 6 essential terms with very short explanations
+## Common confusions
+- 2 or 3 bullets on what learners often misunderstand
+## One-sentence takeaway
+- exactly one sentence
+
+Writing rules:
+- Keep the summary conceptual and easy to review quickly.
+- Focus on understanding, not implementation detail.
+- Do not include code blocks or direct code examples.
+- Do not introduce brand-new ideas that were not in the lesson.
+- Chinese and English versions must mirror the same structure and emphasis.
+- Use crisp review-oriented language rather than long explanations.`;
+
+export const QUIZ_GENERATION_PROMPT = `You are a professional course writer creating a quiz for a self-learning lesson.
+
+Based on the lesson content below, generate a quiz that checks conceptual understanding.
 
 Lesson content:
 {lessonContent}
@@ -191,7 +246,19 @@ Generate both Chinese and English versions using this format:
 }
 \`\`\`
 
-Generate 5 questions per language version and cover the core lesson ideas.`;
+Requirements:
+- Generate exactly 5 questions per language version.
+- Prioritize conceptual understanding, mental models, distinctions between similar ideas, and practical reasoning.
+- Avoid code-reading questions and avoid requiring direct syntax recall.
+- Use a mix of question styles:
+  - core concept identification
+  - compare/contrast
+  - scenario-based reasoning
+  - misconception checking
+- Options should be plausible and clearly distinguishable.
+- Explanations should teach briefly, not just state the answer.
+- Chinese and English versions should test the same ideas at the same level.
+- Cover the most important lesson ideas rather than trivia.`;
 
 export function fillTemplate(
   template: string,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, PanelRightClose } from "lucide-react";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
@@ -25,6 +25,7 @@ interface TutoringChatProps {
   conversationLanguage?: ConversationLanguage | null;
   isExpanded: boolean;
   onToggleExpanded: () => void;
+  onHide: () => void;
 }
 
 const CHAT_HISTORY_STORAGE_PREFIX = "studyclaw:tutoring-history:";
@@ -78,12 +79,19 @@ function getTutorSubtitle(language: ConversationLanguage) {
     : "关于本节内容有任何问题都可以问我";
 }
 
-function getTutorExpandLabel(isExpanded: boolean, language: ConversationLanguage) {
+function getTutorExpandLabel(
+  isExpanded: boolean,
+  language: ConversationLanguage
+) {
   if (language === "en") {
     return isExpanded ? "Restore lesson layout" : "Expand AI assistant";
   }
 
   return isExpanded ? "恢复课程布局" : "展开 AI 辅导助手";
+}
+
+function getTutorHideLabel(language: ConversationLanguage) {
+  return language === "en" ? "Hide AI assistant" : "隐藏 AI 辅导助手";
 }
 
 export function TutoringChat({
@@ -100,6 +108,7 @@ export function TutoringChat({
   conversationLanguage,
   isExpanded,
   onToggleExpanded,
+  onHide,
 }: TutoringChatProps) {
   const { lang } = useLanguage();
   const fallbackLanguage = (lang === "en" ? "en" : "zh") as ConversationLanguage;
@@ -232,38 +241,51 @@ export function TutoringChat({
   );
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
-        <div>
-          <h3 className="text-sm font-semibold">{getTutorTitle(activeLanguage)}</h3>
-          <p className="text-xs text-muted-foreground">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="flex items-start justify-between gap-3 border-b px-3 py-2">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold leading-5">
+            {getTutorTitle(activeLanguage)}
+          </h3>
+          <p className="text-[11px] leading-4 text-muted-foreground">
             {getTutorSubtitle(activeLanguage)}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="shrink-0"
-          onClick={onToggleExpanded}
-          aria-label={getTutorExpandLabel(isExpanded, activeLanguage)}
-        >
-          {isExpanded ? (
-            <Minimize2 className="h-4 w-4" />
-          ) : (
-            <Maximize2 className="h-4 w-4" />
-          )}
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={onToggleExpanded}
+            aria-label={getTutorExpandLabel(isExpanded, activeLanguage)}
+          >
+            {isExpanded ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={onHide}
+            aria-label={getTutorHideLabel(activeLanguage)}
+          >
+            <PanelRightClose className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       <ChatPanel
         messages={visibleMessages}
         onSend={handleSend}
         isLoading={isLoading}
-        placeholder={
-          activeLanguage === "en" ? "Ask a question..." : "问个问题..."
-        }
+        placeholder={activeLanguage === "en" ? "Ask a question..." : "问个问题..."}
         suggestions={getTutorSuggestions(activeLanguage)}
-        className="flex-1"
+        className="flex-1 min-h-0"
+        wideLayout={isExpanded}
       />
     </div>
   );

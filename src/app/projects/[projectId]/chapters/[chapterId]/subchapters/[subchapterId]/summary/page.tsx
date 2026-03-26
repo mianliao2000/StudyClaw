@@ -74,8 +74,8 @@ export default async function SummaryPage({
   return (
     <LearningPageShell
       content={
-        <div className="p-6">
-          <div className="max-w-3xl mx-auto">
+        <div className="p-5 sm:p-6 xl:px-8 xl:py-7">
+          <div className="mx-auto w-full max-w-5xl 2xl:max-w-6xl">
             <SubchapterHeader
               contentType="summary"
               chapterTitle={subchapter.chapter.title}

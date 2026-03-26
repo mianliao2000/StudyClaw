@@ -65,7 +65,7 @@ export function ProjectSidebar({
   };
 
   return (
-    <aside className="w-64 shrink-0 border-r border-border/50 bg-sidebar flex flex-col h-full">
+    <aside className="flex h-full w-full min-w-0 flex-col border-r border-border/50 bg-sidebar">
       <div className="p-4 border-b">
         <Link href={`/projects/${projectId}`}>
           <h2 className="font-semibold text-sm line-clamp-2 hover:text-primary transition-colors">

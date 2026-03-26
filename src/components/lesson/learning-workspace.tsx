@@ -1,80 +1,79 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { PanelRightOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/i18n";
 
-const ASSISTANT_MIN_WIDTH = 300;
-const CONTENT_MIN_WIDTH = 520;
-const DEFAULT_ASSISTANT_WIDTH = 360;
-const WIDTH_STORAGE_KEY = "studyclaw:assistant-width";
+const ASSISTANT_MIN_HEIGHT = 260;
+const CONTENT_MIN_HEIGHT = 320;
+const DEFAULT_ASSISTANT_HEIGHT = 320;
+const DIVIDER_HEIGHT = 8;
+const HEIGHT_STORAGE_KEY = "pandora:assistant-height";
 
 interface LearningWorkspaceProps {
   content: React.ReactNode;
   assistant: React.ReactNode;
   isAssistantExpanded: boolean;
+  isAssistantHidden: boolean;
+  onShowAssistant: () => void;
 }
 
-function clampWidth(nextWidth: number, totalWidth: number) {
-  const maxWidth = Math.max(ASSISTANT_MIN_WIDTH, totalWidth - CONTENT_MIN_WIDTH);
-  return Math.min(Math.max(nextWidth, ASSISTANT_MIN_WIDTH), maxWidth);
+function clampHeight(nextHeight: number, totalHeight: number) {
+  const maxHeight = Math.max(
+    ASSISTANT_MIN_HEIGHT,
+    totalHeight - CONTENT_MIN_HEIGHT - DIVIDER_HEIGHT
+  );
+  return Math.min(Math.max(nextHeight, ASSISTANT_MIN_HEIGHT), maxHeight);
 }
 
 export function LearningWorkspace({
   content,
   assistant,
   isAssistantExpanded,
+  isAssistantHidden,
+  onShowAssistant,
 }: LearningWorkspaceProps) {
+  const { lang } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<number | null>(null);
-  const pendingWidthRef = useRef<number | null>(null);
-  const currentWidthRef = useRef(DEFAULT_ASSISTANT_WIDTH);
-  const previousLayoutWidthRef = useRef(DEFAULT_ASSISTANT_WIDTH);
-  const isDraggingRef = useRef(false);
+  const currentHeightRef = useRef(DEFAULT_ASSISTANT_HEIGHT);
+  const previousLayoutHeightRef = useRef(DEFAULT_ASSISTANT_HEIGHT);
   const wasExpandedRef = useRef(isAssistantExpanded);
-  const [assistantWidth, setAssistantWidth] = useState(DEFAULT_ASSISTANT_WIDTH);
+  const [assistantHeight, setAssistantHeight] = useState(DEFAULT_ASSISTANT_HEIGHT);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const applyAssistantWidth = (width: number) => {
-    currentWidthRef.current = width;
-    containerRef.current?.style.setProperty("--assistant-width", `${width}px`);
-  };
-
-  const scheduleWidthUpdate = (width: number) => {
-    pendingWidthRef.current = width;
-    if (frameRef.current !== null) return;
-
-    frameRef.current = window.requestAnimationFrame(() => {
-      if (pendingWidthRef.current !== null) {
-        applyAssistantWidth(pendingWidthRef.current);
-      }
-      pendingWidthRef.current = null;
-      frameRef.current = null;
-    });
+  const applyAssistantHeight = (height: number) => {
+    currentHeightRef.current = height;
+    containerRef.current?.style.setProperty("--assistant-height", `${height}px`);
   };
 
   useEffect(() => {
-    const savedWidth = window.localStorage.getItem(WIDTH_STORAGE_KEY);
-    const parsedWidth = savedWidth ? Number(savedWidth) : DEFAULT_ASSISTANT_WIDTH;
-    const initialWidth = Number.isNaN(parsedWidth) ? DEFAULT_ASSISTANT_WIDTH : parsedWidth;
+    const savedHeight = window.localStorage.getItem(HEIGHT_STORAGE_KEY);
+    const parsedHeight = savedHeight ? Number(savedHeight) : DEFAULT_ASSISTANT_HEIGHT;
+    const initialHeight = Number.isNaN(parsedHeight)
+      ? DEFAULT_ASSISTANT_HEIGHT
+      : parsedHeight;
 
-    setAssistantWidth(initialWidth);
-    previousLayoutWidthRef.current = initialWidth;
-    applyAssistantWidth(initialWidth);
+    setAssistantHeight(initialHeight);
+    previousLayoutHeightRef.current = initialHeight;
+    applyAssistantHeight(initialHeight);
   }, []);
 
   useEffect(() => {
-    if (!isAssistantExpanded) {
-      window.localStorage.setItem(WIDTH_STORAGE_KEY, String(assistantWidth));
+    if (!isAssistantExpanded && !isAssistantHidden) {
+      window.localStorage.setItem(HEIGHT_STORAGE_KEY, String(assistantHeight));
     }
-  }, [assistantWidth, isAssistantExpanded]);
+  }, [assistantHeight, isAssistantExpanded, isAssistantHidden]);
 
   useEffect(() => {
     if (isAssistantExpanded && !wasExpandedRef.current) {
-      previousLayoutWidthRef.current = currentWidthRef.current;
+      previousLayoutHeightRef.current = currentHeightRef.current;
     }
 
     if (!isAssistantExpanded && wasExpandedRef.current) {
-      applyAssistantWidth(previousLayoutWidthRef.current);
-      setAssistantWidth(previousLayoutWidthRef.current);
+      applyAssistantHeight(previousLayoutHeightRef.current);
+      setAssistantHeight(previousLayoutHeightRef.current);
     }
 
     wasExpandedRef.current = isAssistantExpanded;
@@ -82,93 +81,102 @@ export function LearningWorkspace({
 
   useEffect(() => {
     return () => {
-      if (frameRef.current !== null) {
-        window.cancelAnimationFrame(frameRef.current);
-      }
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
     };
   }, []);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (isAssistantExpanded) return;
-    isDraggingRef.current = true;
-    dividerRef.current?.setPointerCapture(event.pointerId);
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current || isAssistantExpanded) return;
-
+    if (isAssistantExpanded || isAssistantHidden) return;
     const container = containerRef.current;
     if (!container) return;
 
+    const pointerId = event.pointerId;
+    dividerRef.current?.setPointerCapture(pointerId);
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+    setIsDragging(true);
+
     const bounds = container.getBoundingClientRect();
-    const nextWidth = clampWidth(bounds.right - event.clientX, bounds.width);
-    scheduleWidthUpdate(nextWidth);
-  };
 
-  const finishDragging = (pointerId?: number) => {
-    if (!isDraggingRef.current) return;
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const nextHeight = clampHeight(bounds.bottom - moveEvent.clientY, bounds.height);
+      applyAssistantHeight(nextHeight);
+    };
 
-    isDraggingRef.current = false;
-    if (pointerId !== undefined && dividerRef.current?.hasPointerCapture(pointerId)) {
-      dividerRef.current.releasePointerCapture(pointerId);
-    }
+    const finishDragging = () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", finishDragging);
+      window.removeEventListener("pointercancel", finishDragging);
+      dividerRef.current?.releasePointerCapture(pointerId);
+      setAssistantHeight(currentHeightRef.current);
+      previousLayoutHeightRef.current = currentHeightRef.current;
+      setIsDragging(false);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
 
-    if (frameRef.current !== null) {
-      window.cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    }
-
-    if (pendingWidthRef.current !== null) {
-      applyAssistantWidth(pendingWidthRef.current);
-      pendingWidthRef.current = null;
-    }
-
-    setAssistantWidth(currentWidthRef.current);
-    previousLayoutWidthRef.current = currentWidthRef.current;
-    document.body.style.cursor = "";
-    document.body.style.userSelect = "";
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", finishDragging);
+    window.addEventListener("pointercancel", finishDragging);
   };
 
   return (
     <div
       ref={containerRef}
-      className="flex h-full min-w-0"
-      style={{ ["--assistant-width" as string]: `${assistantWidth}px` }}
+      className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
+      style={{ ["--assistant-height" as string]: `${assistantHeight}px` }}
     >
       <div
-        className="min-w-0 overflow-auto transition-[width,opacity] duration-200"
+        className="min-h-0 min-w-0 overflow-y-auto overscroll-contain transition-[height,opacity] duration-200"
         style={{
-          width: isAssistantExpanded ? 0 : "calc(100% - var(--assistant-width))",
+          height:
+            isAssistantExpanded || isAssistantHidden
+              ? "100%"
+              : `calc(100% - var(--assistant-height) - ${DIVIDER_HEIGHT}px)`,
           opacity: isAssistantExpanded ? 0 : 1,
+          transitionDuration: isDragging ? "0ms" : undefined,
         }}
       >
-        {!isAssistantExpanded && content}
+        {(!isAssistantExpanded || isAssistantHidden) && content}
       </div>
 
-      {!isAssistantExpanded && (
+      {!isAssistantExpanded && !isAssistantHidden && (
         <div
           ref={dividerRef}
           role="separator"
-          aria-orientation="vertical"
+          aria-orientation="horizontal"
           aria-label="Resize assistant panel"
           onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={(event) => finishDragging(event.pointerId)}
-          onPointerCancel={(event) => finishDragging(event.pointerId)}
-          className="relative w-2 shrink-0 touch-none cursor-col-resize bg-transparent transition-colors hover:bg-primary/10"
+          className="relative h-2 shrink-0 touch-none cursor-row-resize bg-transparent transition-colors hover:bg-primary/10"
         >
-          <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border/80" />
+          <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border/80" />
         </div>
       )}
 
       <div
-        className="shrink-0 border-l bg-background transition-[width] duration-200"
-        style={{ width: isAssistantExpanded ? "100%" : "var(--assistant-width)" }}
+        className="min-h-0 shrink-0 border-t bg-background transition-[height] duration-200"
+        style={{
+          height: isAssistantHidden ? 0 : isAssistantExpanded ? "100%" : "var(--assistant-height)",
+          transitionDuration: isDragging ? "0ms" : undefined,
+        }}
       >
-        <div className="h-full min-w-[300px]">{assistant}</div>
+        {!isAssistantHidden && <div className="h-full min-h-0">{assistant}</div>}
       </div>
+
+      {isAssistantHidden && (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="absolute bottom-3 right-3 z-20 h-8 w-8 rounded-full border-border/70 bg-background/90 shadow-sm backdrop-blur"
+          onClick={onShowAssistant}
+          aria-label={lang === "en" ? "Show AI assistant" : "显示 AI 辅导助手"}
+          title={lang === "en" ? "Show AI assistant" : "显示 AI 辅导助手"}
+        >
+          <PanelRightOpen className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }

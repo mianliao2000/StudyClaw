@@ -25,6 +25,7 @@ interface ChatPanelProps {
   reasoning?: string;
   onReasoningChange?: (reasoning: string) => void;
   animatePrimaryOption?: boolean;
+  wideLayout?: boolean;
 }
 
 type ParsedPart =
@@ -121,6 +122,7 @@ export function ChatPanel({
   reasoning = "medium",
   onReasoningChange,
   animatePrimaryOption = false,
+  wideLayout = false,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -170,13 +172,27 @@ export function ChatPanel({
   }, [animatePrimaryOption, lastMsg]);
 
   return (
-    <div className={cn("flex h-full flex-col", className)}>
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
+    <div className={cn("flex h-full min-h-0 flex-col overflow-hidden", className)}>
+      <ScrollArea
+        className={cn(
+          "min-h-0 flex-1 overscroll-contain p-4",
+          wideLayout && "px-5 sm:px-6 lg:px-8"
+        )}
+        ref={scrollRef}
+      >
+        <div className={cn("space-y-4", wideLayout && "mx-auto w-full max-w-6xl")}>
           {messages.map((msg, idx) => {
             const isLast = idx === messages.length - 1;
             const parts =
               msg.role === "assistant" ? parseMessageContent(msg.content) : null;
+            const messageWidthClass =
+              msg.role === "assistant"
+                ? wideLayout
+                  ? "w-full max-w-[min(100%,72rem)]"
+                  : "max-w-[85%]"
+                : wideLayout
+                  ? "w-full max-w-[min(100%,44rem)]"
+                  : "max-w-[85%]";
 
             return (
               <div
@@ -186,7 +202,7 @@ export function ChatPanel({
                   msg.role === "user" ? "justify-end" : "justify-start"
                 )}
               >
-                <div className="max-w-[85%] space-y-3">
+                <div className={cn(messageWidthClass, "space-y-3")}>
                   {msg.role === "user" ? (
                     <div className="whitespace-pre-wrap rounded-2xl bg-primary/90 px-4 py-3 text-sm text-primary-foreground shadow-sm">
                       {msg.content}
@@ -277,7 +293,8 @@ export function ChatPanel({
       </ScrollArea>
 
       {suggestions && messages.length === 0 && (
-        <div className="flex flex-wrap gap-2 px-4 pb-2">
+        <div className="shrink-0 border-t border-border/40 px-4 py-2">
+          <div className="flex flex-wrap gap-2">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion}
@@ -287,10 +304,11 @@ export function ChatPanel({
               {suggestion}
             </button>
           ))}
+          </div>
         </div>
       )}
 
-      <div className="space-y-3 border-t border-border/50 p-4">
+      <div className="shrink-0 space-y-2 border-t border-border/50 bg-background p-3">
         {showModelSelector && showSettings && (
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-2">
@@ -347,7 +365,7 @@ export function ChatPanel({
             <Button
               variant="ghost"
               size="icon"
-              className="shrink-0"
+              className="h-10 w-10 shrink-0"
               onClick={() => setShowSettings((prev) => !prev)}
             >
               <Settings2
@@ -362,12 +380,13 @@ export function ChatPanel({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="min-h-[44px] max-h-32 resize-none bg-input/50"
+            className="min-h-[44px] max-h-28 resize-none bg-input/50"
             rows={1}
           />
 
           <Button
             size="icon"
+            className="h-10 w-10 shrink-0"
             onClick={handleSubmit}
             disabled={!input.trim() || isLoading}
           >
