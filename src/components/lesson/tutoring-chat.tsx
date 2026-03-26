@@ -9,6 +9,11 @@ import {
   detectConversationLanguage,
   type ConversationLanguage,
 } from "@/lib/ai/conversation-language";
+import {
+  getFriendlyChatNetworkError,
+  isNetworkFetchError,
+  postChatRequestWithRetry,
+} from "@/lib/chat-request";
 import type { ChatMessage } from "@/types";
 
 interface TutoringChatProps {
@@ -162,21 +167,17 @@ export function TutoringChat({
       setIsLoading(true);
 
       try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            threadId,
-            message: text,
-            mode: "tutoring",
-            context: {
-              projectTitle,
-              chapterTitle,
-              subchapterTitle,
-              learningObjective,
-              lessonContent: lessonContent.slice(0, 4000),
-            },
-          }),
+        const res = await postChatRequestWithRetry({
+          threadId,
+          message: text,
+          mode: "tutoring",
+          context: {
+            projectTitle,
+            chapterTitle,
+            subchapterTitle,
+            learningObjective,
+            lessonContent: lessonContent.slice(0, 4000),
+          },
         });
 
         if (!res.ok) {
@@ -218,8 +219,9 @@ export function TutoringChat({
           {
             id: crypto.randomUUID(),
             role: "assistant",
-            content:
-              error instanceof Error && error.message
+            content: isNetworkFetchError(error)
+              ? getFriendlyChatNetworkError(resolvedLanguage)
+              : error instanceof Error && error.message
                 ? error.message
                 : getTutorFallbackMessage(resolvedLanguage),
             createdAt: new Date(),

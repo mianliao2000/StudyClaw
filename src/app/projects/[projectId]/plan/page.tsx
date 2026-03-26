@@ -13,6 +13,11 @@ import {
   isCreateCourseOption,
   type ConversationLanguage,
 } from "@/lib/ai/conversation-language";
+import {
+  getFriendlyChatNetworkError,
+  isNetworkFetchError,
+  postChatRequestWithRetry,
+} from "@/lib/chat-request";
 import type { ChatMessage, PlanStructure } from "@/types";
 
 type FixedQuestion = {
@@ -605,38 +610,34 @@ export default function PlanPage() {
       setIsLoading(true);
 
       try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            threadId,
-            message: userText,
-            mode: "planning",
-            model,
-            reasoning,
-            context: {
-              planningState: {
-                currentQuestionIndex: nextQuestionIndex,
-                isFreeMode: nextIsFreeMode,
-                stage: nextIsDecisionLoop
-                  ? nextDecisionLoopStage ?? "divergence_only"
-                  : nextIsFreeMode
-                    ? "free"
-                    : "guided",
-                selections: nextSelections,
-                freeformNotes: nextNotes,
-                decisionTrail: nextDecisionTrail,
-                decisionOptionsHistory,
-                pendingQuestion: nextGuidedQuestion
-                  ? {
-                      prompt: nextGuidedQuestion.prompt,
-                      options: [...nextGuidedQuestion.options],
-                    }
-                  : null,
-                hasEnoughInformation: nextIsDecisionLoop || Boolean(coursePlan),
-              },
+        const response = await postChatRequestWithRetry({
+          threadId,
+          message: userText,
+          mode: "planning",
+          model,
+          reasoning,
+          context: {
+            planningState: {
+              currentQuestionIndex: nextQuestionIndex,
+              isFreeMode: nextIsFreeMode,
+              stage: nextIsDecisionLoop
+                ? nextDecisionLoopStage ?? "divergence_only"
+                : nextIsFreeMode
+                  ? "free"
+                  : "guided",
+              selections: nextSelections,
+              freeformNotes: nextNotes,
+              decisionTrail: nextDecisionTrail,
+              decisionOptionsHistory,
+              pendingQuestion: nextGuidedQuestion
+                ? {
+                    prompt: nextGuidedQuestion.prompt,
+                    options: [...nextGuidedQuestion.options],
+                  }
+                : null,
+              hasEnoughInformation: nextIsDecisionLoop || Boolean(coursePlan),
             },
-          }),
+          },
         });
 
         if (!response.ok) {
@@ -758,8 +759,9 @@ export default function PlanPage() {
         );
       } catch (error) {
         console.error("[runPlanningAI] Full error:", error);
-        const displayMessage =
-          error instanceof Error && error.message
+        const displayMessage = isNetworkFetchError(error)
+          ? getFriendlyChatNetworkError(nextLanguage)
+          : error instanceof Error && error.message
             ? error.message
             : getAssistantErrorMessage(nextLanguage);
         setMessages((prev) => [
