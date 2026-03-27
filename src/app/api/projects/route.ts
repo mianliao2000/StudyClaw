@@ -74,13 +74,15 @@ export async function POST(req: Request) {
     include: { chatThreads: true },
   });
 
-  await prisma.learningProject.deleteMany({
+  void prisma.learningProject.deleteMany({
     where: {
       userId: session.user.id,
       status: "planning",
       chapters: { none: {} },
       createdAt: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
     },
+  }).catch((error) => {
+    console.error("Stale planning project cleanup failed:", error);
   });
 
   return NextResponse.json(project);

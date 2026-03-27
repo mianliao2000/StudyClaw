@@ -94,6 +94,7 @@ export default function HomePage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [stats, setStats] = useState<HomeStats | null>(null);
+  const [isLaunchingProject, setIsLaunchingProject] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isZh = lang === "zh";
   const text = (zh: string, en: string) => (isZh ? zh : en);
@@ -123,13 +124,47 @@ export default function HomePage() {
     };
   }, [session?.user?.id]);
 
-  const launchPrompt = (nextPrompt: string) => {
+  const launchPrompt = async (nextPrompt: string) => {
     const normalized = nextPrompt.trim();
     if (!normalized) return;
 
-    startTransition(() => {
+    setIsLaunchingProject(true);
+
+    try {
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: normalized,
+          topic: normalized,
+        }),
+      });
+
+      if (response.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to create project");
+      }
+
+      const project = (await response.json()) as { id?: string };
+      if (!project.id) {
+        throw new Error("Project id missing");
+      }
+
+      startTransition(() => {
+        router.push(
+          `/projects/${project.id}/plan?start=${encodeURIComponent(normalized)}`
+        );
+      });
+    } catch (error) {
+      console.error("[launchPrompt] Failed to create project directly:", error);
       router.push(`/projects/new?prompt=${encodeURIComponent(normalized)}`);
-    });
+    } finally {
+      setIsLaunchingProject(false);
+    }
   };
 
   const scrollToPreview = () => {
@@ -447,10 +482,12 @@ export default function HomePage() {
                     <Button
                       type="submit"
                       size="lg"
-                      disabled={isPending || !prompt.trim()}
+                      disabled={isPending || isLaunchingProject || !prompt.trim()}
                       className="h-14 rounded-[1.25rem] px-6 text-sm shadow-lg shadow-primary/20"
                     >
-                      {text("开始规划课程", "Plan My Course")}
+                      {isLaunchingProject
+                        ? text("正在启动对话", "Starting the conversation")
+                        : text("开始规划课程", "Plan My Course")}
                     </Button>
                     <Button
                       type="button"
