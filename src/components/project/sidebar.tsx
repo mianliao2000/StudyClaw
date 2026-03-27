@@ -66,26 +66,26 @@ export function ProjectSidebar({
 
   return (
     <aside className="flex h-full w-full min-w-0 flex-col border-r border-border/50 bg-sidebar">
-      <div className="p-4 border-b">
+      <div className="border-b p-5">
         <Link href={`/projects/${projectId}`}>
-          <h2 className="font-semibold text-sm line-clamp-2 hover:text-primary transition-colors">
+          <h2 className="line-clamp-3 text-base font-bold leading-7 transition-colors hover:text-primary sm:text-lg">
             {lang === "en" && projectTitleEn ? projectTitleEn : projectTitle}
           </h2>
         </Link>
       </div>
 
       <ScrollArea className="flex-1 min-h-0">
-        <nav className="p-2">
+        <nav className="p-3">
           {chapters.map((chapter) => (
-            <div key={chapter.id} className="mb-1">
+            <div key={chapter.id} className="mb-2">
               <button
                 onClick={() => toggleChapter(chapter.id)}
-                className="flex items-center gap-1 w-full px-2 py-1.5 text-sm font-medium rounded-md hover:bg-accent transition-colors text-left"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-base font-semibold leading-6 transition-colors hover:bg-accent sm:text-[1.02rem]"
               >
                 {expanded[chapter.id] ? (
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                  <ChevronDown className="h-4 w-4 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                  <ChevronRight className="h-4 w-4 shrink-0" />
                 )}
                 <span className="line-clamp-2">
                   {formatChapterLabel(
@@ -98,23 +98,23 @@ export function ProjectSidebar({
               </button>
 
               {expanded[chapter.id] && (
-                <div className="ml-3 border-l pl-2">
+                <div className="ml-3 border-l pl-3">
                   {chapter.subchapters.map((subchapter) => (
-                    <div key={subchapter.id} className="mb-2">
-                      <div className="grid grid-cols-[auto,1fr] items-start gap-x-2 px-2 py-1">
-                        <span className="pt-0.5 text-[11px] font-mono text-primary/60">
+                    <div key={subchapter.id} className="mb-3">
+                      <div className="grid grid-cols-[auto,1fr] items-start gap-x-2.5 px-2.5 py-1.5">
+                        <span className="pt-0.5 text-xs font-mono text-primary/70 sm:text-[0.82rem]">
                           {formatSubchapterLabel(
                             chapter.orderIndex,
                             subchapter.orderIndex
                           )}
                         </span>
-                        <p className="text-xs font-medium leading-5 text-muted-foreground break-words">
+                        <p className="break-words text-sm font-medium leading-6 text-muted-foreground sm:text-[0.95rem]">
                           {lang === "en" && subchapter.titleEn
                             ? subchapter.titleEn
                             : subchapter.title}
                         </p>
                       </div>
-                      <div className="space-y-0.5 pl-1">
+                      <div className="space-y-1 pl-1.5">
                         {(["main", "summary", "quiz"] as const).map((type) => {
                           const Icon = contentIcons[type];
                           const contentItem = subchapter.contents.find(
@@ -131,16 +131,16 @@ export function ProjectSidebar({
                               key={type}
                               href={href}
                               className={cn(
-                                "flex items-center gap-2 px-2 py-1 text-xs rounded-md transition-colors",
+                                "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
                                 isActive
                                   ? "bg-primary text-primary-foreground"
                                   : "hover:bg-accent"
                               )}
                             >
                               {isCompleted ? (
-                                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                               ) : (
-                                <Icon className="h-3 w-3" />
+                                <Icon className="h-3.5 w-3.5" />
                               )}
                               {t(contentLabelKeys[type])}
                             </Link>

@@ -32,6 +32,7 @@ export function SubchapterHeader({
   learningObjective,
 }: SubchapterHeaderProps) {
   const { t, lang } = useLanguage();
+  const pageTypeLabel = t(pageTitleKeys[contentType]);
   const displayChapterTitle = formatChapterLabel(
     chapterTitle,
     chapterTitleEn,
@@ -43,26 +44,22 @@ export function SubchapterHeader({
     subchapterOrderIndex
   )} ${lang === "en" && subchapterTitleEn ? subchapterTitleEn : subchapterTitle}`;
 
-  if (contentType === "main") {
-    return (
-      <div className="mb-4">
-        <p className="text-sm text-muted-foreground">{displayChapterTitle}</p>
-        <h1 className="text-xl font-bold">{displaySubchapterTitle}</h1>
-        {learningObjective && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("lesson.goal")}: {learningObjective}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="mb-4">
-      <p className="text-sm text-muted-foreground">
-        {displayChapterTitle} / {displaySubchapterTitle}
+    <div className="mb-6">
+      <p className="text-sm font-medium text-muted-foreground sm:text-base">
+        {displayChapterTitle}
       </p>
-      <h1 className="text-xl font-bold">{t(pageTitleKeys[contentType])}</h1>
+      <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        {displaySubchapterTitle}
+      </h1>
+      <p className="mt-2 text-sm font-semibold text-primary sm:text-base">
+        {pageTypeLabel}
+      </p>
+      {contentType === "main" && learningObjective && (
+        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+          {t("lesson.goal")}: {learningObjective}
+        </p>
+      )}
     </div>
   );
 }

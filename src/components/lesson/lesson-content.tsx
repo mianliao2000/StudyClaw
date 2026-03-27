@@ -41,6 +41,8 @@ interface LessonSection {
   kind: SectionKind;
 }
 
+type SupportedLanguage = "zh" | "en";
+
 type SectionKind =
   | "about"
   | "importance"
@@ -192,6 +194,56 @@ const sectionMeta: Record<
   },
 };
 
+const sectionTitles: Record<
+  Exclude<SectionKind, "default">,
+  { zh: string; en: string }
+> = {
+  about: {
+    zh: "本节讲什么",
+    en: "What this section is about",
+  },
+  importance: {
+    zh: "为什么重要",
+    en: "Why it matters",
+  },
+  connection: {
+    zh: "与课程的关系",
+    en: "How this connects to the course",
+  },
+  intuition: {
+    zh: "直觉理解",
+    en: "Intuitive explanation",
+  },
+  core: {
+    zh: "核心概念",
+    en: "Core concepts",
+  },
+  misunderstandings: {
+    zh: "常见误区",
+    en: "Common misunderstandings",
+  },
+  examples: {
+    zh: "理解例子",
+    en: "Minimal examples for understanding",
+  },
+  scenarios: {
+    zh: "真实场景",
+    en: "Real-world or engineering scenarios",
+  },
+  next: {
+    zh: "下一步会学什么",
+    en: "What this prepares you for next",
+  },
+  takeaway: {
+    zh: "一句话总结",
+    en: "Key takeaway",
+  },
+  terms: {
+    zh: "关键术语",
+    en: "Key terms",
+  },
+};
+
 const markdownComponents: Components = {
   table: ({ children }) => (
     <div className="my-5 overflow-x-auto rounded-2xl border border-border/70">
@@ -276,6 +328,11 @@ function parseLessonContent(markdown: string) {
   return { intro, sections };
 }
 
+function getSectionDisplayTitle(section: LessonSection, lang: SupportedLanguage) {
+  if (section.kind === "default") return section.title;
+  return sectionTitles[section.kind][lang];
+}
+
 function LessonMarkdown({ markdown }: { markdown: string }) {
   return (
     <div className="lesson-markdown">
@@ -328,11 +385,14 @@ function LessonGuide({
 
 function LessonSectionCard({
   section,
+  lang,
 }: {
   section: LessonSection;
+  lang: SupportedLanguage;
 }) {
   const meta = sectionMeta[section.kind];
   const Icon = meta.icon;
+  const displayTitle = getSectionDisplayTitle(section, lang);
 
   if (meta.variant === "plain") {
     return (
@@ -353,7 +413,7 @@ function LessonSectionCard({
           </div>
           <div className="min-w-0 flex-1 pr-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-              {section.title}
+              {displayTitle}
             </h2>
             {section.body ? (
               <div className="mt-4 max-w-[78ch]">
@@ -380,7 +440,7 @@ function LessonSectionCard({
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-              {section.title}
+              {displayTitle}
             </h2>
             {section.body ? (
               <div className="mt-4 max-w-[82ch]">
@@ -506,6 +566,7 @@ export function LessonContent({
             <LessonSectionCard
               key={`${section.kind}:${section.title}`}
               section={section}
+              lang={lang}
             />
           ))}
         </div>

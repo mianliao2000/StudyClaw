@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 
 const SIDEBAR_MIN_WIDTH = 240;
-const SIDEBAR_MAX_WIDTH = 420;
-const DEFAULT_SIDEBAR_WIDTH = 256;
+const SIDEBAR_MAX_WIDTH = 560;
+const DEFAULT_SIDEBAR_WIDTH = 288;
 const SIDEBAR_WIDTH_STORAGE_KEY = "pandora:project-sidebar-width";
 
 interface ProjectLayoutShellProps {
