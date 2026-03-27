@@ -5,6 +5,9 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:managed": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-server.ps1 restart",
+    "dev:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-server.ps1 stop",
+    "dev:status": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-server.ps1 status",
     "build": "prisma generate --config prisma.config.ts && next build",
     "start": "next start",
     "postinstall": "prisma generate --config prisma.config.ts",

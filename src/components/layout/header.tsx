@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Globe, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import { GuestBanner } from "./guest-banner";
@@ -13,9 +13,8 @@ export function Header() {
   const { data: session } = useSession();
   const { lang, setLang, theme, setTheme } = useLanguage();
 
-  const themeToggleTitle =
-    theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
-  const languageLabel = lang === "zh" ? "EN" : "中";
+  const isChinese = lang === "zh";
+  const isDark = theme === "dark";
   const dashboardLabel = lang === "zh" ? "我的项目" : "My Projects";
   const loginLabel = lang === "zh" ? "登录" : "Login";
 
@@ -31,7 +30,7 @@ export function Header() {
             className="group flex min-w-0 flex-1 items-center gap-2 sm:gap-3"
           >
             <Image
-              src="/Box_Logo2.png"
+              src="/Box_Logo2_v3.png"
               alt="Pandora AI"
               width={40}
               height={40}
@@ -44,36 +43,70 @@ export function Header() {
           </Link>
 
           <nav className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2 lg:gap-3">
-            <Button
-              variant="ghost"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-8 w-8 rounded-full px-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-9 lg:h-10 lg:w-10"
-              title={themeToggleTitle}
-              aria-label={themeToggleTitle}
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-0.5 rounded-full border border-stone-300/80 bg-white/92 p-0.5 shadow-[0_10px_24px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur dark:border-white/10 dark:bg-slate-900/82 dark:shadow-[0_14px_28px_rgba(2,6,23,0.28)]">
+                <Button
+                  variant="ghost"
+                  onClick={() => setLang("zh")}
+                  className={`h-6 min-w-[1.95rem] rounded-full px-1 text-[0.68rem] font-medium sm:h-6.5 sm:min-w-[2.1rem] sm:text-[0.68rem] lg:h-7 lg:min-w-[2.2rem] lg:text-[0.7rem] ${
+                    isChinese
+                      ? "bg-stone-900 text-white hover:bg-stone-800 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+                      : "text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-slate-300 dark:hover:bg-white/8 dark:hover:text-white"
+                  }`}
+                  aria-label="Switch to Chinese"
+                >
+                  中
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setLang("en")}
+                  className={`h-6 min-w-[2.15rem] rounded-full px-1 text-[0.68rem] font-medium sm:h-6.5 sm:min-w-[2.35rem] sm:text-[0.68rem] lg:h-7 lg:min-w-[2.45rem] lg:text-[0.7rem] ${
+                    !isChinese
+                      ? "bg-stone-900 text-white hover:bg-stone-800 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+                      : "text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-slate-300 dark:hover:bg-white/8 dark:hover:text-white"
+                  }`}
+                  aria-label="Switch to English"
+                >
+                  EN
+                </Button>
+              </div>
 
-            <Button
-              variant="ghost"
-              onClick={() => setLang(lang === "zh" ? "en" : "zh")}
-              className="h-8 min-w-[3.5rem] gap-1.5 rounded-full px-2 text-[0.72rem] text-muted-foreground hover:text-foreground sm:h-9 sm:min-w-[4rem] sm:px-3 sm:text-xs lg:h-10 lg:min-w-[4.5rem] lg:text-sm"
-              aria-label="Toggle language"
-            >
-              <Globe className="h-3.5 w-3.5" />
-              <span className="font-mono">{languageLabel}</span>
-            </Button>
+              <div className="flex items-center gap-0.5 rounded-full border border-stone-300/80 bg-white/92 p-0.5 shadow-[0_10px_24px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur dark:border-white/10 dark:bg-slate-900/82 dark:shadow-[0_14px_28px_rgba(2,6,23,0.28)]">
+                <Button
+                  variant="ghost"
+                  onClick={() => setTheme("light")}
+                  className={`h-6 w-6 rounded-full px-0 sm:h-6.5 sm:w-6.5 lg:h-7 lg:w-7 ${
+                    !isDark
+                      ? "bg-stone-900 text-white hover:bg-stone-800 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+                      : "text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-slate-300 dark:hover:bg-white/8 dark:hover:text-white"
+                  }`}
+                  title="Switch to light mode"
+                  aria-label="Switch to light mode"
+                >
+                  <Sun className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setTheme("dark")}
+                  className={`h-6 w-6 rounded-full px-0 sm:h-6.5 sm:w-6.5 lg:h-7 lg:w-7 ${
+                    isDark
+                      ? "bg-stone-900 text-white hover:bg-stone-800 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
+                      : "text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-slate-300 dark:hover:bg-white/8 dark:hover:text-white"
+                  }`}
+                  title="Switch to dark mode"
+                  aria-label="Switch to dark mode"
+                >
+                  <Moon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
 
             {session ? (
               <>
                 <Link href="/dashboard">
                   <Button
-                    variant="ghost"
-                    className="h-8 rounded-full px-3 text-[0.72rem] text-muted-foreground hover:text-foreground sm:h-9 sm:px-4 sm:text-xs lg:h-10 lg:text-sm"
+                    variant="secondary"
+                    className="h-8 rounded-full border border-stone-300/80 bg-white px-3 text-[0.78rem] font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:bg-stone-50 sm:h-8.5 sm:px-4 sm:text-xs lg:h-9 lg:text-sm dark:border-white/10 dark:bg-slate-900/88 dark:text-white dark:hover:bg-slate-900"
                   >
                     {dashboardLabel}
                   </Button>

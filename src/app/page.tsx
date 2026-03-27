@@ -265,59 +265,59 @@ export default function HomePage() {
 
   const previewConversation: PreviewMessage[] = isZh
     ? [
-        { role: "user", content: "系统设计入门到进阶" },
+        { role: "user", content: "AI Agent 开发入门到实战" },
         {
           role: "assistant",
-          content: "明白了 为了帮你把课程规划得更贴近现在的阶段，我会先用几个启发式问题帮你收窄方向",
+          content: "明白了 为了帮你把 AI Agent 课程规划得更贴近现在的阶段，我会先用几个启发式问题帮你收窄方向",
           options: [
-            "A. 我是零基础或刚入门，需要从基础概念开始扎实学起",
-            "B. 我有一些基础，想系统梳理并提升到高级水平",
-            "C. 我已经有实战经验，希望深入攻克某个具体领域或难点",
+            "A. 我是零基础或刚入门，需要先理解 Agent 的基本概念和工作方式",
+            "B. 我会一点开发，想系统掌握工具调用、记忆和多步执行",
+            "C. 我已经做过一些 Agent 项目，想深入优化效果和落地能力",
           ],
-          selectedOption: "B. 我有一些基础，想系统梳理并提升到高级水平",
+          selectedOption: "B. 我会一点开发，想系统掌握工具调用、记忆和多步执行",
         },
         {
           role: "assistant",
-          content: "很好 系统梳理并迈向高级是一个很好的选择 接下来我再确认一下你的学习节奏",
+          content: "很好 这说明你更适合从 Agent 架构到实战工作流的系统路线开始 我再确认一下你的学习节奏",
           options: [
-            "A. 每周 2-3 小时，适合碎片化学习",
-            "B. 每周 5-6 小时，可以安排较系统的学习",
-            "C. 每周 10 小时以上，追求高效密集提升",
+            "A. 每周 2-3 小时，适合轻量探索和概念入门",
+            "B. 每周 5-6 小时，可以安排较系统的学习和练习",
+            "C. 每周 10 小时以上，希望尽快做出能运行的项目原型",
           ],
-          selectedOption: "B. 每周 5-6 小时，可以安排较系统的学习",
+          selectedOption: "B. 每周 5-6 小时，可以安排较系统的学习和练习",
         },
         {
           role: "assistant",
-          content: "收到 我会为你生成一条从基础概念、系统建模、分析方法到综合设计的课程路径，并为每一章配套正文、总结和测验",
+          content: "收到 我会为你生成一条从 Agent 基础、工具调用与记忆，到工作流编排和效果优化的课程路径，并为每一章配套正文、总结和测验",
         },
       ]
     : [
-        { role: "user", content: "System Design from Intro to Advanced" },
+        { role: "user", content: "AI Agent Development from Basics to Practice" },
         {
           role: "assistant",
-          content: "Got it To shape the course around your current level, I will first use a few guided questions to narrow the direction",
+          content: "Got it To shape your AI agent course around your current level, I will first use a few guided questions to narrow the direction",
           options: [
-            "A. I am a beginner and want a stronger foundation first",
-            "B. I know some basics and want a structured path toward advanced level",
-            "C. I already have project experience and want to go deep on a specific challenge",
+            "A. I am just getting started and want the core ideas and workflow first",
+            "B. I know some development basics and want a structured path through tools memory and multi-step execution",
+            "C. I have built a few agent prototypes and want to improve quality and real-world delivery",
           ],
           selectedOption:
-            "B. I know some basics and want a structured path toward advanced level",
+            "B. I know some development basics and want a structured path through tools memory and multi-step execution",
         },
         {
           role: "assistant",
-          content: "Great A structured path toward advanced level is a strong direction Let me confirm your pace next",
+          content: "Great That points to a more systematic path from agent architecture to practical workflows Let me confirm your pace next",
           options: [
-            "A. 2-3 hours a week, better for lighter study",
-            "B. 5-6 hours a week, enough for a more systematic plan",
-            "C. 10+ hours a week, aiming for intensive progress",
+            "A. 2-3 hours a week, better for lighter exploration",
+            "B. 5-6 hours a week, enough for structured study and practice",
+            "C. 10+ hours a week, aiming to build working prototypes quickly",
           ],
           selectedOption:
-            "B. 5-6 hours a week, enough for a more systematic plan",
+            "B. 5-6 hours a week, enough for structured study and practice",
         },
         {
           role: "assistant",
-          content: "Perfect I will generate a path from foundations and modeling to analysis and integrated design, with lessons, summaries, and quizzes for each chapter",
+          content: "Perfect I will generate a path from agent fundamentals and tool use to memory workflow orchestration and evaluation, with lessons summaries and quizzes for each chapter",
         },
       ];
 
@@ -784,7 +784,7 @@ export default function HomePage() {
                     {text("结果预览", "Result Preview")}
                   </h3>
                   <div className="home-preview-chip rounded-full border px-3 py-1 text-xs">
-                    4 Chapters
+                    {text("7 章", "7 Chapters")}
                   </div>
                 </div>
 
@@ -807,16 +807,16 @@ export default function HomePage() {
                   <div className="space-y-3">
                     {[
                       {
-                        title: text("系统基础与建模", "Foundations and Modeling"),
-                        sub: [text("系统抽象", "System abstraction"), text("状态与输入输出", "State and I/O"), text("建模范式", "Modeling patterns")],
+                        title: text("Agent 基础与核心概念", "Agent Foundations and Core Concepts"),
+                        sub: [text("什么是 Agent", "What is an agent"), text("核心组成模块", "Core building blocks"), text("典型应用场景", "Typical use cases")],
                       },
                       {
-                        title: text("分析方法与稳定性", "Analysis and Stability"),
-                        sub: [text("时域分析", "Time-domain analysis"), text("频域理解", "Frequency intuition"), text("稳定性判断", "Stability judgement")],
+                        title: text("工具调用、记忆与状态", "Tool Use Memory and State"),
+                        sub: [text("函数调用流程", "Function calling flow"), text("短期与长期记忆", "Short-term and long-term memory"), text("状态管理", "State management")],
                       },
                       {
-                        title: text("综合设计与工程权衡", "Integrated Design and Tradeoffs"),
-                        sub: [text("指标拆解", "Metric breakdown"), text("控制器设计", "Controller design"), text("工程折中", "Engineering tradeoffs")],
+                        title: text("工作流编排与效果优化", "Workflow Orchestration and Optimization"),
+                        sub: [text("多步任务拆解", "Multi-step task breakdown"), text("执行链路设计", "Execution pipeline design"), text("评估与迭代", "Evaluation and iteration")],
                       },
                     ].map((chapter, index) => (
                       <div
