@@ -66,12 +66,21 @@ export async function POST(
   ]);
 
   if (firstMainContent.status === "pending" || firstMainContent.status === "error") {
-    void generateContentById(firstMainContent.id).catch((error) => {
+    await prisma.lessonContent.update({
+      where: { id: firstMainContent.id },
+      data: { status: "generating" },
+    });
+
+    const userPrefs = await prisma.userPreferences.findUnique({
+      where: { userId: session.user.id },
+      select: { contentDetail: true, quizCount: true },
+    });
+    void generateContentById(firstMainContent.id, userPrefs).catch((error) => {
       console.error(`Initial lesson generation failed for ${firstMainContent.id}:`, error);
     });
   }
 
   return NextResponse.json({
-    redirectTo: `/projects/${projectId}`,
+    redirectTo: `/projects/${projectId}/chapters/${firstChapter.id}/subchapters/${firstSubchapter.id}/main`,
   });
 }

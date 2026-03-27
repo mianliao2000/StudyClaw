@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ArrowRightCircle,
@@ -415,6 +416,7 @@ export function LessonContent({
   contentType,
 }: LessonContentProps) {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
   const [status, setStatus] = useState(initialStatus);
@@ -422,6 +424,22 @@ export function LessonContent({
   const displayContent = lang === "en" && contentEnState ? contentEnState : content;
   const typeLabel = typeKeys[contentType] ? t(typeKeys[contentType]) : contentType;
   const parsedContent = useMemo(() => parseLessonContent(displayContent), [displayContent]);
+
+  useEffect(() => {
+    setContent(body);
+    setContentEnState(bodyEn || "");
+    setStatus(initialStatus);
+  }, [body, bodyEn, initialStatus]);
+
+  useEffect(() => {
+    if (status !== "generating") return;
+
+    const timer = window.setInterval(() => {
+      router.refresh();
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [router, status]);
 
   const handleGenerate = async () => {
     setStatus("generating");
@@ -437,6 +455,7 @@ export function LessonContent({
         setContent(data.body ?? data.bodyZh ?? "");
         setContentEnState(data.bodyEn ?? "");
         setStatus("ready");
+        router.refresh();
       } else {
         const err = await res.json();
         alert(err.error || t("content.error"));

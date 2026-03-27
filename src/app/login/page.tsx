@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
@@ -11,6 +11,7 @@ import { useLanguage } from "@/lib/i18n";
 export default function LoginPage() {
   const { t } = useLanguage();
   const router = useRouter();
+  const { update } = useSession();
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
 
@@ -20,7 +21,8 @@ export default function LoginPage() {
     try {
       const res = await fetch("/api/auth/guest", { method: "POST" });
       if (res.ok) {
-        router.push("/dashboard");
+        await update();
+        router.replace("/dashboard");
         router.refresh();
         return;
       }

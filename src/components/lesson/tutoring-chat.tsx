@@ -35,9 +35,19 @@ interface TutoringChatProps {
 
 const CHAT_HISTORY_STORAGE_PREFIX = "studyclaw:tutoring-history:";
 
+function normalizeMessages(messages: ChatMessage[]) {
+  return messages.map((message) => ({
+    ...message,
+    createdAt:
+      message.createdAt instanceof Date
+        ? message.createdAt
+        : new Date(message.createdAt),
+  }));
+}
+
 function serializeMessages(messages: ChatMessage[]) {
   return JSON.stringify(
-    messages.map((message) => ({
+    normalizeMessages(messages).map((message) => ({
       ...message,
       createdAt: message.createdAt.toISOString(),
     }))
@@ -124,7 +134,9 @@ export function TutoringChat({
     () => `${CHAT_HISTORY_STORAGE_PREFIX}${projectId}:${chapterId}:${subchapterId}`,
     [projectId, chapterId, subchapterId]
   );
-  const [visibleMessages, setVisibleMessages] = useState<ChatMessage[]>(initialMessages);
+  const [visibleMessages, setVisibleMessages] = useState<ChatMessage[]>(
+    normalizeMessages(initialMessages)
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -141,7 +153,7 @@ export function TutoringChat({
       }
     }
 
-    setVisibleMessages(initialMessages);
+    setVisibleMessages(normalizeMessages(initialMessages));
   }, [initialMessages, storageKey]);
 
   useEffect(() => {

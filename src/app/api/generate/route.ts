@@ -26,7 +26,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { zh, en } = await generateContentById(contentId);
+    const userPrefs = await prisma.userPreferences.findUnique({
+      where: { userId: session.user.id },
+      select: { contentDetail: true, quizCount: true },
+    });
+    const { zh, en } = await generateContentById(contentId, userPrefs);
     return NextResponse.json({ body: zh, bodyZh: zh, bodyEn: en, status: "ready" });
   } catch (error) {
     console.error("Content generation error:", error);

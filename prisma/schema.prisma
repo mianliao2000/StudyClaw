@@ -19,8 +19,29 @@ model User {
   isGuest        Boolean   @default(false)
   guestExpiresAt DateTime?
   projects      LearningProject[]
+  preferences   UserPreferences?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model UserPreferences {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // AI tutor preferences
+  teachingStyle   String  @default("balanced")   // encouraging | balanced | concise
+  reasoningLevel  String  @default("medium")     // low | medium | high
+  defaultModel    String  @default("")
+
+  // Learning preferences
+  contentDetail   String  @default("standard")   // beginner | standard | advanced
+  quizCount       Int     @default(5)            // 3 | 5 | 10
+
+  // Notification preferences
+  emailDigest     Boolean @default(false)
+
+  updatedAt       DateTime @updatedAt
 }
 
 model Account {

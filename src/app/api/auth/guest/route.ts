@@ -24,9 +24,9 @@ export async function POST() {
       },
     });
 
-    const useSecureCookies =
-      process.env.AUTH_URL?.startsWith("https://") ||
-      process.env.NODE_ENV === "production";
+    // Use secure cookies only when the configured auth origin is actually HTTPS.
+    // Local production-like runs often use `pnpm start` on http://localhost:3000.
+    const useSecureCookies = process.env.AUTH_URL?.startsWith("https://") ?? false;
     const sessionCookieName = `${useSecureCookies ? "__Secure-" : ""}authjs.session-token`;
     const cookieStore = await cookies();
     cookieStore.set(sessionCookieName, sessionToken, {

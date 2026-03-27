@@ -178,6 +178,101 @@ const translations = {
   "quiz.submit": { zh: "提交答案", en: "Submit" },
   "quiz.regenerate": { zh: "重新生成", en: "Regenerate" },
 
+  // User stats (user menu)
+  "stats.projects": { zh: "项目", en: "projects" },
+  "stats.lessons":  { zh: "节完成", en: "lessons done" },
+  "stats.overall":  { zh: "整体进度", en: "Overall" },
+
+  // Settings page
+  "settings.title": { zh: "设置", en: "Settings" },
+  "settings.saved": { zh: "已保存", en: "Saved" },
+
+  // Settings - Profile
+  "settings.profile": { zh: "个人资料", en: "Profile" },
+  "settings.profile.name": { zh: "姓名", en: "Name" },
+  "settings.profile.email": { zh: "邮箱", en: "Email" },
+  "settings.profile.accountType": { zh: "账号类型", en: "Account Type" },
+  "settings.profile.google": { zh: "Google 账号", en: "Google Account" },
+  "settings.profile.guest": { zh: "游客", en: "Guest" },
+
+  // Settings - Appearance
+  "settings.appearance": { zh: "外观与语言", en: "Appearance & Language" },
+  "settings.appearance.theme": { zh: "主题", en: "Theme" },
+  "settings.appearance.dark": { zh: "深色", en: "Dark" },
+  "settings.appearance.light": { zh: "浅色", en: "Light" },
+  "settings.appearance.language": { zh: "界面语言", en: "Interface Language" },
+  "settings.appearance.zh": { zh: "中文", en: "Chinese" },
+  "settings.appearance.en": { zh: "English", en: "English" },
+
+  // Settings - AI Tutor
+  "settings.ai": { zh: "AI 助教偏好", en: "AI Tutor Preferences" },
+  "settings.ai.desc": {
+    zh: "自定义 AI 助教的教学行为",
+    en: "Customize how the AI tutor teaches you",
+  },
+  "settings.ai.style": { zh: "教学风格", en: "Teaching Style" },
+  "settings.ai.style.encouraging": { zh: "鼓励型", en: "Encouraging" },
+  "settings.ai.style.encouraging.desc": {
+    zh: "耐心引导，多用类比和鼓励",
+    en: "Patient guidance with analogies and encouragement",
+  },
+  "settings.ai.style.balanced": { zh: "均衡型", en: "Balanced" },
+  "settings.ai.style.balanced.desc": {
+    zh: "兼顾解释深度与简洁",
+    en: "Balance between depth and brevity",
+  },
+  "settings.ai.style.concise": { zh: "简洁型", en: "Concise" },
+  "settings.ai.style.concise.desc": {
+    zh: "直击要点，高效回答",
+    en: "Straight to the point, efficient answers",
+  },
+  "settings.ai.reasoning": { zh: "默认推理深度", en: "Default Reasoning Level" },
+  "settings.ai.reasoning.desc": {
+    zh: "更高的推理深度回答更准确但速度更慢",
+    en: "Higher reasoning is more accurate but slower",
+  },
+
+  // Settings - Learning
+  "settings.learning": { zh: "学习偏好", en: "Learning Preferences" },
+  "settings.learning.desc": {
+    zh: "调整生成内容的详细程度和测验设置",
+    en: "Adjust content detail level and quiz settings",
+  },
+  "settings.learning.detail": { zh: "内容详细度", en: "Content Detail Level" },
+  "settings.learning.detail.beginner": { zh: "入门友好", en: "Beginner-Friendly" },
+  "settings.learning.detail.beginner.desc": {
+    zh: "更多基础解释和类比",
+    en: "More basic explanations and analogies",
+  },
+  "settings.learning.detail.standard": { zh: "标准", en: "Standard" },
+  "settings.learning.detail.standard.desc": {
+    zh: "适合有一定基础的学习者",
+    en: "Suitable for learners with some background",
+  },
+  "settings.learning.detail.advanced": { zh: "进阶", en: "Advanced" },
+  "settings.learning.detail.advanced.desc": {
+    zh: "更深入的分析和扩展内容",
+    en: "Deeper analysis and extended content",
+  },
+  "settings.learning.quiz": { zh: "每节测验题数", en: "Quiz Questions Per Lesson" },
+  "settings.learning.quiz.desc": {
+    zh: "每次生成测验的题目数量",
+    en: "Number of questions generated per quiz",
+  },
+
+  // Settings - Account
+  "settings.account": { zh: "账号管理", en: "Account" },
+  "settings.account.logout": { zh: "退出登录", en: "Sign Out" },
+  "settings.account.delete": { zh: "删除账号", en: "Delete Account" },
+  "settings.account.delete.desc": {
+    zh: "永久删除你的账号和所有学习数据，此操作无法撤销",
+    en: "Permanently delete your account and all learning data. This cannot be undone.",
+  },
+  "settings.account.delete.confirm": {
+    zh: "确定要删除账号吗？所有数据将被永久删除。",
+    en: "Are you sure? All data will be permanently deleted.",
+  },
+
   // Misc
   "misc.chapter": { zh: "章", en: "ch" },
   "misc.section": { zh: "节", en: "sec" },

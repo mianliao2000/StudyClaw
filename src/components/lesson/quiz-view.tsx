@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -35,11 +36,30 @@ function parseQuiz(text: string): QuizQuestion[] {
 
 export function QuizView({ contentId, body, bodyEn, status: initialStatus }: QuizViewProps) {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
   const [status, setStatus] = useState(initialStatus);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    setContent(body);
+    setContentEnState(bodyEn || "");
+    setStatus(initialStatus);
+    setAnswers({});
+    setSubmitted(false);
+  }, [body, bodyEn, initialStatus]);
+
+  useEffect(() => {
+    if (status !== "generating") return;
+
+    const timer = window.setInterval(() => {
+      router.refresh();
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [router, status]);
 
   const handleGenerate = async () => {
     setStatus("generating");
@@ -55,6 +75,7 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus }: Qui
         setContent(data.body ?? data.bodyZh ?? "");
         setContentEnState(data.bodyEn ?? "");
         setStatus("ready");
+        router.refresh();
       } else {
         setStatus("error");
       }
@@ -130,7 +151,7 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus }: Qui
       {questions.map((q) => (
         <Card key={q.id}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">
+            <CardTitle className="text-base font-semibold leading-7 sm:text-lg">
               {q.id}. {q.question}
             </CardTitle>
           </CardHeader>
@@ -147,17 +168,34 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus }: Qui
                     if (!submitted) setAnswers((a) => ({ ...a, [q.id]: i }));
                   }}
                   className={cn(
-                    "w-full text-left px-3 py-2 rounded-md border text-sm transition-colors",
-                    isSelected && !submitted && "border-primary bg-primary/5",
-                    isCorrect && "border-green-500 bg-green-50",
-                    isWrong && "border-red-500 bg-red-50",
-                    !submitted && !isSelected && "hover:bg-accent"
+                    "w-full rounded-2xl border px-4 py-3 text-left text-sm transition-all",
+                    isSelected && !submitted && "border-primary bg-primary/5 shadow-sm",
+                    isCorrect && "border-green-500 bg-green-50 dark:bg-green-500/10",
+                    isWrong && "border-red-500 bg-red-50 dark:bg-red-500/10",
+                    !submitted && !isSelected && "hover:border-primary/30 hover:bg-accent/60"
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    {isCorrect && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                    {isWrong && <XCircle className="h-4 w-4 text-red-500" />}
-                    {opt}
+                  <span className="flex items-start gap-3">
+                    <span
+                      className={cn(
+                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                        isCorrect && "border-green-500",
+                        isWrong && "border-red-500",
+                        !isCorrect && !isWrong && isSelected && "border-primary",
+                        !isCorrect && !isWrong && !isSelected && "border-muted-foreground/35"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "h-2.5 w-2.5 rounded-full transition-colors",
+                          isCorrect && "bg-green-500",
+                          isWrong && "bg-red-500",
+                          !isCorrect && !isWrong && isSelected && "bg-primary",
+                          !isSelected && "bg-transparent"
+                        )}
+                      />
+                    </span>
+                    <span className="flex-1 leading-6">{opt}</span>
                   </span>
                 </button>
               );

@@ -33,6 +33,8 @@ type DecisionQuestion = {
 
 type DecisionLoopStage = "divergence_only" | "decision_with_create";
 
+const MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE = 4;
+
 function getGuidedQuestions(language: ConversationLanguage): FixedQuestion[] {
   return language === "en"
     ? [
@@ -439,8 +441,6 @@ export default function PlanPage() {
     useState<ConversationLanguage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [model, setModel] = useState("gpt-5.4-mini");
-  const [reasoning, setReasoning] = useState("medium");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>(
     {}
@@ -614,8 +614,6 @@ export default function PlanPage() {
           threadId,
           message: userText,
           mode: "planning",
-          model,
-          reasoning,
           context: {
             planningState: {
               currentQuestionIndex: nextQuestionIndex,
@@ -793,8 +791,6 @@ export default function PlanPage() {
       hasReturnedFromReview,
       isFreeMode,
       isInDecisionLoop,
-      model,
-      reasoning,
       selectedAnswers,
       threadId,
     ]
@@ -855,10 +851,15 @@ export default function PlanPage() {
         };
         setSelectedAnswers(nextAnswers);
 
-        if (currentQuestionIndex >= guidedQuestions.length - 1) {
-          setCurrentQuestionIndex(guidedQuestions.length);
+        const answeredGuidedCount = currentQuestionIndex + 1;
+        const shouldOfferCreateNow =
+          answeredGuidedCount >= MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE ||
+          currentQuestionIndex >= guidedQuestions.length - 1;
+
+        if (shouldOfferCreateNow) {
+          setCurrentQuestionIndex(answeredGuidedCount);
           setIsInDecisionLoop(true);
-          setDecisionLoopStage("divergence_only");
+          setDecisionLoopStage("decision_with_create");
           setHasReturnedFromReview(false);
           setDecisionTrail([]);
           await runPlanningAI(trimmed, {
@@ -867,8 +868,8 @@ export default function PlanPage() {
             notesOverride: freeformNotes,
             isFreeModeOverride: false,
             isDecisionLoopOverride: true,
-            decisionLoopStageOverride: "divergence_only",
-            currentQuestionIndexOverride: guidedQuestions.length,
+            decisionLoopStageOverride: "decision_with_create",
+            currentQuestionIndexOverride: answeredGuidedCount,
             decisionTrailOverride: [],
             conversationLanguageOverride: activeLanguage,
           });
@@ -1184,11 +1185,6 @@ export default function PlanPage() {
         }
         suggestions={messages.length === 0 ? suggestions : undefined}
         className="flex-1"
-        showModelSelector
-        model={model}
-        onModelChange={setModel}
-        reasoning={reasoning}
-        onReasoningChange={setReasoning}
         animatePrimaryOption={
           decisionLoopStage === "decision_with_create" && !isLoading
         }

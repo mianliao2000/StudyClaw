@@ -226,9 +226,15 @@ export async function POST(req: Request) {
     });
   }
 
+  const userPrefs = mode === "tutoring"
+    ? await prisma.userPreferences.findUnique({ where: { userId: session.user.id } })
+    : null;
+
   let systemPrompt = getPlanningSystemPrompt(conversationLanguage);
   if (mode === "tutoring" && context) {
-    systemPrompt = fillTemplate(getTutoringSystemPrompt(conversationLanguage), {
+    systemPrompt = fillTemplate(
+      getTutoringSystemPrompt(conversationLanguage, userPrefs?.teachingStyle),
+      {
       projectTitle: context.projectTitle || "",
       chapterTitle: context.chapterTitle || "",
       subchapterTitle: context.subchapterTitle || "",

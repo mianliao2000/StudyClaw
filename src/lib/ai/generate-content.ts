@@ -5,6 +5,7 @@ import {
   SUMMARY_GENERATION_PROMPT,
   QUIZ_GENERATION_PROMPT,
   fillTemplate,
+  getContentDetailInstruction,
 } from "@/lib/ai/prompts";
 
 const SUMMARY_CHAPTER_TITLE_ZH = "课程总结";
@@ -31,7 +32,10 @@ function parseBilingualOutput(result: string): { zh: string; en: string } {
  * Saves both zh and en versions to the database.
  * Throws on failure after marking the content as "error".
  */
-export async function generateContentById(contentId: string): Promise<{ zh: string; en: string }> {
+export async function generateContentById(
+  contentId: string,
+  userPrefs?: { contentDetail?: string; quizCount?: number } | null,
+): Promise<{ zh: string; en: string }> {
   const content = await prisma.lessonContent.findUnique({
     where: { id: contentId },
     include: {
@@ -58,13 +62,15 @@ export async function generateContentById(contentId: string): Promise<{ zh: stri
     const isSummaryChapter = isCourseSummaryChapter(chapter);
 
     let prompt: string;
-    const vars = {
+    const vars: Record<string, string> = {
       projectTitle: project.title,
       topic: project.topic,
       chapterTitle: chapter.title,
       subchapterTitle: subchapter.title,
       learningObjective: subchapter.learningObjective || "",
       lessonContent: "",
+      contentDetailInstruction: getContentDetailInstruction(userPrefs?.contentDetail),
+      quizCount: String(userPrefs?.quizCount ?? 5),
     };
 
     let courseWideLessonContent = "";

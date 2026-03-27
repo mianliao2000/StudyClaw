@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2, Send, Settings2 } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,11 +19,6 @@ interface ChatPanelProps {
   placeholder?: string;
   suggestions?: string[];
   className?: string;
-  showModelSelector?: boolean;
-  model?: string;
-  onModelChange?: (model: string) => void;
-  reasoning?: string;
-  onReasoningChange?: (reasoning: string) => void;
   animatePrimaryOption?: boolean;
   wideLayout?: boolean;
 }
@@ -32,9 +27,20 @@ type ParsedPart =
   | { type: "text"; value: string }
   | { type: "options"; value: string; options: string[] };
 
+function sanitizeDisplayContent(content: string) {
+  return content
+    .replace(/\[PLAN_READY\]\s*$/g, "")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => !/^\s*(\*\*|__)\s*$/.test(line))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function parseMessageContent(content: string): ParsedPart[] {
   const parts: ParsedPart[] = [];
-  const normalized = content.replace(/\[PLAN_READY\]\s*$/g, "").trim();
+  const normalized = sanitizeDisplayContent(content);
   const regex = /\[OPTIONS\]\s*([\s\S]*?)(?:\s*\[\/OPTIONS\]|$)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -116,16 +122,10 @@ export function ChatPanel({
   placeholder = "Type a message...",
   suggestions,
   className,
-  showModelSelector = false,
-  model = "gpt-5.4-mini",
-  onModelChange,
-  reasoning = "medium",
-  onReasoningChange,
   animatePrimaryOption = false,
   wideLayout = false,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
   const [animatedMessageId, setAnimatedMessageId] = useState<string | null>(
     null
   );
@@ -309,71 +309,7 @@ export function ChatPanel({
       )}
 
       <div className="shrink-0 space-y-2 border-t border-border/50 bg-background p-3">
-        {showModelSelector && showSettings && (
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Model:</span>
-              <div className="flex overflow-hidden rounded-md border border-border/50">
-                {[
-                  { value: "gpt-5.4", label: "GPT-5.4" },
-                  { value: "gpt-5.4-mini", label: "5.4 Mini" },
-                ].map((modelOption) => (
-                  <button
-                    key={modelOption.value}
-                    onClick={() => onModelChange?.(modelOption.value)}
-                    className={cn(
-                      "px-3 py-1 transition-colors",
-                      model === modelOption.value
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted/50"
-                    )}
-                  >
-                    {modelOption.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Reasoning:</span>
-              <div className="flex overflow-hidden rounded-md border border-border/50">
-                {[
-                  { value: "low", label: "Low" },
-                  { value: "medium", label: "Med" },
-                  { value: "high", label: "High" },
-                ].map((reasoningOption) => (
-                  <button
-                    key={reasoningOption.value}
-                    onClick={() => onReasoningChange?.(reasoningOption.value)}
-                    className={cn(
-                      "px-3 py-1 transition-colors",
-                      reasoning === reasoningOption.value
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-muted/50"
-                    )}
-                  >
-                    {reasoningOption.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="flex gap-2">
-          {showModelSelector && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 shrink-0"
-              onClick={() => setShowSettings((prev) => !prev)}
-            >
-              <Settings2
-                className={cn("h-4 w-4", showSettings && "text-primary")}
-              />
-            </Button>
-          )}
-
           <Textarea
             ref={textareaRef}
             value={input}

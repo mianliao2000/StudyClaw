@@ -9,21 +9,25 @@ export const metadata: Metadata = {
   description: "AI 驱动的个性化学习规划与辅导平台",
 };
 
+const themeInitScript = `
+  try {
+    const savedTheme = localStorage.getItem("theme");
+    const isDark = savedTheme !== "light";
+    document.documentElement.classList.toggle("dark", isDark);
+  } catch {}
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="zh-CN"
-      className="dark h-full antialiased"
-      suppressHydrationWarning
-    >
-      <body
-        className="min-h-full flex flex-col font-sans"
-        suppressHydrationWarning
-      >
+    <html lang="zh-CN" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <SessionProvider>
           <LanguageProvider>
             <TooltipProvider>{children}</TooltipProvider>

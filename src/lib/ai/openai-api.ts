@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { AIProvider, AIMessage } from "./provider";
+import type { AIProvider, AIMessage, AIOptions } from "./provider";
 import { createThinkTagStreamSanitizer, stripThinkTags } from "./response-cleaning";
 
 export class OpenAIAPIProvider implements AIProvider {
@@ -42,11 +42,13 @@ export class OpenAIAPIProvider implements AIProvider {
     });
   }
 
-  async chat(messages: AIMessage[]): Promise<ReadableStream<Uint8Array>> {
+  async chat(messages: AIMessage[], options?: AIOptions): Promise<ReadableStream<Uint8Array>> {
+    const model = options?.model || this.defaultModel;
     const response = await this.client.chat.completions.create({
-      model: this.defaultModel,
+      model,
       messages,
       stream: true,
+      ...(options?.reasoning && { reasoning_effort: options.reasoning }),
     });
 
     const encoder = new TextEncoder();
@@ -71,10 +73,12 @@ export class OpenAIAPIProvider implements AIProvider {
     });
   }
 
-  async generate(messages: AIMessage[]): Promise<string> {
+  async generate(messages: AIMessage[], options?: AIOptions): Promise<string> {
+    const model = options?.model || this.defaultModel;
     const response = await this.client.chat.completions.create({
-      model: this.defaultModel,
+      model,
       messages,
+      ...(options?.reasoning && { reasoning_effort: options.reasoning }),
     });
     return stripThinkTags(response.choices[0]?.message?.content || "");
   }

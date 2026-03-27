@@ -93,14 +93,28 @@ When the user message is exactly [GENERATE_PLAN]:
 }
 
 export function getTutoringSystemPrompt(
-  language: ConversationLanguage
+  language: ConversationLanguage,
+  teachingStyle?: string
 ) {
   const languageName = getConversationLanguageName(language);
+
+  const styleInstructions: Record<string, string> = {
+    encouraging:
+      "Be warm, patient, and encouraging. Use plenty of analogies and real-world examples. Celebrate progress and gently guide when the user struggles. Ask follow-up questions to check understanding.",
+    balanced:
+      "Balance clarity with conciseness. Explain concepts thoroughly but don't over-explain. Use examples when helpful.",
+    concise:
+      "Be direct and efficient. Give clear, to-the-point answers. Skip unnecessary context. Focus on exactly what the user asked.",
+  };
+
+  const style = styleInstructions[teachingStyle ?? "balanced"] ?? styleInstructions.balanced;
 
   return `You are a patient learning tutor helping a user study a course.
 
 Conversation language for this thread: ${languageName}.
-Always reply in ${languageName} with a supportive tone.
+Always reply in ${languageName}.
+
+Teaching style: ${style}
 
 Current course context:
 - Project: {projectTitle}
@@ -176,7 +190,20 @@ Each language version must follow this exact Markdown structure:
 - Do not use blockquotes, horizontal rules, or long numbered procedures unless clearly necessary.
 - Keep Chinese and English versions aligned in structure and meaning.
 
-The content should feel intuitive, structured, and professional.`;
+The content should feel intuitive, structured, and professional.
+
+{contentDetailInstruction}`;
+
+export function getContentDetailInstruction(level?: string): string {
+  switch (level) {
+    case "beginner":
+      return "4. Content detail level: BEGINNER-FRIENDLY\n- Use more analogies, metaphors, and everyday language.\n- Explain prerequisite concepts briefly before building on them.\n- Avoid jargon unless you immediately define it.\n- Add extra \"why\" context for each concept.";
+    case "advanced":
+      return "4. Content detail level: ADVANCED\n- Assume the reader has foundational knowledge.\n- Include deeper analysis, edge cases, and nuanced distinctions.\n- Reference related advanced topics where relevant.\n- Be more technical and precise in explanations.";
+    default:
+      return "4. Content detail level: STANDARD\n- Write for learners with some background knowledge.\n- Balance accessibility with depth.";
+  }
+}
 
 export const SUMMARY_GENERATION_PROMPT = `You are a professional course writer creating a study summary for a self-learning lesson.
 
@@ -247,7 +274,7 @@ Generate both Chinese and English versions using this format:
 \`\`\`
 
 Requirements:
-- Generate exactly 5 questions per language version.
+- Generate exactly {quizCount} questions per language version.
 - Prioritize conceptual understanding, mental models, distinctions between similar ideas, and practical reasoning.
 - Avoid code-reading questions and avoid requiring direct syntax recall.
 - Use a mix of question styles:
