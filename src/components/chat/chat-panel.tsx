@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { isCreateCourseOption } from "@/lib/ai/conversation-language";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 import type { ChatMessage } from "@/types";
 
 interface ChatPanelProps {
@@ -21,6 +22,7 @@ interface ChatPanelProps {
   className?: string;
   animatePrimaryOption?: boolean;
   wideLayout?: boolean;
+  headerSlot?: React.ReactNode;
 }
 
 type ParsedPart =
@@ -55,11 +57,11 @@ function parseMessageContent(content: string): ParsedPart[] {
 
     const optionsText = match[1].trim();
     const options = optionsText
-      .replace(/\s+(?=[A-C][.)]\s)/g, "\n")
+      .replace(/\s+(?=[A-D][.)]\s)/g, "\n")
       .split("\n")
       .map((line) => line.trim())
-      .filter((line) => /^[A-C][.)]\s/.test(line))
-      .slice(0, 3);
+      .filter((line) => /^[A-D][.)]\s/.test(line))
+      .slice(0, 4);
 
     parts.push({ type: "options", value: optionsText, options });
     lastIndex = regex.lastIndex;
@@ -84,10 +86,10 @@ function parseMessageContent(content: string): ParsedPart[] {
     }
 
     const inlineOptions = fallbackOptionsMatch[1]
-      .split(/(?=[A-C][.)]\s)/)
+      .split(/(?=[A-D][.)]\s)/)
       .map((line) => line.trim())
-      .filter((line) => /^[A-C][.)]\s/.test(line))
-      .slice(0, 3);
+      .filter((line) => /^[A-D][.)]\s/.test(line))
+      .slice(0, 4);
 
     if (inlineOptions.length > 0) {
       parts.push({
@@ -124,7 +126,9 @@ export function ChatPanel({
   className,
   animatePrimaryOption = false,
   wideLayout = false,
+  headerSlot,
 }: ChatPanelProps) {
+  const { lang } = useLanguage();
   const [input, setInput] = useState("");
   const [animatedMessageId, setAnimatedMessageId] = useState<string | null>(
     null
@@ -213,9 +217,9 @@ export function ChatPanel({
                         part.type === "text" ? (
                           <div
                             key={`${msg.id}-text-${partIndex}`}
-                            className="rounded-2xl border border-border/40 bg-muted/40 px-4 py-3 text-sm leading-7 shadow-sm"
+                            className="rounded-2xl border border-border/40 bg-muted/40 px-4 py-3 text-sm leading-relaxed shadow-sm dark:border-white/10 dark:bg-white/[0.06]"
                           >
-                            <div className="prose prose-sm max-w-none prose-p:my-3 prose-ul:my-3 prose-ol:my-3 prose-li:my-1 prose-strong:text-foreground prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5">
+                            <div className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:my-2 prose-strong:text-foreground prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 dark:prose-invert">
                               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {part.value}
                               </ReactMarkdown>
@@ -256,8 +260,8 @@ export function ChatPanel({
                                             shouldBreathePrimary &&
                                               "assistant-option-breathe"
                                           )
-                                        : "cursor-pointer border-primary/25 bg-emerald-50/70 hover:border-primary/45 hover:bg-emerald-100/70"
-                                      : "cursor-default border-border/20 bg-muted/30 opacity-60"
+                                        : "cursor-pointer border-primary/25 bg-emerald-50/70 hover:border-primary/45 hover:bg-emerald-100/70 dark:border-white/15 dark:bg-white/[0.06] dark:text-white/90 dark:hover:border-primary/40 dark:hover:bg-white/[0.10]"
+                                      : "cursor-default border-border/20 bg-muted/30 opacity-60 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/50"
                                   )}
                                 >
                                   <span
@@ -272,6 +276,13 @@ export function ChatPanel({
                                 </button>
                               );
                             })}
+                            {isLast && showClickableOptions && (
+                              <p className="mt-1 text-center text-xs text-muted-foreground/60">
+                                {lang === "en"
+                                  ? "or type your own response below"
+                                  : "也可以直接打字输入你的想法"}
+                              </p>
+                            )}
                           </div>
                         )
                       )}
@@ -284,7 +295,7 @@ export function ChatPanel({
 
           {isLoading && (
             <div className="flex justify-start">
-              <div className="rounded-2xl border border-border/30 bg-muted/50 px-4 py-3 shadow-sm">
+              <div className="rounded-2xl border border-border/30 bg-muted/50 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.06]">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
               </div>
             </div>
@@ -308,26 +319,26 @@ export function ChatPanel({
         </div>
       )}
 
-      <div className="shrink-0 space-y-2 border-t border-border/50 bg-background p-3">
-        <div className="flex gap-2">
+      <div className="shrink-0 border-t border-border/50 bg-background p-2 dark:border-white/10">
+        <div className="flex items-center gap-1.5">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="min-h-[44px] max-h-28 resize-none bg-input/50"
+            className="min-h-[36px] max-h-28 flex-1 resize-none bg-input/50 px-3 py-2 text-sm dark:border-white/15 dark:bg-white/[0.06] dark:text-white dark:placeholder:text-white/40"
             rows={1}
           />
-
           <Button
             size="icon"
-            className="h-10 w-10 shrink-0"
+            className="h-9 w-9 shrink-0"
             onClick={handleSubmit}
             disabled={!input.trim() || isLoading}
           >
             <Send className="h-4 w-4" />
           </Button>
+          {headerSlot}
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { contentId } = await req.json();
+  const { contentId, lang } = await req.json();
 
   const content = await prisma.lessonContent.findUnique({
     where: { id: contentId },
@@ -36,6 +36,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ body: zh, bodyZh: zh, bodyEn: en, status: "ready" });
   } catch (error) {
     console.error("Content generation error:", error);
-    return NextResponse.json({ error: "内容生成失败，请重试" }, { status: 500 });
+    const isEnglish = lang === "en";
+    const msg =
+      error instanceof Error && error.message === "MAIN_NOT_READY"
+        ? isEnglish
+          ? "Please generate the main content first"
+          : "请先生成本节的正文内容"
+        : isEnglish
+          ? "Content generation failed. Please try again."
+          : "内容生成失败，请重试";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "next-auth/react";
 import { LanguageProvider } from "@/lib/i18n";
@@ -9,24 +10,23 @@ export const metadata: Metadata = {
   description: "AI 驱动的个性化学习规划与辅导平台",
 };
 
-const themeInitScript = `
-  try {
-    const savedTheme = localStorage.getItem("theme");
-    const isDark = savedTheme !== "light";
-    document.documentElement.classList.toggle("dark", isDark);
-  } catch {}
-`;
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get("theme")?.value;
+  const isDark = themeCookie !== "light";
+  const langCookie = cookieStore.get("lang")?.value;
+  const htmlLang = langCookie === "en" ? "en" : "zh-CN";
+
   return (
-    <html lang="zh-CN" className="h-full antialiased" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
+    <html
+      lang={htmlLang}
+      className={`h-full antialiased${isDark ? " dark" : ""}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <SessionProvider>
           <LanguageProvider>

@@ -1,38 +1,34 @@
 import { spawn } from "child_process";
-import type { AIProvider, AIMessage, AIOptions } from "./provider";
+import { existsSync } from "fs";
+import path from "path";
+import type { AIMessage, AIOptions, AIProvider } from "./provider";
 import { stripThinkTags } from "./response-cleaning";
 
-const BRIDGE_SCRIPT = process.env.CHATGPT_BRIDGE_SCRIPT;
+const BRIDGE_SCRIPT = process.env.CHATGPT_BRIDGE_SCRIPT
+  ? path.resolve(
+      /* turbopackIgnore: true */ process.cwd(),
+      process.env.CHATGPT_BRIDGE_SCRIPT
+    )
+  : path.join(process.cwd(), "scripts", "chatgpt-oauth-bridge.mjs");
 
-const AUTH_FILE = process.env.CHATGPT_OAUTH_FILE;
-const AUTH_TOKEN = process.env.CHATGPT_OAUTH_TOKEN;
+const MODEL = process.env.CHATGPT_MODEL || "gpt-5.4-mini";
 
-const MODEL = process.env.CHATGPT_MODEL || "gpt-4o";
-
-/**
- * ChatGPT OAuth 桥接实现
- * 通过调用 chatgpt_oauth_bridge.mjs 子进程与 ChatGPT Codex 后端通信
- */
 export class ChatGPTOAuthProvider implements AIProvider {
-  private async callBridge(messages: AIMessage[], options?: AIOptions): Promise<string> {
-    if (!BRIDGE_SCRIPT) {
-      throw new Error("CHATGPT_BRIDGE_SCRIPT is required when using the ChatGPT OAuth provider.");
-    }
-
-    if (!AUTH_FILE && !AUTH_TOKEN) {
+  private async callBridge(
+    messages: AIMessage[],
+    options?: AIOptions
+  ): Promise<string> {
+    if (!existsSync(BRIDGE_SCRIPT)) {
       throw new Error(
-        "Set CHATGPT_OAUTH_FILE or CHATGPT_OAUTH_TOKEN when using the ChatGPT OAuth provider."
+        `ChatGPT bridge script not found at ${BRIDGE_SCRIPT}. Set CHATGPT_BRIDGE_SCRIPT to a valid local bridge.`
       );
     }
 
     return new Promise((resolve, reject) => {
-      const model = options?.model || MODEL;
       const payload = JSON.stringify({
-        ...(AUTH_FILE && { auth_file: AUTH_FILE }),
-        ...(AUTH_TOKEN && { auth_token: AUTH_TOKEN }),
-        model,
+        model: options?.model || MODEL,
         messages,
-        session_id: "diy-learn-web",
+        session_id: "studyclaw-chatgpt",
         ...(options?.reasoning && { reasoning_effort: options.reasoning }),
       });
 
@@ -43,21 +39,38 @@ export class ChatGPTOAuthProvider implements AIProvider {
       let stdout = "";
       let stderr = "";
 
-      child.stdout.on("data", (d) => (stdout += d.toString()));
-      child.stderr.on("data", (d) => (stderr += d.toString()));
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk.toString();
+      });
+
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk.toString();
+      });
 
       child.on("close", (code) => {
         if (code !== 0) {
-          reject(new Error(`Bridge exited ${code}: ${stderr}`));
+          reject(
+            new Error(
+              [
+                `ChatGPT bridge exited with code ${code ?? "unknown"}`,
+                stderr.trim(),
+                stdout.trim(),
+              ]
+                .filter(Boolean)
+                .join("\n\n")
+            )
+          );
           return;
         }
+
         try {
           const result = JSON.parse(stdout.trim());
           if (result.error_message) {
             reject(new Error(result.error_message));
-          } else {
-            resolve(stripThinkTags(result.content || ""));
+            return;
           }
+
+          resolve(stripThinkTags(result.content || ""));
         } catch {
           reject(new Error(`Bridge output parse error: ${stdout}`));
         }
@@ -68,24 +81,28 @@ export class ChatGPTOAuthProvider implements AIProvider {
     });
   }
 
-  async chat(messages: AIMessage[], options?: AIOptions): Promise<ReadableStream<Uint8Array>> {
-    // 桥接是非流式的，调用完成后模拟流式输出
+  async chat(
+    messages: AIMessage[],
+    options?: AIOptions
+  ): Promise<ReadableStream<Uint8Array>> {
     const fullText = await this.callBridge(messages, options);
     const encoder = new TextEncoder();
 
     return new ReadableStream({
       start(controller) {
-        // 分块发送，模拟流式效果
         const chunkSize = 10;
-        let i = 0;
+        let index = 0;
         const interval = setInterval(() => {
-          if (i >= fullText.length) {
+          if (index >= fullText.length) {
             clearInterval(interval);
             controller.close();
             return;
           }
-          controller.enqueue(encoder.encode(fullText.slice(i, i + chunkSize)));
-          i += chunkSize;
+
+          controller.enqueue(
+            encoder.encode(fullText.slice(index, index + chunkSize))
+          );
+          index += chunkSize;
         }, 10);
       },
     });

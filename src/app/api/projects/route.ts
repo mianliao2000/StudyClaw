@@ -16,6 +16,19 @@ type ProjectTransactionClient = Pick<
 const SUMMARY_CHAPTER_TITLE_ZH = "课程总结";
 const SUMMARY_CHAPTER_TITLE_EN = "Course Summary";
 
+function ensureSubchapterCountRange<T>(items: T[]): T[] {
+  if (items.length >= 3 && items.length <= 5) return items;
+  if (items.length > 5) return items.slice(0, 5);
+  if (items.length === 0) return items;
+
+  const expanded = [...items];
+  const seed = items[items.length - 1];
+  while (expanded.length < 3) {
+    expanded.push({ ...seed });
+  }
+  return expanded;
+}
+
 function ensureCourseSummaryChapter(plan: PlanStructure): PlanStructure {
   const filteredChapters = plan.chapters.filter(
     (chapter) =>
@@ -96,7 +109,13 @@ export async function PUT(req: Request) {
 
   const { projectId, plan }: { projectId: string; plan: PlanStructure } =
     await req.json();
-  const normalizedPlan = ensureCourseSummaryChapter(plan);
+  const normalizedPlan = ensureCourseSummaryChapter({
+    ...plan,
+    chapters: plan.chapters.map((chapter) => ({
+      ...chapter,
+      subchapters: ensureSubchapterCountRange(chapter.subchapters),
+    })),
+  });
 
   const project = await prisma.learningProject.findFirst({
     where: { id: projectId, userId: session.user.id },

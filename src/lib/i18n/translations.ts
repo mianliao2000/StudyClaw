@@ -151,6 +151,10 @@ const translations = {
   "content.generate": { zh: "生成内容", en: "Generate" },
   "content.regenerate": { zh: "重新生成", en: "Regenerate" },
   "content.generating": { zh: "正在生成", en: "Generating" },
+  "content.generatingHint": {
+    zh: "AI 正在后台生成内容，你可以先看看别的，稍后再回来",
+    en: "AI is generating in the background. Feel free to look around and come back shortly",
+  },
 
   // Tutor chat
   "tutor.title": { zh: "AI 辅导助手", en: "AI Tutor" },
@@ -169,6 +173,10 @@ const translations = {
 
   // Quiz
   "quiz.generating": { zh: "正在生成测验...", en: "Generating quiz..." },
+  "quiz.generatingHint": {
+    zh: "AI 正在后台生成内容，你可以先看看别的，稍后再回来",
+    en: "AI is generating in the background. Feel free to look around and come back shortly",
+  },
   "quiz.error": { zh: "生成失败", en: "Generation failed" },
   "quiz.pending": { zh: "测验尚未生成", en: "Quiz not generated yet" },
   "quiz.generate": { zh: "生成测验", en: "Generate Quiz" },

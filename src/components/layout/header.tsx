@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import { GuestBanner } from "./guest-banner";
 import { UserMenu } from "./user-menu";
+import { RecentStudyCapsule } from "./recent-study-capsule";
 
 export function Header() {
   const { data: session } = useSession();
@@ -25,10 +26,11 @@ export function Header() {
       <header className="sticky top-0 z-50 glass border-b border-border/50">
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-accent/30" />
 
-        <div className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-2 sm:min-h-16 sm:px-6 lg:px-8 2xl:px-10">
+        <div className="flex min-h-14 w-full items-center gap-3 px-4 py-2 sm:min-h-16 sm:px-6 lg:px-8 2xl:px-10">
+          {/* Left: Brand */}
           <Link
             href="/"
-            className="group flex min-w-0 flex-1 items-center gap-2 sm:gap-3"
+            className="group flex shrink-0 items-center gap-2 sm:gap-3"
           >
             <Image
               src="/Box_Logo2_v3.png"
@@ -43,7 +45,13 @@ export function Header() {
             </span>
           </Link>
 
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Right: Navigation & tools */}
           <nav className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2 lg:gap-3">
+            <RecentStudyCapsule />
+
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-0.5 rounded-full border border-stone-300/80 bg-white/92 p-0.5 shadow-[0_10px_24px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur dark:border-white/10 dark:bg-slate-900/82 dark:shadow-[0_14px_28px_rgba(2,6,23,0.28)]">
                 <Button

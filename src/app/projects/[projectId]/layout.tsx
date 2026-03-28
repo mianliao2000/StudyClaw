@@ -27,7 +27,7 @@ export default async function ProjectLayout({
           subchapters: {
             orderBy: { orderIndex: "asc" },
             include: {
-              contents: { select: { id: true, contentType: true, status: true } },
+              contents: { select: { id: true, contentType: true, status: true, lang: true } },
             },
           },
         },
@@ -51,6 +51,9 @@ export default async function ProjectLayout({
   const completedItems: string[] = project.progress?.completedItems
     ? JSON.parse(project.progress.completedItems)
     : [];
+  const quizScores: Record<string, number> = project.progress?.quizScores
+    ? JSON.parse(project.progress.quizScores)
+    : {};
 
   return (
     <div className="flex flex-col h-screen">
@@ -62,6 +65,7 @@ export default async function ProjectLayout({
             projectTitleEn={project.titleEn ?? undefined}
             chapters={project.chapters as ChapterWithSubchapters[]}
             completedItems={completedItems}
+            quizScores={quizScores}
           />
         }
       >

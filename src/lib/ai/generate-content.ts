@@ -132,7 +132,7 @@ export async function generateContentById(
           where: { id: contentId },
           data: { status: "error" },
         });
-        throw new Error("Main content not ready");
+        throw new Error("MAIN_NOT_READY");
       }
 
       vars.lessonContent =

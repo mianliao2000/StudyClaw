@@ -65,6 +65,15 @@ export default async function QuizPage({
     subchapter.contents.find((c: SubchapterContentItem) => c.contentType === "quiz");
   if (!quiz) redirect(`/projects/${projectId}`);
 
+  const progress = await prisma.progressState.findUnique({
+    where: { projectId },
+    select: { completedItems: true },
+  });
+  const completedItems: string[] = progress?.completedItems
+    ? JSON.parse(progress.completedItems)
+    : [];
+  const isCompleted = completedItems.includes(quiz.id);
+
   const thread = subchapter.chatThreads[0];
 
   return (
@@ -86,6 +95,7 @@ export default async function QuizPage({
               body={quiz.body}
               bodyEn={quizEn?.body}
               status={quiz.status}
+              isCompleted={isCompleted}
             />
           </div>
         </div>

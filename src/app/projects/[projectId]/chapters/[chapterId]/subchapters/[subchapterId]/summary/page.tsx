@@ -69,6 +69,15 @@ export default async function SummaryPage({
     );
   if (!summary) redirect(`/projects/${projectId}`);
 
+  const progress = await prisma.progressState.findUnique({
+    where: { projectId },
+    select: { completedItems: true },
+  });
+  const completedItems: string[] = progress?.completedItems
+    ? JSON.parse(progress.completedItems)
+    : [];
+  const isCompleted = completedItems.includes(summary.id);
+
   const thread = subchapter.chatThreads[0];
 
   return (
@@ -91,6 +100,7 @@ export default async function SummaryPage({
               bodyEn={summaryEn?.body}
               status={summary.status}
               contentType="summary"
+              isCompleted={isCompleted}
             />
           </div>
         </div>

@@ -218,47 +218,25 @@ export default function HomePage() {
 
   const knownCourses: SampleCourse[] = [
     {
-      title: text("AI Agent 开发", "AI Agent Development"),
-      duration: text("2-3 周", "2-3 weeks"),
-      level: text("有 Python 基础", "Python basics"),
-      prompt: text("AI Agent 开发", "AI Agent Development"),
-      chapters: [
-        text("Agent 工作流与角色拆分", "Agent workflows and role design"),
-        text("工具调用、记忆与状态管理", "Tool use, memory, and state handling"),
-        text("规划、执行与反馈闭环", "Planning, execution, and feedback loops"),
-      ],
-    },
-    {
-      title: text("React 全栈开发", "React Full-Stack"),
+      title: text("大语言模型", "Large Language Models"),
       duration: text("3-4 周", "3-4 weeks"),
-      level: text("前端进阶", "Intermediate frontend"),
-      prompt: text("React 全栈开发", "React Full-Stack"),
+      level: text("有编程基础", "Programming basics"),
+      prompt: text("大语言模型", "Large Language Models"),
       chapters: [
-        text("App Router 与数据流", "App Router and data flow"),
-        text("认证、数据库与 API", "Auth, database, and APIs"),
-        text("部署、优化与工程化", "Deployment, optimization, and tooling"),
+        text("Transformer 架构与注意力机制", "Transformer architecture and attention"),
+        text("预训练、微调与对齐", "Pre-training, fine-tuning, and alignment"),
+        text("提示工程与应用实践", "Prompt engineering and applications"),
       ],
     },
     {
-      title: text("控制理论", "Control Theory"),
-      duration: text("2 周", "2 weeks"),
-      level: text("工程基础", "Engineering basics"),
-      prompt: text("控制理论", "Control Theory"),
+      title: text("自媒体运营", "Content Creation"),
+      duration: text("2-3 周", "2-3 weeks"),
+      level: text("零基础可学", "No prerequisites"),
+      prompt: text("自媒体运营", "Content Creation"),
       chapters: [
-        text("系统建模与稳定性", "Modeling and stability"),
-        text("时域与频域分析", "Time-domain and frequency analysis"),
-        text("控制器设计", "Controller design"),
-      ],
-    },
-    {
-      title: text("系统设计", "System Design"),
-      duration: text("3 周", "3 weeks"),
-      level: text("进阶提升", "Intermediate to advanced"),
-      prompt: text("系统设计", "System Design"),
-      chapters: [
-        text("需求拆解与系统抽象", "Requirements and system abstraction"),
-        text("存储、缓存与数据流", "Storage, caching, and data flow"),
-        text("扩展性、稳定性与权衡", "Scalability, reliability, and tradeoffs"),
+        text("平台选择与账号定位", "Platform selection and positioning"),
+        text("内容策划与创作技巧", "Content planning and creation skills"),
+        text("数据分析与增长策略", "Analytics and growth strategies"),
       ],
     },
   ];
@@ -451,7 +429,7 @@ export default function HomePage() {
                 {text("AI 驱动的个性化学习平台", "AI-powered personalized learning platform")}
               </div>
 
-              <h1 className="mt-6 max-w-4xl text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl dark:text-white">
+              <h1 className="mt-6 max-w-4xl text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl lang-en:text-3xl lang-en:sm:text-5xl lang-en:lg:text-6xl lang-en:leading-[1.1] text-balance dark:text-white">
                 {text("把目标变成课程", "Turn a goal into a course")}
               </h1>
 
@@ -504,9 +482,9 @@ export default function HomePage() {
 
                 <div className="mt-4 flex flex-wrap items-center gap-2.5">
                   <span className="mr-1 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  {text("也可以直接从这里开始", "Or start from one of these")}
+                  {text("示例：", "Examples:")}
                   </span>
-                  {[text("AI Agent 开发", "AI Agent Development"), text("系统设计", "System Design"), text("控制理论", "Control Theory"), text("电力电子学", "Power Electronics")].map((quickPrompt) => (
+                  {[text("AI Agent开发", "AI Agent Development"), text("大语言模型", "Large Language Models"), text("自媒体运营", "Content Creation"), text("电路设计", "Circuit Design")].map((quickPrompt) => (
                     <button
                       key={quickPrompt}
                       type="button"
@@ -527,7 +505,7 @@ export default function HomePage() {
                   <Wand2 className="h-3.5 w-3.5" />
                   {text("规划流程", "Planning flow")}
                 </div>
-                <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl dark:text-white">
+                <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
                   {text("几轮对话，收窄方向", "A few turns, then a clear direction")}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground dark:text-white/65">
@@ -585,7 +563,7 @@ export default function HomePage() {
                 <Sparkles className="h-3.5 w-3.5" />
                 {text("不只是聊天", "More than chat")}
               </div>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl dark:text-white">
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
                 {text(
                   "几轮对话后，你得到的是一套学习系统",
                   "After a few turns, you get a learning system"
@@ -618,7 +596,7 @@ export default function HomePage() {
                     <Target className="h-3.5 w-3.5" />
                     {text("继续你的学习", "Keep learning")}
                   </div>
-                  <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl dark:text-white">
+                  <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
                     {firstName
                       ? `${firstName}${text("，首页更像你的学习入口", ", the homepage now feels more like your learning entry point")}`
                       : text("首页更像你的学习入口", "The homepage now feels more like your learning entry point")}
@@ -642,18 +620,18 @@ export default function HomePage() {
                 <Compass className="h-3.5 w-3.5" />
                 {text("开始方式", "Ways to start")}
               </div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl dark:text-white">
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance dark:text-white">
                 {text("两种开始方式", "Two ways to start")}
               </h2>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <div className="home-panel-known rounded-[1.8rem] p-1 sm:p-2 xl:pr-4">
+            <div className="grid items-stretch gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+              <div className="home-panel-known flex flex-col rounded-[1.8rem] p-1 sm:p-2 xl:pr-4">
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold dark:text-white">{text("我知道想学什么", "I know the topic")}</h3>
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid flex-1 gap-4 lg:grid-cols-2">
                   {knownCourses.map((course) => (
                     <Link
                       key={course.title}
@@ -704,14 +682,14 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="home-panel-explore rounded-[1.8rem] p-1 sm:p-2 xl:border-l xl:border-slate-200/70 xl:pl-7 dark:xl:border-white/10">
+              <div className="home-panel-explore flex flex-col rounded-[1.8rem] p-1 sm:p-2 xl:border-l xl:border-slate-200/70 xl:pl-7 dark:xl:border-white/10">
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
                     {text("我还不确定怎么开始", "I need help getting started")}
                   </h3>
                 </div>
 
-                <div className="space-y-4">
+                <div className="flex flex-1 flex-col justify-between gap-4">
                   {explorationCards.map((card, index) => (
                     <button
                       key={card.title}
@@ -724,16 +702,13 @@ export default function HomePage() {
                           <card.icon className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-between gap-3">
                             <h4 className="text-base font-semibold dark:text-white">{card.title}</h4>
+                            <ArrowRight className="home-explore-link h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
                           </div>
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground dark:text-white/60">
+                          <p className="mt-1 text-sm leading-6 text-muted-foreground dark:text-white/60">
                             {card.description}
                           </p>
-                          <div className="home-explore-link mt-4 inline-flex items-center gap-2 text-sm font-medium">
-                            <span>{text("按这个目标进入", "Enter from this goal")}</span>
-                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                          </div>
                         </div>
                       </div>
                     </button>
@@ -752,7 +727,7 @@ export default function HomePage() {
                 <Sparkles className="h-3.5 w-3.5" />
                 {text("预览", "Preview")}
               </div>
-              <h2 className="mx-auto mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h2 className="mx-auto mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance">
                 {text("你会得到什么", "What you get")}
               </h2>
               <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-white/72 sm:text-base">
@@ -917,7 +892,7 @@ export default function HomePage() {
                 <Target className="h-3.5 w-3.5" />
                 {text("对比", "Comparison")}
               </div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl dark:text-white">
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance dark:text-white">
                 {text("为什么是 Pandora AI", "Why Pandora AI")}
               </h2>
             </div>
@@ -961,7 +936,7 @@ export default function HomePage() {
         <section className="relative container mx-auto px-4 pb-20">
           <div className="home-topic-shell rounded-[2rem] border border-slate-200/60 p-5 dark:border-white/10 sm:p-6">
           <div className="mb-6 max-w-3xl">
-            <h2 className="text-2xl font-semibold tracking-tight dark:text-white">
+            <h2 className="text-2xl font-semibold tracking-tight text-balance dark:text-white">
               {text("热门主题", "Popular topics")}
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground dark:text-white/62">

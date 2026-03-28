@@ -14,6 +14,8 @@ interface Project {
   topic: string;
   topicEn: string | null;
   status: string;
+  starred: boolean;
+  createdAt: Date;
   updatedAt: Date;
   chapters: { subchapters: unknown[] }[];
   progress: { completionPercent: number } | null;

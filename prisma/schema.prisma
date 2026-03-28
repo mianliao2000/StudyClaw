@@ -93,6 +93,7 @@ model LearningProject {
   goals         String?
   goalsEn       String?
   status        String   @default("planning") // planning | active | completed | archived
+  starred       Boolean  @default(false)
   chapters      Chapter[]
   chatThreads   ProjectChatThread[]
   progress      ProgressState?
@@ -167,6 +168,7 @@ model ProgressState {
   currentChapterId    String?
   currentSubchapterId String?
   completedItems      String?  @default("[]")
+  quizScores          String?  @default("{}")  // JSON: { [contentId]: percentScore }
   completionPercent   Float    @default(0)
   lastVisitedAt       DateTime @default(now())
 }

@@ -46,7 +46,7 @@ export function SubchapterHeader({
 
   return (
     <div className="mb-6">
-      <p className="text-sm font-medium text-muted-foreground sm:text-base">
+      <p className="text-base font-semibold text-muted-foreground sm:text-lg">
         {displayChapterTitle}
       </p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

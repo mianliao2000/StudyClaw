@@ -8,16 +8,21 @@
     "dev:managed": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-server.ps1 restart",
     "dev:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-server.ps1 stop",
     "dev:status": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-server.ps1 status",
+    "chatgpt:login": "node ./scripts/chatgpt-oauth-login.mjs",
+    "chatgpt:probe": "node ./scripts/chatgpt-oauth-probe.mjs",
+    "chatgpt:status": "node ./scripts/chatgpt-oauth-status.mjs",
     "build": "prisma generate --config prisma.config.ts && next build",
     "start": "next start",
     "postinstall": "prisma generate --config prisma.config.ts",
     "lint": "eslint",
     "db:migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
-    "start:railway": "pnpm db:migrate:deploy && next start"
+    "start:railway": "pnpm db:migrate:deploy && next start",
+    "dev:logs": "powershell -ExecutionPolicy Bypass -Command \"Get-Content '.next/dev/logs/next-development.log' -Wait\""
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@base-ui/react": "^1.3.0",
+    "@mariozechner/pi-ai": "0.61.1",
     "@prisma/adapter-better-sqlite3": "7",
     "@prisma/client": "^7.5.0",
     "better-sqlite3": "^12.8.0",

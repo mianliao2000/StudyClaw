@@ -9,13 +9,6 @@ import type { ChatMessage } from "@/types";
 const ASSISTANT_HIDDEN_STORAGE_KEY = "pandora:learning-assistant-hidden";
 const ASSISTANT_EXPANDED_STORAGE_KEY = "pandora:learning-assistant-expanded";
 
-function readStoredBoolean(key: string, fallback = false) {
-  if (typeof window === "undefined") return fallback;
-  const raw = window.localStorage.getItem(key);
-  if (raw === null) return fallback;
-  return raw === "true";
-}
-
 interface LearningPageShellProps {
   content: React.ReactNode;
   tutoring: {
@@ -37,12 +30,16 @@ export function LearningPageShell({
   content,
   tutoring,
 }: LearningPageShellProps) {
-  const [isAssistantExpanded, setIsAssistantExpanded] = useState(() =>
-    readStoredBoolean(ASSISTANT_EXPANDED_STORAGE_KEY, false)
-  );
-  const [isAssistantHidden, setIsAssistantHidden] = useState(() =>
-    readStoredBoolean(ASSISTANT_HIDDEN_STORAGE_KEY, false)
-  );
+  const [isAssistantExpanded, setIsAssistantExpanded] = useState(false);
+  const [isAssistantHidden, setIsAssistantHidden] = useState(false);
+
+  // Sync from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    const expanded = window.localStorage.getItem(ASSISTANT_EXPANDED_STORAGE_KEY) === "true";
+    const hidden = window.localStorage.getItem(ASSISTANT_HIDDEN_STORAGE_KEY) === "true";
+    if (expanded) setIsAssistantExpanded(true);
+    if (hidden) setIsAssistantHidden(true);
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(

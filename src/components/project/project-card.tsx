@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Clock, MoreVertical, Trash2 } from "lucide-react";
+import { Clock, MoreVertical, Star, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n/translations";
 
@@ -51,6 +52,8 @@ interface ProjectCardProps {
     topic: string;
     topicEn: string | null;
     status: string;
+    starred: boolean;
+    createdAt: Date;
     updatedAt: Date;
     chapters: { subchapters: unknown[] }[];
     progress: { completionPercent: number } | null;
@@ -75,6 +78,24 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const { t, lang } = useLanguage();
   const [showDelete, setShowDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [starred, setStarred] = useState(project.starred);
+
+  const handleToggleStar = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = !starred;
+    setStarred(next);
+    try {
+      await fetch(`/api/projects/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ starred: next }),
+      });
+      router.refresh();
+    } catch {
+      setStarred(!next);
+    }
+  };
 
   const chapterCount = project.chapters.length;
   const subchapterCount = project.chapters.reduce(
@@ -106,66 +127,74 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <>
       <Card className="relative h-full rounded-[1.5rem] border border-slate-200/85 bg-white shadow-[0_18px_42px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.92)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-300/90 hover:shadow-[0_28px_60px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] dark:border-white/10 dark:bg-slate-900/82 dark:shadow-[0_20px_44px_rgba(2,6,23,0.34)] dark:hover:border-white/16 dark:hover:shadow-[0_28px_60px_rgba(2,6,23,0.42)] group">
-        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-white/8"
-              onClick={(e) => e.preventDefault()}
-            >
-              <MoreVertical className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowDelete(true);
-                }}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {t("delete.menu")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
         <Link href={href} className="flex h-full flex-col">
-          <CardHeader className="min-h-0 border-b border-slate-100/90 px-4 pb-1.5 pt-2.5 dark:border-white/10">
-            <div className="flex items-start justify-between gap-3 pr-8">
+          <CardHeader className="min-h-0 border-b border-slate-100/90 px-4 pb-1.5 pt-1.5 dark:border-white/10">
+            <div className="flex items-center gap-2">
               <CardTitle
-                className="min-w-0 flex-1 line-clamp-1 text-[18px] font-semibold leading-6 text-slate-900 dark:text-white"
+                className="min-w-0 flex-1 line-clamp-1 text-xl font-bold leading-7 text-slate-900 dark:text-white"
                 title={projectTitle}
               >
                 {cardTitle}
               </CardTitle>
-              <Badge variant={statusVariants[project.status]} className="shrink-0">
+              <Badge variant={statusVariants[project.status]} className="shrink-0 text-xs">
                 {statusKeys[project.status] ? t(statusKeys[project.status]) : project.status}
               </Badge>
+              <button
+                onClick={handleToggleStar}
+                className={cn(
+                  "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-all",
+                  starred
+                    ? "text-amber-400 opacity-100"
+                    : "text-slate-400 opacity-0 hover:text-amber-400 group-hover:opacity-100 dark:text-white/30"
+                )}
+              >
+                <Star className={cn("h-4 w-4", starred && "fill-amber-400")} />
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-white/8"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowDelete(true);
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {t("delete.menu")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <p className="mt-0.5 line-clamp-1 text-[14px] leading-5 text-muted-foreground" title={projectTopic}>
+            <p className="mt-1 line-clamp-1 text-[15px] leading-6 text-muted-foreground" title={projectTopic}>
               {projectTopic}
             </p>
           </CardHeader>
-          <CardContent className="mt-auto px-4 pt-2 pb-2.5">
-            <div className="mb-1.5 flex items-center gap-3 text-[13px] text-muted-foreground">
+          <CardContent className="mt-auto px-4 pt-1.5 pb-2">
+            <div className="mb-2 flex items-center gap-3 text-sm text-muted-foreground">
               <span>{chapterCount} {t("misc.chapter")}</span>
               <span>{subchapterCount} {t("misc.section")}</span>
               <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{lang === "zh" ? "最近更新" : "Updated"}</span>
-                <span>{new Date(project.updatedAt).toLocaleDateString(dateLocale)}</span>
+                <Clock className="h-3.5 w-3.5" />
+                <span>{lang === "zh" ? "创建时间" : "Created"}</span>
+                <span>{new Date(project.createdAt).toLocaleDateString(dateLocale)}</span>
               </span>
             </div>
             {project.progress && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <div className="min-w-0 flex-1 rounded-full bg-slate-100/90 p-1 dark:bg-white/6">
                 <Progress
                   value={project.progress.completionPercent}
-                  className="h-1"
+                  className="h-1.5"
                 />
                 </div>
-                <span className="shrink-0 text-[13px] font-medium text-muted-foreground">
-                  {project.progress.completionPercent}%
+                <span className="shrink-0 text-sm font-semibold text-muted-foreground">
+                  {Math.round(project.progress.completionPercent)}%
                 </span>
               </div>
             )}

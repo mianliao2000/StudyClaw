@@ -14,6 +14,7 @@ import {
   BookOpen,
   Brain,
   BriefcaseBusiness,
+  CheckCircle2,
   GitBranch,
   KeyRound,
   Lightbulb,
@@ -28,6 +29,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { cn } from "@/lib/utils";
+import { useMarkCompleted } from "@/lib/use-mark-completed";
 
 interface LessonContentProps {
   contentId: string;
@@ -35,6 +37,7 @@ interface LessonContentProps {
   bodyEn?: string;
   status: string;
   contentType: string;
+  isCompleted?: boolean;
 }
 
 interface LessonSection {
@@ -497,9 +500,11 @@ function LessonGuide({
 function LessonSectionCard({
   section,
   lang,
+  compact = false,
 }: {
   section: LessonSection;
   lang: SupportedLanguage;
+  compact?: boolean;
 }) {
   const meta = sectionMeta[section.kind];
   const Icon = meta.icon;
@@ -527,7 +532,7 @@ function LessonSectionCard({
               {displayTitle}
             </h2>
             {section.body ? (
-              <div className="mt-4 max-w-[78ch]">
+              <div className="mt-4 max-w-[80ch]">
                 <LessonMarkdown markdown={section.body} />
               </div>
             ) : null}
@@ -539,7 +544,7 @@ function LessonSectionCard({
 
   return (
     <Card className={cn("overflow-hidden border shadow-sm", meta.cardClassName)}>
-      <CardContent className="px-5 py-5 sm:px-6 lg:px-7">
+      <CardContent className={cn("px-5 sm:px-6 lg:px-7", compact ? "py-4" : "py-5")}>
         <div className="flex items-start gap-4">
           <div
             className={cn(
@@ -554,7 +559,7 @@ function LessonSectionCard({
               {displayTitle}
             </h2>
             {section.body ? (
-              <div className="mt-4 max-w-[82ch]">
+              <div className="mt-4 max-w-[80ch]">
                 <LessonMarkdown markdown={section.body} />
               </div>
             ) : null}
@@ -572,7 +577,7 @@ function FallbackLessonBody({
 }) {
   return (
     <div className="rounded-3xl border-l-4 border-primary/20 bg-transparent px-0 py-1">
-      <div className="max-w-[78ch] pl-5 pr-1 sm:pl-6">
+      <div className="max-w-[80ch] pl-5 pr-1 text-muted-foreground italic sm:pl-6">
         <LessonMarkdown markdown={intro} />
       </div>
     </div>
@@ -585,12 +590,15 @@ export function LessonContent({
   bodyEn,
   status: initialStatus,
   contentType,
+  isCompleted: initialCompleted = false,
 }: LessonContentProps) {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
   const [status, setStatus] = useState(initialStatus);
+
+  const { isCompleted, isMarking, markCompleted } = useMarkCompleted(contentId, initialCompleted);
 
   const displayContent = lang === "en" && contentEnState ? contentEnState : content;
   const typeLabel = typeKeys[contentType] ? t(typeKeys[contentType]) : contentType;
@@ -612,13 +620,16 @@ export function LessonContent({
     return () => clearInterval(timer);
   }, [router, status]);
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handleGenerate = async () => {
     setStatus("generating");
+    setErrorMessage(null);
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentId }),
+        body: JSON.stringify({ contentId, lang }),
       });
 
       if (res.ok) {
@@ -629,7 +640,7 @@ export function LessonContent({
         router.refresh();
       } else {
         const err = await res.json();
-        alert(err.error || t("content.error"));
+        setErrorMessage(err.error || null);
         setStatus("error");
       }
     } catch {
@@ -639,11 +650,14 @@ export function LessonContent({
 
   if (status === "generating") {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+      <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
         <Loader2 className="mb-4 h-8 w-8 animate-spin" />
         <p>
           {t("content.generating")}
           {typeLabel}...
+        </p>
+        <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground/85">
+          {t("content.generatingHint")}
         </p>
       </div>
     );
@@ -652,9 +666,15 @@ export function LessonContent({
   if (status === "pending" || status === "error" || !content) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="mb-4 text-muted-foreground">
-          {status === "error" ? t("content.error") : `${typeLabel}${t("content.notReady")}`}
-        </p>
+        {status === "error" && errorMessage ? (
+          <p className="mb-4 max-w-2xl text-center text-base font-semibold leading-7 text-red-600 dark:text-red-400 sm:text-lg">
+            {errorMessage}
+          </p>
+        ) : (
+          <p className="mb-4 text-muted-foreground">
+            {status === "error" ? t("content.error") : `${typeLabel}${t("content.notReady")}`}
+          </p>
+        )}
         <Button onClick={handleGenerate}>
           <RefreshCw className="mr-2 h-4 w-4" />
           {status === "error" ? t("content.regenerate") : t("content.generate")}
@@ -672,18 +692,41 @@ export function LessonContent({
       ) : null}
 
       {parsedContent.sections.length > 0 ? (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {parsedContent.sections.map((section) => (
             <LessonSectionCard
               key={`${section.kind}:${section.title}`}
               section={section}
               lang={lang}
+              compact={contentType === "summary"}
             />
           ))}
         </div>
       ) : (
         <FallbackLessonBody intro={parsedContent.intro || displayContent} />
       )}
+
+      <div className="flex justify-center pt-4 pb-2">
+        {isCompleted ? (
+          <div className="flex items-center gap-2 rounded-full border border-green-500/30 bg-green-50 px-5 py-2.5 text-sm font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
+            <CheckCircle2 className="h-4 w-4" />
+            {lang === "en" ? "Completed" : "已完成"}
+          </div>
+        ) : (
+          <Button
+            onClick={() => markCompleted()}
+            disabled={isMarking}
+            className="gap-2 rounded-full px-6"
+          >
+            {isMarking ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            {lang === "en" ? "Mark as Read" : "标记为已读"}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -23,12 +23,12 @@ import type { ChatMessage, PlanStructure } from "@/types";
 type FixedQuestion = {
   id: string;
   prompt: string;
-  options: [string, string, string];
+  options: string[];
 };
 
 type DecisionQuestion = {
   prompt: string;
-  options: [string, string, string];
+  options: string[];
 };
 
 type DecisionLoopStage = "divergence_only" | "decision_with_create";
@@ -147,18 +147,16 @@ function getAssistantErrorMessage(language: ConversationLanguage) {
 }
 
 function getDecisionBannerText(
-  stage: DecisionLoopStage,
+  _stage: DecisionLoopStage,
   language: ConversationLanguage
 ) {
   if (language === "en") {
-    return stage === "decision_with_create"
-      ? "This is a create-or-continue round: you can create the course now, or keep expanding the current direction."
-      : "This is a pure exploration round: choose one of the three concrete directions first.";
+    return "Ready to create! Click \"Create Course\" anytime, or keep chatting to refine your plan.";
   }
 
-  return stage === "decision_with_create"
-    ? "当前是创建决策轮：你可以直接创建课程，或继续沿当前方向发散。"
-    : "当前是纯发散轮：请先从三个具体探索方向里选择一个。";
+  return _stage === "decision_with_create"
+    ? "随时可以点击「创建课程」生成课程，也可以继续对话来优化方向"
+    : "随时可以点击「创建课程」生成课程，也可以继续对话来优化方向";
 }
 
 function getPlanHint(language: ConversationLanguage) {
@@ -221,11 +219,11 @@ function extractOptionsFromMessage(content: string) {
   if (!match) return [] as string[];
 
   return match[1]
-    .replace(/\s+(?=[A-C][.)]\s)/g, "\n")
+    .replace(/\s+(?=[A-D][.)]\s)/g, "\n")
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => /^[A-C][.)]\s/.test(line))
-    .slice(0, 3);
+    .filter((line) => /^[A-D][.)]\s/.test(line))
+    .slice(0, 4);
 }
 
 function inferDecisionLoopStage(
@@ -318,6 +316,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. Adjust the direction, such as making it more practical, more foundational, or paced differently",
             "C. Re-plan more deeply, such as reframing the topic or rebuilding the path from scratch",
+            "D. Start fresh with a completely different topic",
           ],
         }
       : {
@@ -327,6 +326,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. 调整方向，例如更偏实战、更基础、或调整节奏",
             "C. 重新规划，例如换主题、重做路径、重新梳理目标",
+            "D. 换一个全新的主题重新开始",
           ],
         };
   }
@@ -343,6 +343,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. Make the foundation much stronger and lower the early learning barrier",
             "C. Keep the basics, but introduce examples and application bridges earlier",
+            "D. Add more hands-on exercises alongside the theory",
           ],
         }
       : {
@@ -351,6 +352,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. 更扎实地补基础，降低前期门槛",
             "C. 保留基础，但更早加入案例和应用桥接",
+            "D. 理论和动手练习并重，边学边练",
           ],
         };
   }
@@ -363,6 +365,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. Keep the broad topic, but rebuild the chapter path and sequence",
             "C. Switch to a different topic that fits your current goal better",
+            "D. Keep the topic but change the depth and target audience level",
           ],
         }
       : {
@@ -371,6 +374,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. 保留大主题，但重做章节路径和学习顺序",
             "C. 直接换一个更贴近当前目标的新主题",
+            "D. 保留主题但调整深度和目标受众层级",
           ],
         };
   }
@@ -384,6 +388,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. More project output and case breakdowns, with an emphasis on building real things",
             "C. More job-facing scenarios, with an emphasis on communicating applied ability",
+            "D. Focus on real-world tools, workflows, and deployment practices",
           ],
         }
       : {
@@ -392,6 +397,7 @@ function buildDecisionQuestion(args: {
             createCourseOption,
             "B. 项目作品与案例拆解，强调做出来",
             "C. 求职与面试导向，强调能力表达和落地场景",
+            "D. 真实工具链、工作流和部署实践",
           ],
         };
   }
@@ -399,7 +405,7 @@ function buildDecisionQuestion(args: {
   return language === "en"
     ? {
         prompt:
-          "I already have enough information to build the course. Do you want to create it now, or explore two more directions first?",
+          "I already have enough information to build the course. Do you want to create it now, or explore more directions first?",
         options: [
           createCourseOption,
           wantsPractice
@@ -408,11 +414,12 @@ function buildDecisionQuestion(args: {
           needsFoundation
             ? "C. Keep the topic, but slow down and reinforce the fundamentals more deliberately"
             : "C. Keep the topic, but stretch into deeper and more advanced exploration",
+          "D. Explore a different angle or sub-topic within this field",
         ],
       }
     : {
         prompt:
-          "基于你当前给的信息，我已经可以开始建课。你要直接创建，还是先让我再发散两个方向？",
+          "基于你当前给的信息，我已经可以开始建课。你要直接创建，还是先让我再发散几个方向？",
         options: [
           createCourseOption,
           wantsPractice
@@ -421,6 +428,7 @@ function buildDecisionQuestion(args: {
           needsFoundation
             ? "C. 保留主题，但把节奏放慢、把基础铺得更稳"
             : "C. 保留主题，但拉向更高阶、更深入的专题探索",
+          "D. 从另一个角度或子方向切入这个领域",
         ],
       };
 }
@@ -619,7 +627,7 @@ export default function PlanPage() {
               currentQuestionIndex: nextQuestionIndex,
               isFreeMode: nextIsFreeMode,
               stage: nextIsDecisionLoop
-                ? nextDecisionLoopStage ?? "divergence_only"
+                ? nextDecisionLoopStage ?? "decision_with_create"
                 : nextIsFreeMode
                   ? "free"
                   : "guided",
@@ -710,7 +718,7 @@ export default function PlanPage() {
           const resolvedStage = inferDecisionLoopStage(
             responseOptions,
             nextLanguage,
-            nextDecisionLoopStage ?? "divergence_only"
+            nextDecisionLoopStage ?? "decision_with_create"
           );
           setDecisionLoopStage(resolvedStage);
           setDecisionOptionsHistory((prev) => [...prev, responseOptions]);
@@ -847,7 +855,7 @@ export default function PlanPage() {
 
         const nextAnswers = {
           ...selectedAnswers,
-          [guidedQuestion.id]: trimmed.replace(/^[A-C][.)]\s*/, ""),
+          [guidedQuestion.id]: trimmed.replace(/^[A-D][.)]\s*/, ""),
         };
         setSelectedAnswers(nextAnswers);
 
@@ -886,18 +894,14 @@ export default function PlanPage() {
         appendUserMessage(trimmed);
         const nextTrail = [...decisionTrail, trimmed];
         setDecisionTrail(nextTrail);
-        const nextDecisionStage: DecisionLoopStage =
-          decisionLoopStage === "decision_with_create"
-            ? "divergence_only"
-            : "decision_with_create";
-        setDecisionLoopStage(nextDecisionStage);
+        setDecisionLoopStage("decision_with_create");
         setHasReturnedFromReview(false);
         await runPlanningAI(trimmed, {
           appendUser: false,
           notesOverride: freeformNotes,
           isFreeModeOverride: false,
           isDecisionLoopOverride: true,
-          decisionLoopStageOverride: nextDecisionStage,
+          decisionLoopStageOverride: "decision_with_create",
           currentQuestionIndexOverride: currentQuestionIndex,
           selectionsOverride: selectedAnswers,
           decisionTrailOverride: nextTrail,
@@ -906,7 +910,29 @@ export default function PlanPage() {
         return;
       }
 
+      // Free-mode fallthrough: count user messages and force decision loop after limit
+      appendUserMessage(trimmed);
+      const userMessageCount =
+        messages.filter((m) => m.role === "user").length + 1;
+      if (userMessageCount >= MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE) {
+        setIsInDecisionLoop(true);
+        setDecisionLoopStage("decision_with_create");
+        setHasReturnedFromReview(false);
+        await runPlanningAI(trimmed, {
+          appendUser: false,
+          isFreeModeOverride: false,
+          isDecisionLoopOverride: true,
+          decisionLoopStageOverride: "decision_with_create",
+          currentQuestionIndexOverride: currentQuestionIndex,
+          selectionsOverride: selectedAnswers,
+          decisionTrailOverride: [],
+          conversationLanguageOverride: activeLanguage,
+        });
+        return;
+      }
+
       await runPlanningAI(trimmed, {
+        appendUser: false,
         conversationLanguageOverride: activeLanguage,
       });
     },
@@ -924,6 +950,7 @@ export default function PlanPage() {
       handleCreateCourse,
       isFreeMode,
       isInDecisionLoop,
+      messages,
       runPlanningAI,
       selectedAnswers,
     ]
@@ -947,7 +974,7 @@ export default function PlanPage() {
           notesOverride: nextNotes,
           isFreeModeOverride: false,
           isDecisionLoopOverride: true,
-          decisionLoopStageOverride: decisionLoopStage ?? "divergence_only",
+          decisionLoopStageOverride: decisionLoopStage ?? "decision_with_create",
           currentQuestionIndexOverride: currentQuestionIndex,
           selectionsOverride: selectedAnswers,
           decisionTrailOverride: decisionTrail,
@@ -970,6 +997,27 @@ export default function PlanPage() {
       setIsFreeMode(true);
       const nextNotes = [...freeformNotes, trimmed];
       setFreeformNotes(nextNotes);
+
+      // Count total user messages (including this one) to enforce the 4-round limit
+      const userMessageCount =
+        messages.filter((m) => m.role === "user").length + 1;
+      if (userMessageCount >= MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE) {
+        setIsInDecisionLoop(true);
+        setDecisionLoopStage("decision_with_create");
+        setHasReturnedFromReview(false);
+        await runPlanningAI(trimmed, {
+          notesOverride: nextNotes,
+          isFreeModeOverride: false,
+          isDecisionLoopOverride: true,
+          decisionLoopStageOverride: "decision_with_create",
+          currentQuestionIndexOverride: currentQuestionIndex,
+          selectionsOverride: selectedAnswers,
+          decisionTrailOverride: [],
+          conversationLanguageOverride: nextLanguage,
+        });
+        return;
+      }
+
       await runPlanningAI(trimmed, {
         notesOverride: nextNotes,
         conversationLanguageOverride: nextLanguage,
@@ -986,6 +1034,7 @@ export default function PlanPage() {
       handleOptionSelect,
       isFreeMode,
       isInDecisionLoop,
+      messages,
       rememberConversationLanguage,
       runPlanningAI,
       selectedAnswers,
@@ -1072,7 +1121,8 @@ export default function PlanPage() {
           }
         }
       });
-  }, [fallbackLanguage, isRevising, projectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fallbackLanguage intentionally excluded: re-fetching thread on language switch resets decision-loop state
+  }, [isRevising, projectId]);
 
   useEffect(() => {
     if (!isRevising || hasInjectedRevisionPrompt) return;
@@ -1111,29 +1161,17 @@ export default function PlanPage() {
     threadId,
   ]);
 
-  const suggestions =
-    t("plan.placeholder") === "Tell AI what you want to learn..."
-      ? [
-          "Learn AI Agent development",
-          "Plan a Power Electronics course",
-          "React full-stack development",
-          "System Design intro to advanced",
-        ]
-      : [
-          "我想学习 AI Agent 开发",
-          "帮我规划电力电子学课程",
-          "我想学 React 全栈开发",
-          "系统设计入门到进阶",
-        ];
+  const userMessageCount = messages.filter((m) => m.role === "user").length;
+  const planningProgress = Math.min(userMessageCount, MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE);
 
   const canCreateCourse =
     decisionLoopStage === "decision_with_create" || Boolean(coursePlan);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col min-h-0 overflow-hidden">
       <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
         <div>
-          <h1 className="font-semibold">{t("plan.title")}</h1>
+          <h1 className="text-2xl font-extrabold dark:text-white">{t("plan.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("plan.subtitle")}</p>
         </div>
         <Button
@@ -1160,16 +1198,21 @@ export default function PlanPage() {
       </div>
 
       {isInDecisionLoop && !isCreating && decisionLoopStage && (
-        <div className="border-b border-primary/30 bg-primary/10 px-4 py-3 text-center">
-          <p className="text-sm font-medium text-primary">
+        <div className="border-b border-primary/30 bg-primary/10 px-4 py-3 text-center dark:border-primary/20 dark:bg-primary/[0.08]">
+          <p className="text-sm font-medium text-primary dark:text-primary/90">
             {getDecisionBannerText(decisionLoopStage, activeLanguage)}
           </p>
         </div>
       )}
 
       {!isCreating && (
-        <div className="border-b border-border/30 bg-muted/20 px-4 py-2 text-center text-xs text-muted-foreground">
-          {conversationLanguage ? getPlanHint(activeLanguage) : t("plan.hint")}
+        <div className="flex items-center justify-center gap-3 border-b border-border/30 bg-muted/20 px-4 py-2 text-xs text-muted-foreground dark:border-white/10 dark:bg-white/[0.03] dark:text-white/50">
+          {!isInDecisionLoop && messages.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/80 px-2 py-0.5 font-mono text-[11px] font-medium tabular-nums dark:border-white/15 dark:bg-white/[0.06]">
+              {planningProgress}/{MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE}
+            </span>
+          )}
+          <span>{conversationLanguage ? getPlanHint(activeLanguage) : t("plan.hint")}</span>
         </div>
       )}
 
@@ -1183,7 +1226,7 @@ export default function PlanPage() {
             ? getPlanPlaceholder(activeLanguage)
             : t("plan.placeholder")
         }
-        suggestions={messages.length === 0 ? suggestions : undefined}
+        suggestions={undefined}
         className="flex-1"
         animatePrimaryOption={
           decisionLoopStage === "decision_with_create" && !isLoading

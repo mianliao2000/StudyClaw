@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
+﻿import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getAIProvider } from "@/lib/ai/provider";
+import { getAIProvider, getActiveProviderInfo } from "@/lib/ai/provider";
 import {
   detectConversationLanguage,
   type ConversationLanguage,
@@ -66,14 +66,14 @@ function createPlanSummaryFallback(
   }
 
   return title
-    ? `计划已生成：${title}。请前往确认计划页面查看结构。`
-    : "计划已生成。请前往确认计划页面查看结构。";
+    ? `è®¡åˆ’å·²ç”Ÿæˆï¼š${title}ã€‚è¯·å‰å¾€ç¡®è®¤è®¡åˆ’é¡µé¢æŸ¥çœ‹ç»“æž„ã€‚`
+    : "è®¡åˆ’å·²ç”Ÿæˆã€‚è¯·å‰å¾€ç¡®è®¤è®¡åˆ’é¡µé¢æŸ¥çœ‹ç»“æž„ã€‚";
 }
 
 function getUnavailableMessage(language: ConversationLanguage) {
   return language === "en"
     ? "AI service is temporarily unavailable. Please check the server configuration."
-    : "AI 服务暂时不可用，请检查服务器配置。";
+    : "AI æœåŠ¡æš‚æ—¶ä¸å¯ç”¨ï¼Œè¯·æ£€æŸ¥æœåŠ¡å™¨é…ç½®ã€‚";
 }
 
 function buildPlanningStateSystemMessage(planningState?: PlanningStateContext) {
@@ -283,13 +283,14 @@ export async function POST(req: Request) {
 
   try {
     const provider = getAIProvider();
+    const task =
+      mode === "planning"
+        ? message === "[GENERATE_PLAN]"
+          ? "planning-generate"
+          : "planning-chat"
+        : "tutoring-chat";
     const resolvedReasoning = resolveReasoningForTask({
-      task:
-        mode === "planning"
-          ? message === "[GENERATE_PLAN]"
-            ? "planning-generate"
-            : "planning-chat"
-          : "tutoring-chat",
+      task,
       userPreference: userPrefs?.reasoningLevel,
       explicitReasoning: reasoning,
     });
@@ -297,6 +298,10 @@ export async function POST(req: Request) {
       explicitModel: model,
       reasoning: resolvedReasoning,
     });
+    const activeProvider = getActiveProviderInfo();
+    console.log(
+      `[AI chat] task=${task} provider=${activeProvider.provider} model=${resolvedModel || activeProvider.defaultModel || "unknown"} reasoning=${resolvedReasoning || "default"}`
+    );
     const stream = await provider.chat(aiMessages, {
       model: resolvedModel,
       reasoning: resolvedReasoning,
@@ -351,3 +356,4 @@ export async function POST(req: Request) {
     });
   }
 }
+

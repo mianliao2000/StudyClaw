@@ -6,7 +6,10 @@ import {
   BookOpen,
   Brain,
   CheckCircle2,
+  Lightbulb,
   MessageSquare,
+  Sparkles,
+  Target,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,28 @@ const content = {
       "大多数人用 AI 的方式，是把它当成一个更快的搜索框——问一个问题，得到一个答案，然后关掉页面。这没错，但我们觉得 AI 能做的远不止这些。",
       "真正的学习需要结构。你需要知道从哪里开始、每一步学什么、哪里卡住了、怎么把知识串联起来。这些事情，一个好老师才能做到。",
       "我们做 Pandora AI，就是想让 AI 扮演这个角色：帮你规划一条适合你自己的学习路径，生成内容，陪你把一个复杂主题真正学通——而不是给你一堆碎片信息，让你自己去拼。",
+    ],
+    // Why it works
+    whyLabel: "为什么有效",
+    whyTitle: "理解，而不是死记硬背",
+    whyBody:
+      "传统学习靠背公式、背定义、背步骤，记住了却不知道为什么。Pandora AI 换了一种方式——每个概念先讲直觉，再讲原理，用类比和真实场景帮你建立心智模型。你不需要硬记，因为当你真正理解一个东西，它就很难忘掉。",
+    whyPoints: [
+      {
+        icon: Lightbulb,
+        title: "先讲直觉，再讲原理",
+        desc: "每节课从「这个东西到底在干什么」讲起，用生活中的例子帮你建立第一印象，再逐步深入细节。",
+      },
+      {
+        icon: Sparkles,
+        title: "类比驱动，不靠硬背",
+        desc: "把陌生概念和你已经懂的东西连接起来。不需要记公式，因为你理解了公式背后的意思。",
+      },
+      {
+        icon: Target,
+        title: "场景化学习，记得更牢",
+        desc: "每个概念都放到真实场景中，让你知道「这东西什么时候会用到」，而不只是一个抽象的定义。",
+      },
     ],
     // How it works
     howLabel: "工作原理",
@@ -60,6 +85,27 @@ const content = {
       "Most people use AI like a faster search box — ask a question, get an answer, close the tab. That works. But we think AI can do far more than that.",
       "Real learning needs structure. You need to know where to start, what to learn at each step, where you're getting stuck, and how to connect the pieces together. That's what a good teacher does.",
       "We built Pandora AI to let AI play that role: plan a learning path tailored to you, generate the content, and guide you through a complex topic from start to finish — instead of handing you a pile of fragments and leaving you to figure it out.",
+    ],
+    whyLabel: "Why It Works",
+    whyTitle: "Understanding, not memorization",
+    whyBody:
+      "Traditional learning relies on memorizing formulas, definitions, and procedures — you remember the steps but never understand why. Pandora AI takes a different approach: every concept starts with intuition, then builds to the principle, using analogies and real scenarios to form a mental model. You don't need to memorize, because when you truly understand something, it sticks.",
+    whyPoints: [
+      {
+        icon: Lightbulb,
+        title: "Intuition first, details second",
+        desc: "Each lesson starts with \"what is this actually doing\" — using everyday examples to build your first impression before diving deeper.",
+      },
+      {
+        icon: Sparkles,
+        title: "Analogy-driven, no rote memorization",
+        desc: "We connect unfamiliar concepts to things you already understand. No need to memorize formulas when you grasp the meaning behind them.",
+      },
+      {
+        icon: Target,
+        title: "Learn in context, remember longer",
+        desc: "Every concept is placed in a real scenario so you know when and why it matters — not just an abstract definition.",
+      },
     ],
     howLabel: "How It Works",
     howTitle: "From idea to systematic learning",
@@ -115,6 +161,37 @@ export default function AboutPage() {
                 {para}
               </p>
             ))}
+          </div>
+        </section>
+
+        <hr className="border-border/50" />
+
+        {/* ─── Why It Works ──────────────────────── */}
+        <section className="mb-16 mt-14">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">
+            {copy.whyLabel}
+          </p>
+          <h2 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">
+            {copy.whyTitle}
+          </h2>
+          <p className="mb-8 leading-7 text-muted-foreground">{copy.whyBody}</p>
+          <div className="space-y-6">
+            {copy.whyPoints.map((point, i) => {
+              const Icon = point.icon;
+              return (
+                <div key={i} className="flex gap-4">
+                  <div className="mt-0.5 shrink-0 rounded-lg border border-primary/20 bg-primary/5 p-2 text-primary">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{point.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      {point.desc}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 

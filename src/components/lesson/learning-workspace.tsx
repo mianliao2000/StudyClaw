@@ -148,9 +148,9 @@ export function LearningWorkspace({
           aria-orientation="horizontal"
           aria-label="Resize assistant panel"
           onPointerDown={handlePointerDown}
-          className="relative h-2 shrink-0 touch-none cursor-row-resize bg-transparent transition-colors hover:bg-primary/10"
+          className="relative h-2.5 shrink-0 touch-none cursor-row-resize bg-transparent transition-colors hover:bg-primary/10"
         >
-          <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border/80" />
+          <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 bg-slate-300 dark:bg-white/20" />
         </div>
       )}
 
@@ -165,17 +165,15 @@ export function LearningWorkspace({
       </div>
 
       {isAssistantHidden && (
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="icon"
-          className="absolute bottom-3 right-3 z-20 h-8 w-8 rounded-full border-border/70 bg-background/90 shadow-sm backdrop-blur"
+          className="absolute bottom-4 right-4 z-20 flex items-center gap-2.5 rounded-full border border-primary/40 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30 dark:bg-primary dark:shadow-primary/20"
           onClick={onShowAssistant}
           aria-label={lang === "en" ? "Show AI assistant" : "显示 AI 辅导助手"}
-          title={lang === "en" ? "Show AI assistant" : "显示 AI 辅导助手"}
         >
           <PanelRightOpen className="h-4 w-4" />
-        </Button>
+          <span>{lang === "en" ? "Open AI Tutor" : "打开 AI 助手"}</span>
+        </button>
       )}
     </div>
   );

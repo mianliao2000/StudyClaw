@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Maximize2, Minimize2, PanelRightClose } from "lucide-react";
+import { Maximize2, Minimize2, PanelRightClose, Trash2 } from "lucide-react";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
@@ -109,6 +109,10 @@ function getTutorHideLabel(language: ConversationLanguage) {
   return language === "en" ? "Hide AI assistant" : "隐藏 AI 辅导助手";
 }
 
+function getTutorClearLabel(language: ConversationLanguage) {
+  return language === "en" ? "Clear chat history" : "清空聊天记录";
+}
+
 export function TutoringChat({
   threadId,
   projectId,
@@ -161,6 +165,11 @@ export function TutoringChat({
   }, [storageKey, visibleMessages]);
 
   const activeLanguage = threadLanguage ?? fallbackLanguage;
+
+  const handleClearHistory = useCallback(() => {
+    setVisibleMessages([]);
+    window.localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   const handleSend = useCallback(
     async (text: string) => {
@@ -256,42 +265,6 @@ export function TutoringChat({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="flex items-start justify-between gap-3 border-b px-3 py-2">
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold leading-5">
-            {getTutorTitle(activeLanguage)}
-          </h3>
-          <p className="text-[11px] leading-4 text-muted-foreground">
-            {getTutorSubtitle(activeLanguage)}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={onToggleExpanded}
-            aria-label={getTutorExpandLabel(isExpanded, activeLanguage)}
-          >
-            {isExpanded ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={onHide}
-            aria-label={getTutorHideLabel(activeLanguage)}
-          >
-            <PanelRightClose className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
       <ChatPanel
         messages={visibleMessages}
         onSend={handleSend}
@@ -300,6 +273,44 @@ export function TutoringChat({
         suggestions={getTutorSuggestions(activeLanguage)}
         className="flex-1 min-h-0"
         wideLayout={isExpanded}
+        headerSlot={
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={handleClearHistory}
+              aria-label={getTutorClearLabel(activeLanguage)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={onToggleExpanded}
+              aria-label={getTutorExpandLabel(isExpanded, activeLanguage)}
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={onHide}
+              aria-label={getTutorHideLabel(activeLanguage)}
+            >
+              <PanelRightClose className="h-4 w-4" />
+            </Button>
+          </div>
+        }
       />
     </div>
   );

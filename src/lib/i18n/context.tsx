@@ -28,10 +28,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedLang = localStorage.getItem("lang") === "en" ? "en" : "zh";
     setLangState(savedLang);
+    document.documentElement.lang = savedLang === "en" ? "en" : "zh-CN";
+    document.cookie = `lang=${savedLang};path=/;max-age=31536000;SameSite=Lax`;
 
     const savedTheme = localStorage.getItem("theme") === "light" ? "light" : "dark";
     setThemeState(savedTheme);
     document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    // Sync to cookie so server can apply class without a script tag
+    document.cookie = `theme=${savedTheme};path=/;max-age=31536000;SameSite=Lax`;
   }, []);
 
   useEffect(() => {
@@ -41,11 +45,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLang = (l: Lang) => {
     setLangState(l);
     localStorage.setItem("lang", l);
+    document.documentElement.lang = l === "en" ? "en" : "zh-CN";
+    document.cookie = `lang=${l};path=/;max-age=31536000;SameSite=Lax`;
   };
 
   const setTheme = (t: Theme) => {
     setThemeState(t);
     localStorage.setItem("theme", t);
+    document.cookie = `theme=${t};path=/;max-age=31536000;SameSite=Lax`;
     if (t === "dark") {
       document.documentElement.classList.add("dark");
     } else {

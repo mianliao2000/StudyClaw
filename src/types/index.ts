@@ -46,6 +46,7 @@ export interface SubchapterInfo {
     id: string;
     contentType: string;
     status: string;
+    lang?: string;
   }[];
 }
 

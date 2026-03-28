@@ -4,6 +4,7 @@
 @import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant lang-en (&:is([lang="en"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -139,6 +140,9 @@
   }
   html {
     @apply font-sans;
+  }
+  [lang="en"] :is(h1, h2) {
+    text-wrap: balance;
   }
 }
 
