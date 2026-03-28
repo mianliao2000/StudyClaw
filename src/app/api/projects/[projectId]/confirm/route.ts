@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateContentById } from "@/lib/ai/generate-content";
+import { getUserPreferencesOrDefault } from "@/lib/user-preferences";
 import { NextResponse } from "next/server";
 
 export async function POST(
@@ -71,9 +72,10 @@ export async function POST(
       data: { status: "generating" },
     });
 
-    const userPrefs = await prisma.userPreferences.findUnique({
-      where: { userId: session.user.id },
-      select: { contentDetail: true, quizCount: true, reasoningLevel: true },
+    const userPrefs = await getUserPreferencesOrDefault(session.user.id, {
+      contentDetail: true,
+      quizCount: true,
+      reasoningLevel: true,
     });
     void generateContentById(firstMainContent.id, userPrefs).catch((error) => {
       console.error(`Initial lesson generation failed for ${firstMainContent.id}:`, error);

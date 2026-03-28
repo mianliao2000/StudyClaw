@@ -13,6 +13,7 @@ import {
 import type { AIMessage } from "@/lib/ai/provider";
 import { resolveModelForReasoning } from "@/lib/ai/model-routing";
 import { resolveReasoningForTask } from "@/lib/ai/reasoning";
+import { getUserPreferencesOrDefault } from "@/lib/user-preferences";
 
 type StoredChatMessage = {
   role: string;
@@ -228,9 +229,9 @@ export async function POST(req: Request) {
     });
   }
 
-  const userPrefs = await prisma.userPreferences.findUnique({
-    where: { userId: session.user.id },
-    select: { teachingStyle: true, reasoningLevel: true },
+  const userPrefs = await getUserPreferencesOrDefault(session.user.id, {
+    teachingStyle: true,
+    reasoningLevel: true,
   });
 
   let systemPrompt = getPlanningSystemPrompt(conversationLanguage);

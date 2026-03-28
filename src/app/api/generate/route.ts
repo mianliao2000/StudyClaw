@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateContentById } from "@/lib/ai/generate-content";
+import { getUserPreferencesOrDefault } from "@/lib/user-preferences";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -26,9 +27,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const userPrefs = await prisma.userPreferences.findUnique({
-      where: { userId: session.user.id },
-      select: { contentDetail: true, quizCount: true, reasoningLevel: true },
+    const userPrefs = await getUserPreferencesOrDefault(session.user.id, {
+      contentDetail: true,
+      quizCount: true,
+      reasoningLevel: true,
     });
     const { zh, en } = await generateContentById(contentId, userPrefs);
     return NextResponse.json({ body: zh, bodyZh: zh, bodyEn: en, status: "ready" });

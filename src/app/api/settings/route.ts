@@ -1,5 +1,10 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  DEFAULT_USER_PREFERENCES,
+  getUserPreferencesOrDefault,
+} from "@/lib/user-preferences";
+import { Prisma } from "@prisma/client";
 
 export async function GET() {
   const session = await auth();
@@ -7,20 +12,8 @@ export async function GET() {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const prefs = await prisma.userPreferences.findUnique({
-    where: { userId: session.user.id },
-  });
-
-  return Response.json(
-    prefs ?? {
-      teachingStyle: "balanced",
-      reasoningLevel: "medium",
-      defaultModel: "",
-      contentDetail: "standard",
-      quizCount: 5,
-      emailDigest: false,
-    }
-  );
+  const prefs = await getUserPreferencesOrDefault(session.user.id);
+  return Response.json(prefs ?? DEFAULT_USER_PREFERENCES);
 }
 
 export async function PUT(req: Request) {
@@ -45,13 +38,29 @@ export async function PUT(req: Request) {
     if (key in body) data[key] = body[key];
   }
 
-  const prefs = await prisma.userPreferences.upsert({
-    where: { userId: session.user.id },
-    create: { userId: session.user.id, ...data },
-    update: data,
-  });
+  try {
+    const prefs = await prisma.userPreferences.upsert({
+      where: { userId: session.user.id },
+      create: { userId: session.user.id, ...data },
+      update: data,
+    });
 
-  return Response.json(prefs);
+    return Response.json(prefs);
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2021"
+    ) {
+      return Response.json(
+        {
+          error:
+            "UserPreferences table is missing. Run prisma migrate deploy on the deployed database.",
+        },
+        { status: 503 }
+      );
+    }
+    throw error;
+  }
 }
 
 export async function DELETE() {
