@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -278,6 +280,109 @@ const markdownComponents: Components = {
   ),
 };
 
+function looksLikeMathExpression(value: string) {
+  const text = value.trim();
+  if (!text || text.length > 160) return false;
+
+  const hasLatexCommand = /\\[a-zA-Z]+/.test(text);
+  const hasEquationOperator = /[=<>+\-*/^_]/.test(text);
+  const hasMathToken = /[A-Za-z]\s*(?:\(|\[)|\b(?:sin|cos|tan|log|ln|max|min)\b/.test(text);
+
+  return hasLatexCommand || (hasEquationOperator && hasMathToken);
+}
+
+function normalizeBoldMarkers(markdown: string) {
+  return markdown.replace(/\*\*\s*([^*\n][^*\n]*?)\s*\*\*/g, (_, content: string) => {
+    const cleaned = content.trim();
+    return cleaned ? `**${cleaned}**` : _;
+  });
+}
+
+function repairDanglingInlineLatex(markdown: string) {
+  let result = "";
+
+  for (let index = 0; index < markdown.length; index += 1) {
+    if (markdown[index] === "\\" && markdown[index + 1] === "(") {
+      const closeIndex = markdown.indexOf("\\)", index + 2);
+
+      if (closeIndex !== -1) {
+        result += markdown.slice(index, closeIndex + 2);
+        index = closeIndex + 1;
+        continue;
+      }
+
+      let cursor = index + 2;
+      while (cursor < markdown.length) {
+        const current = markdown[cursor];
+        if ("\n。！？；;,.，".includes(current)) break;
+        cursor += 1;
+      }
+
+      const candidate = markdown.slice(index + 2, cursor).trim();
+      if (looksLikeMathExpression(candidate)) {
+        result += `$${candidate}$`;
+        index = cursor - 1;
+        continue;
+      }
+    }
+
+    result += markdown[index];
+  }
+
+  return result;
+}
+
+function normalizeInlineMath(markdown: string) {
+  let normalized = normalizeBoldMarkers(markdown)
+    .replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, expr: string) => `\n\n$$${expr.trim()}$$\n\n`)
+    .replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (_, expr: string) => `$${expr.trim()}$`);
+
+  normalized = repairDanglingInlineLatex(normalized);
+
+  let result = "";
+
+  for (let index = 0; index < normalized.length; index += 1) {
+    const char = normalized[index];
+
+    if (char !== "(") {
+      result += char;
+      continue;
+    }
+
+    let depth = 1;
+    let cursor = index + 1;
+
+    while (cursor < normalized.length && depth > 0) {
+      const current = normalized[cursor];
+      if (current === "(") depth += 1;
+      if (current === ")") depth -= 1;
+      cursor += 1;
+    }
+
+    if (depth !== 0) {
+      result += char;
+      continue;
+    }
+
+    const inner = normalized.slice(index + 1, cursor - 1);
+
+    if (looksLikeMathExpression(inner)) {
+      result += `$${inner.trim()}$`;
+      index = cursor - 1;
+      continue;
+    }
+
+    result += normalized.slice(index, cursor);
+    index = cursor - 1;
+  }
+
+  normalized = result
+    .replace(/\$\$\s+([\s\S]*?)\s+\$\$/g, (_, expr: string) => `$$${expr.trim()}$$`)
+    .replace(/\$\s+([^$]*?)\s+\$/g, (_, expr: string) => `$${expr.trim()}$`);
+
+  return normalized;
+}
+
 function normalizeHeadingTitle(title: string) {
   return title
     .toLowerCase()
@@ -334,10 +439,16 @@ function getSectionDisplayTitle(section: LessonSection, lang: SupportedLanguage)
 }
 
 function LessonMarkdown({ markdown }: { markdown: string }) {
+  const normalizedMarkdown = useMemo(() => normalizeInlineMath(markdown), [markdown]);
+
   return (
     <div className="lesson-markdown">
-      <ReactMarkdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
-        {markdown}
+      <ReactMarkdown
+        components={markdownComponents}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+      >
+        {normalizedMarkdown}
       </ReactMarkdown>
     </div>
   );

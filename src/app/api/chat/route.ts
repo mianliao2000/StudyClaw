@@ -11,6 +11,8 @@ import {
   getTutoringSystemPrompt,
 } from "@/lib/ai/prompts";
 import type { AIMessage } from "@/lib/ai/provider";
+import { resolveModelForReasoning } from "@/lib/ai/model-routing";
+import { resolveReasoningForTask } from "@/lib/ai/reasoning";
 
 type StoredChatMessage = {
   role: string;
@@ -226,9 +228,10 @@ export async function POST(req: Request) {
     });
   }
 
-  const userPrefs = mode === "tutoring"
-    ? await prisma.userPreferences.findUnique({ where: { userId: session.user.id } })
-    : null;
+  const userPrefs = await prisma.userPreferences.findUnique({
+    where: { userId: session.user.id },
+    select: { teachingStyle: true, reasoningLevel: true },
+  });
 
   let systemPrompt = getPlanningSystemPrompt(conversationLanguage);
   if (mode === "tutoring" && context) {
@@ -279,7 +282,24 @@ export async function POST(req: Request) {
 
   try {
     const provider = getAIProvider();
-    const stream = await provider.chat(aiMessages, { model, reasoning });
+    const resolvedReasoning = resolveReasoningForTask({
+      task:
+        mode === "planning"
+          ? message === "[GENERATE_PLAN]"
+            ? "planning-generate"
+            : "planning-chat"
+          : "tutoring-chat",
+      userPreference: userPrefs?.reasoningLevel,
+      explicitReasoning: reasoning,
+    });
+    const resolvedModel = resolveModelForReasoning({
+      explicitModel: model,
+      reasoning: resolvedReasoning,
+    });
+    const stream = await provider.chat(aiMessages, {
+      model: resolvedModel,
+      reasoning: resolvedReasoning,
+    });
     const [streamForClient, streamForSave] = stream.tee();
     const decoder = new TextDecoder();
 

@@ -7,6 +7,8 @@ import {
   fillTemplate,
   getContentDetailInstruction,
 } from "@/lib/ai/prompts";
+import { resolveModelForReasoning } from "@/lib/ai/model-routing";
+import { resolveReasoningForTask } from "@/lib/ai/reasoning";
 
 const SUMMARY_CHAPTER_TITLE_ZH = "课程总结";
 const SUMMARY_CHAPTER_TITLE_EN = "Course Summary";
@@ -34,7 +36,11 @@ function parseBilingualOutput(result: string): { zh: string; en: string } {
  */
 export async function generateContentById(
   contentId: string,
-  userPrefs?: { contentDetail?: string; quizCount?: number } | null,
+  userPrefs?: {
+    contentDetail?: string;
+    quizCount?: number;
+    reasoningLevel?: string;
+  } | null,
 ): Promise<{ zh: string; en: string }> {
   const content = await prisma.lessonContent.findUnique({
     where: { id: contentId },
@@ -139,7 +145,22 @@ export async function generateContentById(
           : fillTemplate(QUIZ_GENERATION_PROMPT, vars);
     }
 
-    const result = await provider.generate([{ role: "user", content: prompt }]);
+    const reasoningTask =
+      content.contentType === "main"
+        ? "lesson-main"
+        : content.contentType === "summary"
+          ? "lesson-summary"
+          : "lesson-quiz";
+
+    const resolvedReasoning = resolveReasoningForTask({
+        task: reasoningTask,
+        userPreference: userPrefs?.reasoningLevel,
+      });
+
+    const result = await provider.generate([{ role: "user", content: prompt }], {
+      model: resolveModelForReasoning({ reasoning: resolvedReasoning }),
+      reasoning: resolvedReasoning,
+    });
     const { zh, en } = parseBilingualOutput(result);
 
     await prisma.lessonContent.update({

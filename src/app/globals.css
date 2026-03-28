@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -901,4 +902,16 @@ a[href] {
 
 .lesson-markdown pre code {
   @apply bg-transparent p-0;
+}
+
+.lesson-markdown .katex {
+  font-size: 1.02em;
+}
+
+.lesson-markdown .katex-display {
+  @apply my-5 overflow-x-auto overflow-y-hidden rounded-2xl border border-border/60 bg-muted/35 px-4 py-3;
+}
+
+.lesson-markdown .katex-display > .katex {
+  @apply min-w-max;
 }

@@ -73,7 +73,7 @@ export async function POST(
 
     const userPrefs = await prisma.userPreferences.findUnique({
       where: { userId: session.user.id },
-      select: { contentDetail: true, quizCount: true },
+      select: { contentDetail: true, quizCount: true, reasoningLevel: true },
     });
     void generateContentById(firstMainContent.id, userPrefs).catch((error) => {
       console.error(`Initial lesson generation failed for ${firstMainContent.id}:`, error);

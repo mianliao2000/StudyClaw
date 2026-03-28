@@ -161,6 +161,12 @@ Each language version must follow this exact Markdown structure:
 ## What this prepares you for next
 ## Key takeaway
 
+English heading rules:
+- The English version must use the exact section titles above, character for character.
+- Do not rename, paraphrase, shorten, or expand any English section heading.
+- Do not add punctuation such as ":" or "-" to English section headings.
+- Do not output alternative headings like "Overview", "Main idea", "Why this matters", or "Examples".
+
 2. Teaching principles
 - Write like a thoughtful course instructor, not a marketing article, FAQ answer, or coding tutorial.
 - Prioritize intuition, conceptual clarity, and mental models over implementation details.
@@ -189,6 +195,14 @@ Each language version must follow this exact Markdown structure:
 - Use bold text sparingly, only for truly important terms.
 - Do not use blockquotes, horizontal rules, or long numbered procedures unless clearly necessary.
 - Keep Chinese and English versions aligned in structure and meaning.
+- Mathematical expressions must always use standard LaTeX delimiters:
+  - inline math: $...$
+  - display math: $$...$$
+- Never leave formulas as plain text with raw \\(, \\), \\[, \\], or unmatched parentheses.
+- Never write formulas like "( G(s) = \\frac{X(s)}{F(s)} )". Write them as "$G(s)=\\frac{X(s)}{F(s)}$".
+- If a sentence contains variables, functions, transforms, matrices, transfer functions, or differential equations, wrap the mathematical part in LaTeX delimiters.
+- Use valid LaTeX commands for fractions, subscripts, superscripts, derivatives, vectors, and Greek letters.
+- Keep ordinary prose outside math delimiters.
 
 The content should feel intuitive, structured, and professional.
 
@@ -233,7 +247,9 @@ Writing rules:
 - Do not include code blocks or direct code examples.
 - Do not introduce brand-new ideas that were not in the lesson.
 - Chinese and English versions must mirror the same structure and emphasis.
-- Use crisp review-oriented language rather than long explanations.`;
+- Use crisp review-oriented language rather than long explanations.
+- If the summary includes formulas, always use standard LaTeX delimiters: inline $...$ or display $$...$$.
+- Do not leave formulas as plain text or raw \\(...\\) / \\[...\\] syntax.`;
 
 export const QUIZ_GENERATION_PROMPT = `You are a professional course writer creating a quiz for a self-learning lesson.
 

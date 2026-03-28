@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Moon, Sun } from "lucide-react";
+import { CircleHelp, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import { GuestBanner } from "./guest-banner";
@@ -15,6 +15,7 @@ export function Header() {
 
   const isChinese = lang === "zh";
   const isDark = theme === "dark";
+  const aboutLabel = lang === "zh" ? "关于我们" : "About";
   const dashboardLabel = lang === "zh" ? "我的项目" : "My Projects";
   const loginLabel = lang === "zh" ? "登录" : "Login";
 
@@ -109,6 +110,15 @@ export function Header() {
                     className="h-8 rounded-full border border-stone-300/80 bg-white px-3 text-[0.78rem] font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:bg-stone-50 sm:h-8.5 sm:px-4 sm:text-xs lg:h-9 lg:text-sm dark:border-white/10 dark:bg-slate-900/88 dark:text-white dark:hover:bg-slate-900"
                   >
                     {dashboardLabel}
+                  </Button>
+                </Link>
+                <Link href="/about">
+                  <Button
+                    variant="secondary"
+                    className="h-8 gap-1.5 rounded-full border border-stone-300/80 bg-white px-3 text-[0.78rem] font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:bg-stone-50 sm:h-8.5 sm:px-4 sm:text-xs lg:h-9 lg:text-sm dark:border-white/10 dark:bg-slate-900/88 dark:text-white dark:hover:bg-slate-900"
+                  >
+                    <CircleHelp className="h-3.5 w-3.5" />
+                    {aboutLabel}
                   </Button>
                 </Link>
                 <UserMenu />

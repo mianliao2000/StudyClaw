@@ -61,19 +61,19 @@ type CompareCard = {
 };
 
 const TOPICS = [
-  "AI Agent 开发",
-  "系统设计",
-  "控制理论",
-  "React 全栈开发",
-  "MATLAB/Simulink",
-  "嵌入式系统",
-  "电力电子学",
-  "数据库系统",
-  "机器学习基础",
-  "信号与系统",
-  "Python 数据分析",
-  "计算机体系结构",
-];
+  { zh: "AI Agent 开发", en: "AI Agent Development" },
+  { zh: "系统设计", en: "System Design" },
+  { zh: "控制理论", en: "Control Theory" },
+  { zh: "React 全栈开发", en: "React Full-Stack" },
+  { zh: "MATLAB/Simulink", en: "MATLAB/Simulink" },
+  { zh: "嵌入式系统", en: "Embedded Systems" },
+  { zh: "电力电子学", en: "Power Electronics" },
+  { zh: "数据库系统", en: "Database Systems" },
+  { zh: "机器学习基础", en: "Machine Learning Foundations" },
+  { zh: "信号与系统", en: "Signals and Systems" },
+  { zh: "Python 数据分析", en: "Python Data Analysis" },
+  { zh: "计算机体系结构", en: "Computer Architecture" },
+] as const;
 
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
@@ -399,7 +399,8 @@ export default function HomePage() {
     },
   ];
 
-  const scrollingTopics = [...TOPICS, ...TOPICS];
+  const localizedTopics = TOPICS.map((topic) => (isZh ? topic.zh : topic.en));
+  const scrollingTopics = [...localizedTopics, ...localizedTopics];
   const firstName = session?.user?.name?.split(" ")[0];
   const evidenceIconClasses = [
     "home-tone-dialogue",

@@ -226,10 +226,10 @@ const translations = {
     zh: "直击要点，高效回答",
     en: "Straight to the point, efficient answers",
   },
-  "settings.ai.reasoning": { zh: "默认推理深度", en: "Default Reasoning Level" },
+  "settings.ai.reasoning": { zh: "推理强度上限", en: "Reasoning Cap" },
   "settings.ai.reasoning.desc": {
-    zh: "更高的推理深度回答更准确但速度更慢",
-    en: "Higher reasoning is more accurate but slower",
+    zh: "系统会按任务自动分配推理强度，这里设置允许使用的最高档位",
+    en: "Tasks choose reasoning automatically. This sets the highest level allowed.",
   },
 
   // Settings - Learning
