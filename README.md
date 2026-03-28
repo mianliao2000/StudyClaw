@@ -1,4 +1,4 @@
-# Pandora AI
+﻿# Pandora AI
 
 Pandora AI is a bilingual AI learning platform for turning a broad learning goal into a structured course, then studying it through generated lessons, summaries, quizzes, and an in-course AI tutor.
 
@@ -169,21 +169,84 @@ OPENROUTER_APP_NAME="Pandora AI"
 ANTHROPIC_API_KEY="replace-with-provider-key"
 ANTHROPIC_AUTH_TOKEN="replace-with-provider-token"
 ANTHROPIC_MODEL="doubao-seed-2.0-pro"
+ANTHROPIC_REASONING_MODEL="doubao-seed-2.0-pro"
 ANTHROPIC_BASE_URL="https://ark.cn-beijing.volces.com/api/coding"
 ```
 
 ### ChatGPT OAuth Bridge
 
 ```env
-CHATGPT_BRIDGE_SCRIPT="/app/scripts/chatgpt_oauth_bridge.mjs"
-CHATGPT_OAUTH_FILE="/data/chatgpt-oauth.json"
-CHATGPT_OAUTH_TOKEN=""
-CHATGPT_MODEL="gpt-5.4"
+CODEX_BIN="C:/Users/your-user/.vscode/extensions/openai.chatgpt-<version>/bin/windows-x86_64/codex.exe"
+CHATGPT_BRIDGE_SCRIPT="./scripts/chatgpt-oauth-bridge.mjs"
+CHATGPT_MODEL="gpt-5.4-mini"
 ```
+
+`CODEX_BIN` is optional, but it is useful on Windows if `codex` is installed by the VS Code extension and is not available on PATH.
+
+To sign in locally with your ChatGPT account, run:
+
+```bash
+corepack pnpm chatgpt:login
+```
+
+This uses the local `codex app-server` login flow. It opens a browser window, completes ChatGPT authentication through Codex, and reuses the Codex-managed local session for model calls.
+
+To check whether the local ChatGPT OAuth setup is ready, run:
+
+```bash
+corepack pnpm chatgpt:status
+```
+
+To verify the current Codex-managed ChatGPT login with a real model call, run:
+
+```bash
+corepack pnpm chatgpt:probe
+```
+
+## Environment Variables Recognized By The Code
+
+These are the environment variable names that the current code actually reads:
+
+- Database
+  - `DATABASE_URL`
+- Auth
+  - `AUTH_SECRET`
+  - `AUTH_URL`
+  - `AUTH_TRUST_HOST`
+  - `AUTH_GOOGLE_ID`
+  - `AUTH_GOOGLE_SECRET`
+- OpenRouter
+  - `OPENROUTER_API_KEY`
+  - `OPENROUTER_BASE_URL`
+  - `OPENROUTER_MODEL_STRONG`
+  - `OPENROUTER_MODEL_MEDIUM`
+  - `OPENROUTER_MODEL_WEAK`
+  - optional extras: `OPENROUTER_SITE_URL`, `OPENROUTER_APP_NAME`, `OPENROUTER_MODEL`
+- MiniMax
+  - `MINIMAX_API_KEY`
+  - `MINIMAX_MODEL`
+  - `MINIMAX_BASE_URL`
+- OpenAI
+  - `OPENAI_API_KEY`
+  - `OPENAI_MODEL`
+  - `OPENAI_BASE_URL`
+- ChatGPT bridge
+  - `CHATGPT_BRIDGE_SCRIPT`
+  - `CHATGPT_MODEL`
+  - `CODEX_BIN`
+  - `CHATGPT_CODEX_BIN`
+- Anthropic-compatible
+  - `ANTHROPIC_API_KEY`
+  - `ANTHROPIC_AUTH_TOKEN`
+  - `ANTHROPIC_MODEL`
+  - `ANTHROPIC_REASONING_MODEL`
+  - `ANTHROPIC_BASE_URL`
 
 ## AI Configuration Notes
 
-- Keep only one provider family enabled at a time in `.env`
+- The app selects the active provider entirely from the uncommented lines in `.env`
+- Uncomment the provider block you want to use
+- If multiple blocks are left enabled by accident, OpenRouter/MiniMax/OpenAI/Anthropic-compatible win before the ChatGPT bridge
 - Reasoning intensity is selected automatically by task
 - When using OpenRouter:
   - low-intensity tasks use `OPENROUTER_MODEL_WEAK`
@@ -221,7 +284,7 @@ Useful schema notes:
 - `LearningProject`, `Chapter`, and `Subchapter` support bilingual fields
 - `LessonContent` stores both language and content type
 - `ProjectChatThread` stores planning and tutoring conversations
-- `ProgressState` tracks the learner’s current position and completion
+- `ProgressState` tracks the learnerâ€™s current position and completion
 - `UserPreferences` stores AI and learning defaults
 
 ## Deployment
@@ -297,3 +360,6 @@ corepack pnpm start:railway
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [Auth.js Documentation](https://authjs.dev)
+
+
+
