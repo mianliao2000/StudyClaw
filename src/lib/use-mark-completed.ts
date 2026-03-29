@@ -25,6 +25,11 @@ export function useMarkCompleted(contentId: string, initialCompleted: boolean) {
       });
       if (res.ok) {
         setIsCompleted(true);
+        window.dispatchEvent(
+          new CustomEvent("studyclaw:progress-updated", {
+            detail: { projectId },
+          })
+        );
         router.refresh();
       }
     } catch {

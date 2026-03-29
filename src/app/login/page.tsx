@@ -40,13 +40,13 @@ export default function LoginPage() {
       <div className="relative w-full max-w-sm">
         <div className="rounded-xl border border-border/50 bg-card/80 p-8 glow-border glass">
           <div className="text-center mb-8">
-            <div className="inline-flex p-3 rounded-xl bg-primary/10 mb-4">
+            <div className="mb-4 flex justify-center">
               <Image
                 src="/Box_Logo2_v3.png"
                 alt="Pandora AI"
-                width={32}
-                height={32}
-                className="h-8 w-8 object-contain"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
                 priority
               />
             </div>

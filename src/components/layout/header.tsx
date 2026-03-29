@@ -115,7 +115,7 @@ export function Header() {
                 <Link href="/dashboard">
                   <Button
                     variant="secondary"
-                    className="h-8 rounded-full border border-stone-300/80 bg-white px-3 text-[0.78rem] font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:bg-stone-50 sm:h-8.5 sm:px-4 sm:text-xs lg:h-9 lg:text-sm dark:border-white/10 dark:bg-slate-900/88 dark:text-white dark:hover:bg-slate-900"
+                    className="h-8 min-w-[5.75rem] rounded-full border border-stone-300/80 bg-white px-3.5 text-[0.78rem] font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:bg-stone-50 sm:h-8.5 sm:min-w-[6.25rem] sm:px-4 sm:text-xs lg:h-9 lg:min-w-[6.75rem] lg:text-sm dark:border-white/10 dark:bg-slate-900/88 dark:text-white dark:hover:bg-slate-900"
                   >
                     {dashboardLabel}
                   </Button>
@@ -123,9 +123,9 @@ export function Header() {
                 <Link href="/about">
                   <Button
                     variant="secondary"
-                    className="h-8 gap-1.5 rounded-full border border-stone-300/80 bg-white px-3 text-[0.78rem] font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:bg-stone-50 sm:h-8.5 sm:px-4 sm:text-xs lg:h-9 lg:text-sm dark:border-white/10 dark:bg-slate-900/88 dark:text-white dark:hover:bg-slate-900"
+                    className="h-8 min-w-[5.75rem] gap-1 rounded-full border border-stone-300/80 bg-white px-3.5 text-[0.78rem] font-semibold text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:bg-stone-50 sm:h-8.5 sm:min-w-[6.25rem] sm:px-4 sm:text-xs lg:h-9 lg:min-w-[6.75rem] lg:text-sm dark:border-white/10 dark:bg-slate-900/88 dark:text-white dark:hover:bg-slate-900"
                   >
-                    <CircleHelp className="h-3.5 w-3.5" />
+                    <CircleHelp className="h-3.25 w-3.25 shrink-0" />
                     {aboutLabel}
                   </Button>
                 </Link>

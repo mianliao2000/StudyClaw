@@ -8,9 +8,7 @@ import {
   ArrowRight,
   BookOpen,
   Bot,
-  Brain,
   CheckCircle2,
-  Compass,
   FileText,
   Frown,
   MessageSquare,
@@ -35,14 +33,6 @@ type SimpleCard = {
   title: string;
   description: string;
   icon: LucideIcon;
-};
-
-type SampleCourse = {
-  title: string;
-  duration: string;
-  level: string;
-  prompt: string;
-  chapters: string[];
 };
 
 type PreviewMessage = {
@@ -216,66 +206,6 @@ export default function HomePage() {
     },
   ];
 
-  const knownCourses: SampleCourse[] = [
-    {
-      title: text("大语言模型", "Large Language Models"),
-      duration: text("3-4 周", "3-4 weeks"),
-      level: text("有编程基础", "Programming basics"),
-      prompt: text("大语言模型", "Large Language Models"),
-      chapters: [
-        text("Transformer 架构与注意力机制", "Transformer architecture and attention"),
-        text("预训练、微调与对齐", "Pre-training, fine-tuning, and alignment"),
-        text("提示工程与应用实践", "Prompt engineering and applications"),
-      ],
-    },
-    {
-      title: text("自媒体运营", "Content Creation"),
-      duration: text("2-3 周", "2-3 weeks"),
-      level: text("零基础可学", "No prerequisites"),
-      prompt: text("自媒体运营", "Content Creation"),
-      chapters: [
-        text("平台选择与账号定位", "Platform selection and positioning"),
-        text("内容策划与创作技巧", "Content planning and creation skills"),
-        text("数据分析与增长策略", "Analytics and growth strategies"),
-      ],
-    },
-  ];
-
-  const explorationCards: SimpleCard[] = [
-    {
-      title: text("从零基础开始", "Start from zero"),
-      description: text(
-        "先补基础，再建立节奏",
-        "Build foundations and pacing first"
-      ),
-      icon: Target,
-    },
-    {
-      title: text("为了项目实战", "Learn for projects"),
-      description: text(
-        "更偏项目、案例和实战",
-        "Better for projects and applied practice"
-      ),
-      icon: Brain,
-    },
-    {
-      title: text("为了求职准备", "Learn for job preparation"),
-      description: text(
-        "更聚焦岗位能力和准备",
-        "More focused on role readiness"
-      ),
-      icon: Sparkles,
-    },
-    {
-      title: text("为了研究或深挖", "Go deeper into a hard topic"),
-      description: text(
-        "围绕一个难点继续深入",
-        "Go deeper on one hard topic"
-      ),
-      icon: Search,
-    },
-  ];
-
   const previewConversation: PreviewMessage[] = isZh
     ? [
         { role: "user", content: "AI Agent 开发入门到实战" },
@@ -342,22 +272,22 @@ export default function HomePage() {
         "Good for one answer, but weak at turning that answer into a full learning path"
       ),
       points: [
-        text("只解决当下这一个问题", "Only solves the immediate question"),
-        text("不会自动整理章节和学习路径", "Does not automatically organize chapters or a learning path"),
-        text("学习节奏和结构还要你自己搭", "You still have to build the learning structure yourself"),
+        text("只答一题", "One answer"),
+        text("不成体系", "No structure"),
+        text("节奏自管", "Self paced"),
       ],
       tone: "negative",
     },
     {
-      title: text("搜索资料", "Search and resources"),
+      title: text("搜索资料", "Search"),
       description: text(
         "擅长找到很多资料，但很少帮你把这些内容重组成可学的课程",
         "Good for finding information, but weak at reshaping it into a course you can follow"
       ),
       points: [
-        text("资料很多，但容易分散", "There is a lot of material, but it is easy to get scattered"),
-        text("筛选、排序和重组的成本很高", "Filtering, sorting, and restructuring take a lot of effort"),
-        text("不会直接给你个性化规划", "Does not directly give you a personalized plan"),
+        text("资料很多", "Many sources"),
+        text("信息分散", "Scattered info"),
+        text("还要自己拼", "Need to stitch"),
       ],
       tone: "warning",
     },
@@ -368,9 +298,9 @@ export default function HomePage() {
         "Turns a vague goal into an actionable learning path, then keeps supporting the learning"
       ),
       points: [
-        text("启发式对话先帮你收窄方向", "Guided dialogue helps narrow the direction first"),
-        text("自动生成章节、正文、总结和测验", "Automatically generates chapters, lessons, summaries, and quizzes"),
-        text("学到中途还能继续追问 AI 辅导", "You can keep asking for AI tutoring while learning"),
+        text("对话收窄", "Guided narrowing"),
+        text("自动成课", "Auto course"),
+        text("边学边问", "Ask while learning"),
       ],
       accent: true,
       tone: "positive",
@@ -390,12 +320,6 @@ export default function HomePage() {
     "home-tone-goal",
     "home-tone-choice",
     "home-tone-deliver",
-  ] as const;
-  const explorationToneClasses = [
-    { icon: "home-tone-foundation", chip: "home-chip-foundation" },
-    { icon: "home-tone-projects", chip: "home-chip-projects" },
-    { icon: "home-tone-career", chip: "home-chip-career" },
-    { icon: "home-tone-research", chip: "home-chip-research" },
   ] as const;
   const compareToneMeta = {
     positive: {
@@ -435,8 +359,8 @@ export default function HomePage() {
 
               <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg dark:text-white/68">
                 {text(
-                  "几轮对话后，系统会生成课程、材料和辅导",
-                  "After a few turns, Pandora AI generates a course, materials, and tutoring"
+                  "几轮对话，生成课程与材料",
+                  "A few turns, then course and materials"
                 )}
               </p>
 
@@ -525,7 +449,7 @@ export default function HomePage() {
                     {
                       title: text("再做选择", "Choose the direction"),
                       detail: text("AI 用启发式问题和选项帮你收窄范围", "AI uses guided questions and options to narrow the path"),
-                      icon: Compass,
+                      icon: Target,
                     },
                     {
                       title: text("得到课程", "Get the course"),
@@ -565,8 +489,8 @@ export default function HomePage() {
               </div>
               <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
                 {text(
-                  "几轮对话后，你得到的是一套学习系统",
-                  "After a few turns, you get a learning system"
+                  "不是回答，是课程",
+                  "Not answers. A course."
                 )}
               </h2>
             </div>
@@ -612,112 +536,6 @@ export default function HomePage() {
             </div>
           </section>
         ) : null}
-
-        <section className="relative container mx-auto px-4 pb-20">
-          <div className="home-shell-focus rounded-[2.3rem] border border-amber-100/70 p-6 dark:border-white/10 sm:p-8">
-            <div className="mb-8 max-w-4xl">
-              <div className="home-badge-focus inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                <Compass className="h-3.5 w-3.5" />
-                {text("开始方式", "Ways to start")}
-              </div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance dark:text-white">
-                {text("两种开始方式", "Two ways to start")}
-              </h2>
-            </div>
-
-            <div className="grid items-stretch gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <div className="home-panel-known flex flex-col rounded-[1.8rem] p-1 sm:p-2 xl:pr-4">
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold dark:text-white">{text("我知道想学什么", "I know the topic")}</h3>
-                </div>
-
-                <div className="grid flex-1 gap-4 lg:grid-cols-2">
-                  {knownCourses.map((course) => (
-                    <Link
-                      key={course.title}
-                      href={`/projects/new?prompt=${encodeURIComponent(course.prompt)}`}
-                      className="home-course-card group flex h-full flex-col rounded-[1.7rem] border border-border/60 p-5 transition-all hover:-translate-y-1 dark:border-white/10"
-                    >
-                      <div className="mb-5 flex items-start justify-between gap-4">
-                        <div>
-                          <h4 className="text-lg font-semibold dark:text-white">{course.title}</h4>
-                          <p className="mt-2 text-sm text-muted-foreground dark:text-white/60">
-                            {text("预计周期", "Timeline")}: {course.duration}
-                          </p>
-                          <p className="text-sm text-muted-foreground dark:text-white/60">
-                            {text("适合阶段", "Best for")}: {course.level}
-                          </p>
-                        </div>
-                        <div className="home-tone-course rounded-2xl p-3">
-                          <Brain className="h-5 w-5" />
-                        </div>
-                      </div>
-
-                      <div className="mt-auto divide-y divide-slate-200/80 dark:divide-white/10">
-                        {course.chapters.map((chapter, index) => (
-                          <div
-                            key={chapter}
-                            className="home-course-step flex items-center gap-3 px-0 py-3 text-sm dark:text-white/86"
-                          >
-                            <span className="home-tone-course inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-                              {index + 1}
-                            </span>
-                            <span>{chapter}</span>
-                          </div>
-                        ))}
-                        <div className="home-course-more flex items-center gap-3 px-0 py-3 text-sm text-muted-foreground dark:text-white/45">
-                          <span className="home-tone-course inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-                            ...
-                          </span>
-                          <span>...</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-5 flex items-center justify-between rounded-2xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 dark:bg-cyan-400 dark:text-slate-950 dark:shadow-cyan-500/20">
-                        <span>{text("从这个方向开始", "Start from this direction")}</span>
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div className="home-panel-explore flex flex-col rounded-[1.8rem] p-1 sm:p-2 xl:border-l xl:border-slate-200/70 xl:pl-7 dark:xl:border-white/10">
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                    {text("我还不确定怎么开始", "I need help getting started")}
-                  </h3>
-                </div>
-
-                <div className="flex flex-1 flex-col justify-between gap-4">
-                  {explorationCards.map((card, index) => (
-                    <button
-                      key={card.title}
-                      type="button"
-                      onClick={() => launchPrompt(card.title)}
-                      className="home-explore-card group block w-full rounded-[1.6rem] border border-slate-200/70 p-4 text-left transition-all hover:-translate-y-1 dark:border-white/10"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={`rounded-2xl p-3 ${explorationToneClasses[index].icon}`}>
-                          <card.icon className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-3">
-                            <h4 className="text-base font-semibold dark:text-white">{card.title}</h4>
-                            <ArrowRight className="home-explore-link h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
-                          </div>
-                          <p className="mt-1 text-sm leading-6 text-muted-foreground dark:text-white/60">
-                            {card.description}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <section id="product-preview" className="relative overflow-hidden pb-24 pt-10">
           <div className="home-preview-stage absolute inset-0" />
@@ -890,10 +708,10 @@ export default function HomePage() {
             <div className="mb-8 max-w-4xl">
               <div className="home-badge-compare inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
                 <Target className="h-3.5 w-3.5" />
-                {text("对比", "Comparison")}
+                {text("对比", "Compare")}
               </div>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance dark:text-white">
-                {text("为什么是 Pandora AI", "Why Pandora AI")}
+                {text("为什么选 Pandora AI", "Why choose Pandora AI")}
               </h2>
             </div>
 
@@ -907,21 +725,18 @@ export default function HomePage() {
                     key={card.title}
                     className={
                       card.accent
-                        ? "home-compare-card-accent rounded-[1.8rem] border border-cyan-200/50 p-5 dark:border-cyan-300/18"
+                        ? "home-compare-card-accent rounded-[1.8rem] border border-emerald-200/70 p-5 dark:border-emerald-300/18"
                         : "home-compare-card rounded-[1.8rem] border border-border/60 p-5 dark:border-white/10"
                     }
                   >
                     <h3 className="text-xl font-semibold dark:text-white">{card.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground dark:text-white/62">
-                      {card.description}
-                    </p>
-                    <div className="mt-5 divide-y divide-slate-200/80 dark:divide-white/10">
+                    <div className="mt-6 divide-y divide-slate-200/80 dark:divide-white/10">
                       {card.points.map((point) => (
                         <div
                           key={point}
-                          className="home-compare-row flex items-start gap-3 py-3 text-sm text-slate-700 first:pt-0 last:pb-0 dark:text-white/84"
+                          className="home-compare-row flex items-center gap-3 py-4 text-sm font-medium text-slate-700 first:pt-0 last:pb-0 dark:text-white/84"
                         >
-                          <ToneIcon className={`mt-0.5 h-4 w-4 shrink-0 ${toneMeta.iconClass}`} />
+                          <ToneIcon className={`h-4 w-4 shrink-0 ${toneMeta.iconClass}`} />
                           <span>{point}</span>
                         </div>
                       ))}

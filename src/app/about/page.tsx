@@ -179,8 +179,8 @@ export default function AboutPage() {
             {copy.whyPoints.map((point, i) => {
               const Icon = point.icon;
               return (
-                <div key={i} className="flex gap-4">
-                  <div className="mt-0.5 shrink-0 rounded-lg border border-primary/20 bg-primary/5 p-2 text-primary">
+                <div key={i} className="flex items-start gap-4">
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary">
                     <Icon className="h-4 w-4" />
                   </div>
                   <div>
@@ -209,8 +209,8 @@ export default function AboutPage() {
             {copy.steps.map((step, i) => {
               const Icon = step.icon;
               return (
-                <div key={i} className="flex gap-4">
-                  <div className="mt-0.5 shrink-0 rounded-lg border border-border/60 bg-card p-2 text-primary">
+                <div key={i} className="flex items-start gap-4">
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card text-primary">
                     <Icon className="h-4 w-4" />
                   </div>
                   <div>

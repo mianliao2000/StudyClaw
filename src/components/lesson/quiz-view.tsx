@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, usePathname } from "next/navigation";
 import { CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +66,7 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
   const { t, lang } = useLanguage();
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
   const projectId = params.projectId as string;
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
@@ -118,6 +119,31 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
 
     return () => clearInterval(timer);
   }, [router, status]);
+
+  useEffect(() => {
+    const chapterId = params.chapterId as string | undefined;
+    const subchapterId = params.subchapterId as string | undefined;
+    if (!contentId || !projectId || !chapterId || !subchapterId) return;
+
+    fetch("/api/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contentId,
+        projectId,
+        chapterId,
+        subchapterId,
+        trackOnly: true,
+      }),
+    }).catch(() => {
+      // Silent ? visit tracking is best-effort
+    });
+  }, [contentId, params.chapterId, params.subchapterId, projectId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !projectId || !pathname) return;
+    window.localStorage.setItem(`studyclaw:last-project-path:${projectId}`, pathname);
+  }, [pathname, projectId]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

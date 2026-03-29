@@ -169,6 +169,7 @@ model ProgressState {
   currentSubchapterId String?
   completedItems      String?  @default("[]")
   quizScores          String?  @default("{}")  // JSON: { [contentId]: percentScore }
-  completionPercent   Float    @default(0)
-  lastVisitedAt       DateTime @default(now())
+  completionPercent   Float     @default(0)
+  lastVisitedAt       DateTime  @default(now())
+  lastCompletedAt     DateTime?
 }

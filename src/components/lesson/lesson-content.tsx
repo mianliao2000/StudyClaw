@@ -6,7 +6,7 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import { useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ArrowRightCircle,
@@ -594,6 +594,11 @@ export function LessonContent({
 }: LessonContentProps) {
   const { t, lang } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
+  const params = useParams();
+  const projectId = params.projectId as string;
+  const chapterId = params.chapterId as string;
+  const subchapterId = params.subchapterId as string;
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
   const [status, setStatus] = useState(initialStatus);
@@ -619,6 +624,29 @@ export function LessonContent({
 
     return () => clearInterval(timer);
   }, [router, status]);
+
+  useEffect(() => {
+    if (!contentId || !projectId || !chapterId || !subchapterId) return;
+
+    fetch("/api/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contentId,
+        projectId,
+        chapterId,
+        subchapterId,
+        trackOnly: true,
+      }),
+    }).catch(() => {
+      // Silent ? visit tracking is best-effort
+    });
+  }, [chapterId, contentId, projectId, subchapterId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !projectId || !pathname) return;
+    window.localStorage.setItem(`studyclaw:last-project-path:${projectId}`, pathname);
+  }, [pathname, projectId]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

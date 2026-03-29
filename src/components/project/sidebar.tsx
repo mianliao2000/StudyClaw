@@ -10,7 +10,7 @@ import {
   ClipboardList,
   CheckCircle2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
@@ -40,6 +40,9 @@ export function ProjectSidebar({
   const params = useParams();
   const pathname = usePathname();
   const { t, lang } = useLanguage();
+  const projectId = params.projectId as string;
+  const storageKey = `studyclaw:sidebar-expanded:${projectId}`;
+
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const map: Record<string, boolean> = {};
     chapters.forEach((chapter) => {
@@ -53,7 +56,46 @@ export function ProjectSidebar({
     return map;
   });
 
-  const projectId = params.projectId as string;
+  const getDefaultExpandedState = () => {
+    const defaults: Record<string, boolean> = {};
+    chapters.forEach((chapter) => {
+      defaults[chapter.id] = chapter.subchapters.some((subchapter) =>
+        pathname.includes(subchapter.id)
+      );
+    });
+    if (!Object.values(defaults).some(Boolean) && chapters.length > 0) {
+      defaults[chapters[0].id] = true;
+    }
+    return defaults;
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) {
+      setExpanded(getDefaultExpandedState());
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Record<string, boolean>;
+      const next = getDefaultExpandedState();
+      chapters.forEach((chapter) => {
+        if (Object.prototype.hasOwnProperty.call(parsed, chapter.id)) {
+          next[chapter.id] = Boolean(parsed[chapter.id]);
+        }
+      });
+      setExpanded(next);
+    } catch {
+      setExpanded(getDefaultExpandedState());
+    }
+  }, [chapters, pathname, storageKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(storageKey, JSON.stringify(expanded));
+  }, [expanded, storageKey]);
 
   const toggleChapter = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));

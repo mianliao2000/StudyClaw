@@ -7,10 +7,13 @@ export async function POST(req: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { contentId, projectId, quizScore } = (await req.json()) as {
+  const { contentId, projectId, quizScore, chapterId, subchapterId, trackOnly } = (await req.json()) as {
     contentId?: string;
     projectId?: string;
     quizScore?: number; // 0-100 percentage
+    chapterId?: string;
+    subchapterId?: string;
+    trackOnly?: boolean;
   };
 
   if (!contentId || !projectId) {
@@ -48,6 +51,29 @@ export async function POST(req: Request) {
     ? JSON.parse(project.progress.completedItems)
     : [];
 
+  if (trackOnly) {
+    await prisma.progressState.upsert({
+      where: { projectId },
+      update: {
+        currentChapterId: chapterId ?? project.progress?.currentChapterId ?? null,
+        currentSubchapterId: subchapterId ?? project.progress?.currentSubchapterId ?? null,
+        lastVisitedAt: new Date(),
+      },
+      create: {
+        projectId,
+        completedItems: JSON.stringify(existing),
+        quizScores: JSON.stringify(project.progress?.quizScores ? JSON.parse(project.progress.quizScores) : {}),
+        completionPercent: project.progress?.completionPercent ?? 0,
+        currentChapterId: chapterId ?? null,
+        currentSubchapterId: subchapterId ?? null,
+        lastVisitedAt: new Date(),
+        lastCompletedAt: project.progress?.lastCompletedAt ?? null,
+      },
+    });
+
+    return Response.json({ ok: true, tracked: true });
+  }
+
   if (existing.includes(contentId)) {
     // Still update quiz score if provided (user may retry)
     if (quizScore !== undefined && project.progress) {
@@ -57,7 +83,12 @@ export async function POST(req: Request) {
       scores[contentId] = quizScore;
       await prisma.progressState.update({
         where: { projectId },
-        data: { quizScores: JSON.stringify(scores) },
+        data: {
+          quizScores: JSON.stringify(scores),
+          currentChapterId: chapterId ?? project.progress.currentChapterId ?? null,
+          currentSubchapterId: subchapterId ?? project.progress.currentSubchapterId ?? null,
+          lastVisitedAt: new Date(),
+        },
       });
     }
     return Response.json({ ok: true });
@@ -81,14 +112,20 @@ export async function POST(req: Request) {
       completedItems: JSON.stringify(updated),
       quizScores: JSON.stringify(existingScores),
       completionPercent,
+      currentChapterId: chapterId ?? project.progress?.currentChapterId ?? null,
+      currentSubchapterId: subchapterId ?? project.progress?.currentSubchapterId ?? null,
       lastVisitedAt: new Date(),
+      lastCompletedAt: new Date(),
     },
     create: {
       projectId,
       completedItems: JSON.stringify(updated),
       quizScores: JSON.stringify(existingScores),
       completionPercent,
+      currentChapterId: chapterId ?? null,
+      currentSubchapterId: subchapterId ?? null,
       lastVisitedAt: new Date(),
+      lastCompletedAt: new Date(),
     },
   });
 

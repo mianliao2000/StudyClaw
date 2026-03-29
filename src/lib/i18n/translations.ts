@@ -56,8 +56,31 @@ const translations = {
     en: 'Click "New Project" to start your first learning plan',
   },
   "dash.createFirst": { zh: "创建第一个项目", en: "Create First Project" },
+  "dash.starred": { zh: "星标项目", en: "Starred Projects" },
+  "dash.starredHint": {
+    zh: "先看你标过星的重要项目",
+    en: "Your pinned projects stay here for quick access",
+  },
+  "dash.starredEmpty": {
+    zh: "还没有星标项目，点卡片右上角星星即可加入这里",
+    en: "No starred projects yet. Click the star on a project card to pin it here",
+  },
+  "dash.allProjects": { zh: "全部项目", en: "All Projects" },
+  "dash.allProjectsHint": {
+    zh: "未星标的项目会显示在这里",
+    en: "Non-starred projects appear here",
+  },
+  "dash.allProjectsEmpty": {
+    zh: "当前没有非星标项目",
+    en: "There are no non-starred projects right now",
+  },
 
-  // Status
+    "dash.sort": { zh: "\u6392\u5e8f", en: "Sort" },
+  "dash.sort.completion": { zh: "\u5b8c\u6210\u5ea6", en: "Progress" },
+  "dash.sort.createdAt": { zh: "\u521b\u5efa\u65f6\u95f4", en: "Created" },
+  "dash.sort.lastCompletedAt": { zh: "\u6700\u540e\u5b8c\u6210\u65f6\u95f4", en: "Completed" },
+
+// Status
   "status.planning": { zh: "未完成", en: "Incomplete" },
   "status.active": { zh: "学习中", en: "Active" },
   "status.completed": { zh: "已完成", en: "Completed" },

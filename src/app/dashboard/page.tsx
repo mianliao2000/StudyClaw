@@ -11,7 +11,6 @@ export default async function DashboardPage() {
   const projects = await prisma.learningProject.findMany({
     where: { userId: session.user.id, status: { not: "planning" } },
     include: { progress: true, chapters: { include: { subchapters: true } } },
-    orderBy: [{ starred: "desc" }, { updatedAt: "desc" }],
   });
 
   return (

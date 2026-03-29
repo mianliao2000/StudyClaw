@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Clock, MoreVertical, Star, Trash2 } from "lucide-react";
@@ -56,7 +56,7 @@ interface ProjectCardProps {
     createdAt: Date;
     updatedAt: Date;
     chapters: { subchapters: unknown[] }[];
-    progress: { completionPercent: number } | null;
+    progress: { completionPercent: number; currentChapterId?: string | null; currentSubchapterId?: string | null; lastCompletedAt?: Date | string | null } | null;
   };
 }
 
@@ -103,10 +103,26 @@ export function ProjectCard({ project }: ProjectCardProps) {
     0
   );
 
-  const href =
+  const defaultHref =
     project.status === "planning"
       ? `/projects/${project.id}/plan`
       : `/projects/${project.id}`;
+  const [href, setHref] = useState(defaultHref);
+
+  const resolveProjectHref = () => {
+    if (typeof window === "undefined") return defaultHref;
+
+    const savedHref = window.localStorage.getItem(`studyclaw:last-project-path:${project.id}`);
+    if (savedHref && savedHref.startsWith(`/projects/${project.id}`)) {
+      return savedHref;
+    }
+
+    if (project.progress?.currentChapterId && project.progress?.currentSubchapterId) {
+      return `/projects/${project.id}/chapters/${project.progress.currentChapterId}/subchapters/${project.progress.currentSubchapterId}/main`;
+    }
+
+    return defaultHref;
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -124,10 +140,22 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const projectTopic = lang === "en" ? project.topicEn || project.topic : project.topic;
   const cardTitle = lang === "en" ? getCompactEnglishCardTitle(projectTitle) : projectTitle;
 
+  useEffect(() => {
+    setHref(resolveProjectHref());
+  }, [defaultHref, project.id, project.progress?.currentChapterId, project.progress?.currentSubchapterId]);
+
+  const handleNavigate = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const targetHref = resolveProjectHref();
+    if (targetHref === href) return;
+    e.preventDefault();
+    setHref(targetHref);
+    router.push(targetHref);
+  };
+
   return (
     <>
       <Card className="relative h-full rounded-[1.5rem] border border-slate-200/85 bg-white shadow-[0_18px_42px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.92)] transition-all duration-300 hover:-translate-y-1 hover:border-slate-300/90 hover:shadow-[0_28px_60px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] dark:border-white/10 dark:bg-slate-900/82 dark:shadow-[0_20px_44px_rgba(2,6,23,0.34)] dark:hover:border-white/16 dark:hover:shadow-[0_28px_60px_rgba(2,6,23,0.42)] group">
-        <Link href={href} className="flex h-full flex-col">
+        <Link href={href} className="flex h-full flex-col" onClick={handleNavigate}>
           <CardHeader className="min-h-0 border-b border-slate-100/90 px-4 pb-1.5 pt-1.5 dark:border-white/10">
             <div className="flex items-center gap-2">
               <CardTitle
