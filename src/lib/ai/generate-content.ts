@@ -4,13 +4,16 @@ import {
   CONTENT_GENERATION_PROMPT,
   SUMMARY_GENERATION_PROMPT,
   QUIZ_GENERATION_PROMPT,
+  DIAGRAM_CODE_GENERATION_PROMPT,
   fillTemplate,
   getContentDetailInstruction,
 } from "@/lib/ai/prompts";
+import { executePythonForDiagram, extractPythonCode } from "@/lib/ai/execute-python";
+import { normalizeMarkdownMath } from "@/lib/markdown-math";
 import { resolveModelForReasoning } from "@/lib/ai/model-routing";
 import { resolveReasoningForTask } from "@/lib/ai/reasoning";
 
-const SUMMARY_CHAPTER_TITLE_ZH = "课程总结";
+const SUMMARY_CHAPTER_TITLE_ZH = "\u8bfe\u7a0b\u603b\u7ed3";
 const SUMMARY_CHAPTER_TITLE_EN = "Course Summary";
 
 function isCourseSummaryChapter(chapter: { title: string; titleEn?: string | null }) {
@@ -24,8 +27,8 @@ function parseBilingualOutput(result: string): { zh: string; en: string } {
   const zhMatch = result.match(/---LANG:zh---\s*([\s\S]*?)(?:---LANG:en---|$)/);
   const enMatch = result.match(/---LANG:en---\s*([\s\S]*?)$/);
   return {
-    zh: zhMatch?.[1]?.trim() || result.trim(),
-    en: enMatch?.[1]?.trim() || result.trim(),
+    zh: normalizeMarkdownMath(zhMatch?.[1]?.trim() || result.trim()),
+    en: normalizeMarkdownMath(enMatch?.[1]?.trim() || result.trim()),
   };
 }
 
@@ -106,7 +109,7 @@ export async function generateContentById(
       courseWideLessonContent = courseMainContents
         .map(
           (item) =>
-            `# ${item.subchapter.chapter.title} / ${item.subchapter.title}\n${item.body}`
+            `# ${item.subchapter.chapter.title} / ${item.subchapter.title}\n${normalizeMarkdownMath(item.body)}`,
         )
         .join("\n\n")
         .slice(0, 12000);
@@ -138,7 +141,8 @@ export async function generateContentById(
       vars.lessonContent =
         isSummaryChapter && courseWideLessonContent
           ? courseWideLessonContent
-          : mainContent.body;
+          : normalizeMarkdownMath(mainContent.body);
+
       prompt =
         content.contentType === "summary"
           ? fillTemplate(SUMMARY_GENERATION_PROMPT, vars)
@@ -153,9 +157,9 @@ export async function generateContentById(
           : "lesson-quiz";
 
     const resolvedReasoning = resolveReasoningForTask({
-        task: reasoningTask,
-        userPreference: userPrefs?.reasoningLevel,
-      });
+      task: reasoningTask,
+      userPreference: userPrefs?.reasoningLevel,
+    });
 
     const result = await provider.generate([{ role: "user", content: prompt }], {
       model: resolveModelForReasoning({ reasoning: resolvedReasoning }),
@@ -163,9 +167,46 @@ export async function generateContentById(
     });
     const { zh, en } = parseBilingualOutput(result);
 
+    // Only main lesson content may optionally receive a diagram.
+    let diagramBase64: string | null = null;
+    if (content.contentType === "main") {
+      try {
+        const diagramPrompt = fillTemplate(DIAGRAM_CODE_GENERATION_PROMPT, {
+          lessonTitle: subchapter.title,
+          lessonContent: zh,
+          diagramLang: "Chinese",
+        });
+
+        const diagramResult = await provider.generate(
+          [{ role: "user", content: diagramPrompt }],
+          { model: resolveModelForReasoning({ reasoning: "low" }) },
+        );
+
+        const trimmed = diagramResult.trim();
+        const pythonCode = trimmed === "NO_DIAGRAM" ? null : extractPythonCode(trimmed);
+
+        if (pythonCode) {
+          const imageBuffer = await executePythonForDiagram(pythonCode);
+          if (imageBuffer) {
+            diagramBase64 = imageBuffer.toString("base64");
+          }
+        }
+      } catch (error) {
+        console.error("[generateContentById] Diagram generation failed:", error);
+        // Keep the lesson content even if the optional diagram fails.
+      }
+    }
+
+    const storedDiagramBase64 = content.contentType === "main" ? diagramBase64 : null;
+
     await prisma.lessonContent.update({
       where: { id: contentId },
-      data: { body: zh, status: "ready", lang: "zh" },
+      data: {
+        body: zh,
+        status: "ready",
+        lang: "zh",
+        diagramBase64: storedDiagramBase64,
+      },
     });
 
     await prisma.lessonContent.upsert({
@@ -176,13 +217,18 @@ export async function generateContentById(
           lang: "en",
         },
       },
-      update: { body: en, status: "ready" },
+      update: {
+        body: en,
+        status: "ready",
+        diagramBase64: storedDiagramBase64,
+      },
       create: {
         subchapterId: subchapter.id,
         contentType: content.contentType,
         lang: "en",
         body: en,
         status: "ready",
+        diagramBase64: storedDiagramBase64,
       },
     });
 

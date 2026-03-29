@@ -125,8 +125,45 @@ Response length rules:
 - Keep your first answer to any new question SHORT: 2-4 sentences or a brief list. Get to the point fast.
 - Only expand with more detail, examples, or deeper explanation when the user asks a follow-up about the same topic.
 - Do not front-load long explanations. Let the user pull more depth by asking again.
-- Avoid repeating what the lesson content already says. Add value, not repetition.`;
+- Avoid repeating what the lesson content already says. Add value, not repetition.
+
+Formula formatting rules:
+- Use standard LaTeX delimiters only: inline $...$ and display $$...$$.
+- Wrap variables, transfer functions, matrices, equations, and symbolic expressions in LaTeX delimiters: $x$, $K$, $G(s)$, $A x = b$.
+- Keep ordinary prose outside math delimiters. Write "the gain $K$" instead of "$the gain K$".
+- Never output raw \\(...\\), \\[...\\], unmatched $, or broken forms like \\left$...\\right$, $and ..., ...$word, or word$....
+- Use valid LaTeX commands for fractions, subscripts, superscripts, derivatives, vectors, Greek letters, and matrices.
+- Before finishing, do one quick self-check that every formula is fully enclosed and every $ is matched.`;
 }
+
+const FORMULA_GENERATION_RULES = `Formula rules:
+- Use standard LaTeX delimiters only:
+  - inline math: $...$
+  - display math: $$...$$
+- Wrap symbolic content in LaTeX delimiters whenever it contains variables, indices, functions, transforms, transfer functions, matrices, vectors, operators, or equations.
+- Single math symbols must also be wrapped when used symbolically: $x$, $u$, $K$, $N$, $\\beta$, $O(N)$.
+- Keep ordinary prose outside math delimiters. Good: "the gain $K$", "past $N$ days", "$z$-score". Bad: "$the gain K$", "$past N days$", "the$z$-score".
+- Never use raw \\(...\\), \\[...\\], unmatched $, or broken mixed forms such as \\left$...\\right$, $and ..., ...$word, word$..., or "$100" when 100 is plain text.
+- Never split one formula across prose and math boundaries. If an expression is mathematical, include the full expression inside the same delimiter pair.
+- Use valid LaTeX commands for fractions, subscripts, superscripts, derivatives, vectors, Greek letters, norms, integrals, and matrices.
+- If a phrase is mostly prose with only one symbol, keep only the symbol in math mode.
+
+Examples:
+- Good: "$G(s)=\\frac{Y(s)}{U(s)}$"
+- Good: "the state $x$, input $u$, and output $y$"
+- Good: "$J=\\int_0^\\infty \\left(x^\\top Qx+u^\\top Ru\\right)\\,dt$"
+- Good: "complexity $O(N)$"
+- Good: "$z$-score"
+- Bad: "( G(s) = \\frac{Y(s)}{U(s)} )"
+- Bad: "\\left$x^\\top Qx+u^\\top Ru\\right$"
+- Bad: "$the transfer function G(s)$"
+- Bad: "the$z$-score"
+
+Final self-check before output:
+- every $ is matched
+- no raw \\(...\\) or \\[...\\]
+- no prose accidentally trapped inside $...$
+- no malformed sequences like \\left$, \\right$, $word, or word$`;
 
 export const CONTENT_GENERATION_PROMPT = `You are a professional course writer creating self-learning lesson content.
 
@@ -190,14 +227,8 @@ English heading rules:
 - Use bold text sparingly, only for truly important terms.
 - Do not use blockquotes, horizontal rules, or long numbered procedures unless clearly necessary.
 - Keep Chinese and English versions aligned in structure and meaning.
-- Mathematical expressions must always use standard LaTeX delimiters:
-  - inline math: $...$
-  - display math: $$...$$
-- Never leave formulas as plain text with raw \\(, \\), \\[, \\], or unmatched parentheses.
-- Never write formulas like "( G(s) = \\frac{X(s)}{F(s)} )". Write them as "$G(s)=\\frac{X(s)}{F(s)}$".
-- If a sentence contains variables, functions, transforms, matrices, transfer functions, or differential equations, wrap the mathematical part in LaTeX delimiters.
-- Use valid LaTeX commands for fractions, subscripts, superscripts, derivatives, vectors, and Greek letters.
-- Keep ordinary prose outside math delimiters.
+
+${FORMULA_GENERATION_RULES}
 
 The content should feel intuitive, structured, and professional.
 
@@ -243,8 +274,77 @@ Writing rules:
 - Do not introduce brand-new ideas that were not in the lesson.
 - Chinese and English versions must mirror the same structure and emphasis.
 - Use crisp review-oriented language rather than long explanations.
-- If the summary includes formulas, always use standard LaTeX delimiters: inline $...$ or display $$...$$.
-- Do not leave formulas as plain text or raw \\(...\\) / \\[...\\] syntax.`;
+
+${FORMULA_GENERATION_RULES}`;
+
+export const DIAGRAM_CODE_GENERATION_PROMPT = `You are a teaching-visual generator. Decide whether a Python visual would materially improve understanding of this lesson section.
+
+Lesson title:
+{lessonTitle}
+
+Lesson content:
+{lessonContent}
+
+Language for labels: {diagramLang}
+
+Decision rule:
+- Be conservative. Prefer NO_DIAGRAM unless a visual clearly improves understanding.
+- Generate a visual ONLY if the lesson would clearly benefit from a compact visual explanation, such as:
+  - trend, comparison, distribution, or evolution over time
+  - strategy logic that is easier to explain with an example chart
+  - a simple comparison between 2 to 4 concepts
+  - a small system structure or signal flow with only a few labeled parts
+  - a short cause-and-effect chain that is clearer visually than in prose
+- Do NOT generate a visual if the lesson is mostly narrative, definition-heavy, or already clear enough in plain text.
+- Do NOT generate a visual if it would require many labels, many boxes, long Chinese phrases, or dense arrows to explain properly.
+- If a diagram is not useful enough, output exactly:
+NO_DIAGRAM
+
+If you decide to generate a visual, requirements:
+1. Use Python with matplotlib only. Build simple visuals with lines, boxes, arrows, annotations, or basic charts.
+2. Choose the best visual form for the lesson:
+   - comparison chart
+   - annotated line chart
+   - time-series example chart
+   - schematic or block-style explanatory drawing built with matplotlib annotations/shapes
+   - minimal process or cause-effect sketch with 2 to 4 boxes
+3. Do NOT default to a concept map. Use the simplest visual that best teaches the idea.
+4. The visual must directly explain the lesson. Do not draw decorative charts.
+5. Prefer one clean figure. Do not use subplots or multi-panel layouts.
+6. Keep the visual sparse and readable:
+   - maximum 4 boxes or conceptual nodes
+   - maximum 6 short text labels total inside the figure
+   - keep each label to a short phrase, not a full sentence
+   - avoid crowded arrows or overlapping elements
+   - if labels are in Chinese, be stricter:
+     - prefer 2 to 4 boxes only
+     - keep each label to about 3 to 6 Chinese characters when possible
+     - never use long sentence-like Chinese labels inside the figure
+     - if the idea needs many Chinese labels to explain properly, output NO_DIAGRAM
+7. For charts or plots:
+   - use readable axes, titles, legends, and annotations
+   - if example data is needed, use simple synthetic data that faithfully illustrates the concept
+   - for finance or strategy topics, it is acceptable to simulate a small example series and mark key events
+   - for systems or engineering topics, it is acceptable to draw response curves, comparison plots, or simplified block-style diagrams
+8. Set the font to "Microsoft YaHei" for Chinese or "Arial" for English so CJK characters render correctly:
+   - plt.rcParams["font.sans-serif"] = ["Microsoft YaHei"] for Chinese
+   - plt.rcParams["axes.unicode_minus"] = False
+9. Use a clean, visually appealing style:
+   - Light colored highlights only when needed
+   - Clear lines, markers, arrows, or annotations when needed
+   - White or very light figure background
+10. Make the visual presentation-quality and easy to read:
+   - Use a larger canvas (prefer figsize around 14x9)
+   - Use readable labels, node sizes, and font sizes
+   - Avoid tiny text or cramped layouts
+11. Save the figure to the exact path in the OUTPUT_PATH variable (already defined above your code). Use plt.savefig(OUTPUT_PATH, dpi=300, bbox_inches="tight", facecolor="white").
+12. Call plt.close() after saving. Do NOT call plt.show().
+13. The code must be self-contained and use only matplotlib and the Python standard library. No pandas, seaborn, or networkx.
+14. If a figure would need too much fake data, too many labels, or too much complexity to stay readable, output NO_DIAGRAM instead.
+
+Output rules:
+- If no visual is needed, output exactly NO_DIAGRAM
+- If a visual is needed, output ONLY the Python code inside a single \`\`\`python fenced block. No explanation.`;
 
 export const QUIZ_GENERATION_PROMPT = `You are a professional course writer creating a quiz for a self-learning lesson.
 
@@ -296,7 +396,20 @@ Requirements:
 - Options should be plausible and clearly distinguishable.
 - Explanations should teach briefly, not just state the answer.
 - Chinese and English versions should test the same ideas at the same level.
-- Cover the most important lesson ideas rather than trivia.`;
+- Cover the most important lesson ideas rather than trivia.
+- If a question, option, or explanation contains symbolic math, apply the same strict formula rules inside the JSON string values.
+- In JSON string values, never mix prose and math with broken boundaries. Keep prose as plain text and isolate only the symbolic fragment in LaTeX.
+- JSON quiz examples:
+  - Good: "question": "If the gain $K$ increases, what happens to the closed-loop poles?"
+  - Good: "explanation": "The spread is defined as $S_t=P_t^A-\\beta P_t^B$, and the $z$-score measures normalized deviation."
+  - Good: "question": "A trader observes prices 100 and 100.5 in two markets. Which strategy is this?"
+  - Bad: "question": "If the gain$K$ increases, what happens?"
+  - Bad: "explanation": "The spread is defined as $the spread S_t=P_t^A-\\beta P_t^B$."
+  - Bad: "question": "A trader observes prices $100 and 100.5$ in two markets."
+  - Bad: "explanation": "Use \\left$x^\\top Qx+u^\\top Ru\\right$ to define the cost."
+- For numbers, units, and short plain-language phrases inside JSON, keep them outside math mode unless they are part of a true symbolic expression.
+
+${FORMULA_GENERATION_RULES}`;
 
 export function fillTemplate(
   template: string,

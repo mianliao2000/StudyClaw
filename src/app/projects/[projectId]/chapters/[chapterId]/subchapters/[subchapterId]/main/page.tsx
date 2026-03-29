@@ -11,6 +11,7 @@ type SubchapterContentItem = {
   status: string;
   contentType: string;
   lang: string;
+  diagramBase64?: string | null;
 };
 
 type TutoringThreadMessage = {
@@ -102,6 +103,7 @@ export default async function MainContentPage({
               status={mainContent.status}
               contentType="main"
               isCompleted={isCompleted}
+              diagramBase64={mainContent.diagramBase64}
             />
           </div>
         </div>

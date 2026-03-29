@@ -33,7 +33,17 @@ export async function POST(req: Request) {
       reasoningLevel: true,
     });
     const { zh, en } = await generateContentById(contentId, userPrefs);
-    return NextResponse.json({ body: zh, bodyZh: zh, bodyEn: en, status: "ready" });
+    const updated = await prisma.lessonContent.findUnique({
+      where: { id: contentId },
+      select: { diagramBase64: true },
+    });
+    return NextResponse.json({
+      body: zh,
+      bodyZh: zh,
+      bodyEn: en,
+      diagramBase64: updated?.diagramBase64 || null,
+      status: "ready",
+    });
   } catch (error) {
     console.error("Content generation error:", error);
     const isEnglish = lang === "en";

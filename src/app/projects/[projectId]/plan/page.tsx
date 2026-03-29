@@ -269,6 +269,13 @@ function buildPlanReadyMessage(
   ].join("\n");
 }
 
+/** Detect mojibake: UTF-8 bytes decoded as Latin-1 produce clusters of ÃÂ etc. */
+function looksLikeMojibake(text: string): boolean {
+  // Count Latin-1 diacritic clusters typical of double-encoded UTF-8
+  const hits = text.match(/[\xC0-\xFF][\x80-\xBF]/g);
+  return (hits?.length ?? 0) >= 3;
+}
+
 function sanitizeAssistantMessage(
   message: ChatMessage,
   language: ConversationLanguage
@@ -284,6 +291,17 @@ function sanitizeAssistantMessage(
     return {
       ...message,
       content: message.content.replace(/\[PLAN_READY\]\s*$/g, "").trim(),
+    };
+  }
+
+  // Drop messages that are mostly mojibake (double-encoded UTF-8)
+  if (looksLikeMojibake(message.content)) {
+    return {
+      ...message,
+      content:
+        language === "en"
+          ? "Plan generated. Please proceed to the review page."
+          : "计划已生成，请前往确认计划页面查看。",
     };
   }
 
@@ -1112,39 +1130,73 @@ export default function PlanPage() {
           setDecisionLoopStage(inferredStageFromMessages ?? "decision_with_create");
         }
 
-        if (loadedMessages.length > 0 && !isRevising) {
-          setMessages(loadedMessages);
-          setIsFreeMode(true);
-          if (inferredStageFromMessages) {
-            setIsInDecisionLoop(true);
-            setDecisionLoopStage(inferredStageFromMessages);
+        if (loadedMessages.length > 0) {
+          if (isRevising) {
+            // Keep chat history but drop plan-ready messages, then append revision prompt
+            const cleaned = loadedMessages.filter(
+              (m) =>
+                !(
+                  m.role === "assistant" &&
+                  (extractPlan(m.content) !== null ||
+                    m.content.includes("[PLAN_READY]") ||
+                    /^计划已生成|^Plan generated/i.test(m.content))
+                )
+            );
+            const revisionPrompt: ChatMessage = {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content:
+                (loadedConversationLanguage ?? fallbackLanguage) === "en"
+                  ? "You're back! What would you like to change?"
+                  : "你好，你还需要修改什么吗？请告诉我你的要求。",
+              createdAt: new Date(),
+            };
+            setMessages([...cleaned, revisionPrompt]);
+            setIsFreeMode(true);
+            setCoursePlan(null);
+            setIsInDecisionLoop(false);
+            setDecisionLoopStage("decision_with_create");
+            setDecisionTrail([]);
+            setHasReturnedFromReview(true);
+            setHasInjectedRevisionPrompt(true);
+            router.replace(`/projects/${projectId}/plan`);
+          } else if (!hasInjectedRevisionPrompt) {
+            // If a plan exists but the last message has no options, re-append the decision prompt
+            const lastAssistant = [...loadedMessages]
+              .reverse()
+              .find((m) => m.role === "assistant");
+            const lastHasOptions =
+              lastAssistant && extractOptionsFromMessage(lastAssistant.content).length > 0;
+
+            if (loadedPlan && !lastHasOptions) {
+              const lang = loadedConversationLanguage ?? fallbackLanguage;
+              const decisionQuestion = buildDecisionQuestion({
+                language: lang,
+                returnedFromReview: false,
+                selections: {},
+                notes: [],
+                trail: [],
+              });
+              const optionsMessage: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content: buildQuestionMessage(decisionQuestion),
+                createdAt: new Date(),
+              };
+              setMessages([...loadedMessages, optionsMessage]);
+            } else {
+              setMessages(loadedMessages);
+            }
+            setIsFreeMode(true);
+            if (inferredStageFromMessages) {
+              setIsInDecisionLoop(true);
+              setDecisionLoopStage(inferredStageFromMessages);
+            }
           }
         }
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- fallbackLanguage intentionally excluded: re-fetching thread on language switch resets decision-loop state
   }, [isRevising, projectId]);
-
-  useEffect(() => {
-    if (!isRevising || hasInjectedRevisionPrompt) return;
-
-    setMessages([]);
-    setCoursePlan(null);
-    setIsFreeMode(false);
-    setIsInDecisionLoop(false);
-    setDecisionLoopStage("decision_with_create");
-    setDecisionTrail([]);
-    setHasReturnedFromReview(true);
-    setHasInjectedRevisionPrompt(true);
-    router.replace(`/projects/${projectId}/plan`);
-    enterDecisionLoop([], true, { language: activeLanguage });
-  }, [
-    activeLanguage,
-    enterDecisionLoop,
-    hasInjectedRevisionPrompt,
-    isRevising,
-    projectId,
-    router,
-  ]);
 
   useEffect(() => {
     if (!initialPrompt || !threadId || hasAutoStarted || isRevising) return;

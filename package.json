@@ -11,6 +11,7 @@
     "chatgpt:login": "node ./scripts/chatgpt-oauth-login.mjs",
     "chatgpt:probe": "node ./scripts/chatgpt-oauth-probe.mjs",
     "chatgpt:status": "node ./scripts/chatgpt-oauth-status.mjs",
+    "backfill:lesson-math": "node ./scripts/backfill-lesson-math.mjs",
     "build": "prisma generate --config prisma.config.ts && next build",
     "start": "next start",
     "postinstall": "prisma generate --config prisma.config.ts",

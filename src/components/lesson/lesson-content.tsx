@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n/translations";
+import { normalizeMarkdownMath } from "@/lib/markdown-math";
 import { cn } from "@/lib/utils";
 import { useMarkCompleted } from "@/lib/use-mark-completed";
 
@@ -38,6 +39,7 @@ interface LessonContentProps {
   status: string;
   contentType: string;
   isCompleted?: boolean;
+  diagramBase64?: string | null;
 }
 
 interface LessonSection {
@@ -71,47 +73,82 @@ const typeKeys: Record<string, TranslationKey> = {
 const sectionMatchers: Array<{ kind: SectionKind; terms: string[] }> = [
   {
     kind: "about",
-    terms: ["what this section is about", "core ideas", "本节在讲什么", "本节核心问题", "核心要点"],
+    terms: [
+      "what this section is about",
+      "core ideas",
+      "\u672c\u8282\u5728\u8bb2\u4ec0\u4e48",
+      "\u672c\u8282\u6838\u5fc3\u95ee\u9898",
+      "\u6838\u5fc3\u8981\u70b9",
+    ],
   },
   {
     kind: "importance",
-    terms: ["why it matters", "为什么重要", "重要性", "意义"],
+    terms: ["why it matters", "\u4e3a\u4ec0\u4e48\u91cd\u8981", "\u91cd\u8981\u6027", "\u610f\u4e49"],
   },
   {
     kind: "connection",
-    terms: ["how this connects to the course", "与课程的关系", "承上启下", "连接到课程"],
+    terms: [
+      "how this connects to the course",
+      "\u4e0e\u8bfe\u7a0b\u7684\u5173\u7cfb",
+      "\u627f\u4e0a\u542f\u4e0b",
+      "\u8fde\u63a5\u5230\u8bfe\u7a0b",
+    ],
   },
   {
     kind: "intuition",
-    terms: ["intuitive explanation", "直觉理解", "直观理解"],
+    terms: ["intuitive explanation", "\u76f4\u89c9\u7406\u89e3", "\u76f4\u89c2\u7406\u89e3"],
   },
   {
     kind: "core",
-    terms: ["core concepts", "核心概念", "概念拆解"],
+    terms: ["core concepts", "\u6838\u5fc3\u6982\u5ff5", "\u6982\u5ff5\u62c6\u89e3"],
   },
   {
     kind: "misunderstandings",
-    terms: ["common misunderstandings", "common confusions", "常见误区", "常见混淆"],
+    terms: [
+      "common misunderstandings",
+      "common confusions",
+      "\u5e38\u89c1\u8bef\u533a",
+      "\u5e38\u89c1\u6df7\u6dc6",
+    ],
   },
   {
     kind: "examples",
-    terms: ["minimal examples for understanding", "最小可理解例子", "理解例子", "例子"],
+    terms: [
+      "minimal examples for understanding",
+      "\u6700\u5c0f\u53ef\u7406\u89e3\u4f8b\u5b50",
+      "\u7406\u89e3\u4f8b\u5b50",
+      "\u4f8b\u5b50",
+    ],
   },
   {
     kind: "scenarios",
-    terms: ["real-world or engineering scenarios", "真实场景", "工程场景", "应用场景"],
+    terms: [
+      "real-world or engineering scenarios",
+      "\u771f\u5b9e\u573a\u666f",
+      "\u5de5\u7a0b\u573a\u666f",
+      "\u5e94\u7528\u573a\u666f",
+    ],
   },
   {
     kind: "next",
-    terms: ["what this prepares you for next", "为下一节做什么准备", "接下来会学到什么"],
+    terms: [
+      "what this prepares you for next",
+      "\u4e3a\u4e0b\u4e00\u8282\u505a\u4ec0\u4e48\u51c6\u5907",
+      "\u63a5\u4e0b\u6765\u4f1a\u5b66\u5230\u4ec0\u4e48",
+    ],
   },
   {
     kind: "takeaway",
-    terms: ["key takeaway", "one-sentence takeaway", "一句话总结", "本节小结"],
+    terms: [
+      "key takeaway",
+      "one-sentence takeaway",
+      "\u4e00\u53e5\u8bdd\u603b\u7ed3",
+      "\u672c\u8282\u5c0f\u7ed3",
+    ],
   },
   {
     kind: "terms",
-    terms: ["key terms", "关键术语"],
+    terms: ["key terms", "\u5173\u952e\u672f\u8bed"],
   },
 ];
 
@@ -204,47 +241,47 @@ const sectionTitles: Record<
   { zh: string; en: string }
 > = {
   about: {
-    zh: "本节讲什么",
+    zh: "\u672c\u8282\u8bb2\u4ec0\u4e48",
     en: "What this section is about",
   },
   importance: {
-    zh: "为什么重要",
+    zh: "\u4e3a\u4ec0\u4e48\u91cd\u8981",
     en: "Why it matters",
   },
   connection: {
-    zh: "与课程的关系",
+    zh: "\u4e0e\u8bfe\u7a0b\u7684\u5173\u7cfb",
     en: "How this connects to the course",
   },
   intuition: {
-    zh: "直觉理解",
+    zh: "\u76f4\u89c9\u7406\u89e3",
     en: "Intuitive explanation",
   },
   core: {
-    zh: "核心概念",
+    zh: "\u6838\u5fc3\u6982\u5ff5",
     en: "Core concepts",
   },
   misunderstandings: {
-    zh: "常见误区",
+    zh: "\u5e38\u89c1\u8bef\u533a",
     en: "Common misunderstandings",
   },
   examples: {
-    zh: "理解例子",
+    zh: "\u7406\u89e3\u4f8b\u5b50",
     en: "Minimal examples for understanding",
   },
   scenarios: {
-    zh: "真实场景",
+    zh: "\u771f\u5b9e\u573a\u666f",
     en: "Real-world or engineering scenarios",
   },
   next: {
-    zh: "下一步会学什么",
+    zh: "\u4e0b\u4e00\u6b65\u4f1a\u5b66\u4ec0\u4e48",
     en: "What this prepares you for next",
   },
   takeaway: {
-    zh: "一句话总结",
+    zh: "\u4e00\u53e5\u8bdd\u603b\u7ed3",
     en: "Key takeaway",
   },
   terms: {
-    zh: "关键术语",
+    zh: "\u5173\u952e\u672f\u8bed",
     en: "Key terms",
   },
 };
@@ -282,109 +319,6 @@ const markdownComponents: Components = {
     </a>
   ),
 };
-
-function looksLikeMathExpression(value: string) {
-  const text = value.trim();
-  if (!text || text.length > 160) return false;
-
-  const hasLatexCommand = /\\[a-zA-Z]+/.test(text);
-  const hasEquationOperator = /[=<>+\-*/^_]/.test(text);
-  const hasMathToken = /[A-Za-z]\s*(?:\(|\[)|\b(?:sin|cos|tan|log|ln|max|min)\b/.test(text);
-
-  return hasLatexCommand || (hasEquationOperator && hasMathToken);
-}
-
-function normalizeBoldMarkers(markdown: string) {
-  return markdown.replace(/\*\*\s*([^*\n][^*\n]*?)\s*\*\*/g, (_, content: string) => {
-    const cleaned = content.trim();
-    return cleaned ? `**${cleaned}**` : _;
-  });
-}
-
-function repairDanglingInlineLatex(markdown: string) {
-  let result = "";
-
-  for (let index = 0; index < markdown.length; index += 1) {
-    if (markdown[index] === "\\" && markdown[index + 1] === "(") {
-      const closeIndex = markdown.indexOf("\\)", index + 2);
-
-      if (closeIndex !== -1) {
-        result += markdown.slice(index, closeIndex + 2);
-        index = closeIndex + 1;
-        continue;
-      }
-
-      let cursor = index + 2;
-      while (cursor < markdown.length) {
-        const current = markdown[cursor];
-        if ("\n。！？；;,.，".includes(current)) break;
-        cursor += 1;
-      }
-
-      const candidate = markdown.slice(index + 2, cursor).trim();
-      if (looksLikeMathExpression(candidate)) {
-        result += `$${candidate}$`;
-        index = cursor - 1;
-        continue;
-      }
-    }
-
-    result += markdown[index];
-  }
-
-  return result;
-}
-
-function normalizeInlineMath(markdown: string) {
-  let normalized = normalizeBoldMarkers(markdown)
-    .replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, expr: string) => `\n\n$$${expr.trim()}$$\n\n`)
-    .replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (_, expr: string) => `$${expr.trim()}$`);
-
-  normalized = repairDanglingInlineLatex(normalized);
-
-  let result = "";
-
-  for (let index = 0; index < normalized.length; index += 1) {
-    const char = normalized[index];
-
-    if (char !== "(") {
-      result += char;
-      continue;
-    }
-
-    let depth = 1;
-    let cursor = index + 1;
-
-    while (cursor < normalized.length && depth > 0) {
-      const current = normalized[cursor];
-      if (current === "(") depth += 1;
-      if (current === ")") depth -= 1;
-      cursor += 1;
-    }
-
-    if (depth !== 0) {
-      result += char;
-      continue;
-    }
-
-    const inner = normalized.slice(index + 1, cursor - 1);
-
-    if (looksLikeMathExpression(inner)) {
-      result += `$${inner.trim()}$`;
-      index = cursor - 1;
-      continue;
-    }
-
-    result += normalized.slice(index, cursor);
-    index = cursor - 1;
-  }
-
-  normalized = result
-    .replace(/\$\$\s+([\s\S]*?)\s+\$\$/g, (_, expr: string) => `$$${expr.trim()}$$`)
-    .replace(/\$\s+([^$]*?)\s+\$/g, (_, expr: string) => `$${expr.trim()}$`);
-
-  return normalized;
-}
 
 function normalizeHeadingTitle(title: string) {
   return title
@@ -442,7 +376,7 @@ function getSectionDisplayTitle(section: LessonSection, lang: SupportedLanguage)
 }
 
 function LessonMarkdown({ markdown }: { markdown: string }) {
-  const normalizedMarkdown = useMemo(() => normalizeInlineMath(markdown), [markdown]);
+  const normalizedMarkdown = useMemo(() => normalizeMarkdownMath(markdown), [markdown]);
 
   return (
     <div className="lesson-markdown">
@@ -468,19 +402,19 @@ function LessonGuide({
     contentType === "summary"
       ? lang === "en"
         ? "Review guide"
-        : "复习导读"
+        : "\u590d\u4e60\u5bfc\u8bfb"
       : lang === "en"
         ? "Learning guide"
-        : "学习导读";
+        : "\u5b66\u4e60\u5bfc\u8bfb";
 
   const description =
     contentType === "summary"
       ? lang === "en"
         ? "Use this page to quickly review the core ideas, key terms, and common confusions before moving on."
-        : "把这一页当作快速复习卡，先抓住核心概念、关键术语和常见误区，再继续学习。"
+        : "\u628a\u8fd9\u4e00\u9875\u5f53\u4f5c\u5feb\u901f\u590d\u4e60\u5361\uff0c\u5148\u6293\u4f4f\u6838\u5fc3\u6982\u5ff5\u3001\u5173\u952e\u672f\u8bed\u548c\u5e38\u89c1\u8bef\u533a\uff0c\u518d\u7ee7\u7eed\u5b66\u4e60\u3002"
       : lang === "en"
         ? "Read this section from intuition to scenarios, and treat the highlighted concepts as the ideas to remember first."
-        : "建议先从直觉理解读起，再看场景和误区；高亮的关键概念就是这一节最值得先记住的内容。";
+        : "\u5efa\u8bae\u5148\u4ece\u76f4\u89c9\u7406\u89e3\u8bfb\u8d77\uff0c\u518d\u770b\u573a\u666f\u548c\u8bef\u533a\uff1b\u9ad8\u4eae\u7684\u5173\u952e\u6982\u5ff5\u5c31\u662f\u8fd9\u4e00\u8282\u6700\u503c\u5f97\u5148\u8bb0\u4f4f\u7684\u5185\u5bb9\u3002";
 
   return (
     <Card className="mb-6 border-primary/15 bg-gradient-to-r from-primary/6 via-background to-accent/6">
@@ -591,6 +525,7 @@ export function LessonContent({
   status: initialStatus,
   contentType,
   isCompleted: initialCompleted = false,
+  diagramBase64,
 }: LessonContentProps) {
   const { t, lang } = useLanguage();
   const router = useRouter();
@@ -602,6 +537,7 @@ export function LessonContent({
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
   const [status, setStatus] = useState(initialStatus);
+  const [diagramData, setDiagramData] = useState(diagramBase64 || null);
 
   const { isCompleted, isMarking, markCompleted } = useMarkCompleted(contentId, initialCompleted);
 
@@ -613,7 +549,8 @@ export function LessonContent({
     setContent(body);
     setContentEnState(bodyEn || "");
     setStatus(initialStatus);
-  }, [body, bodyEn, initialStatus]);
+    setDiagramData(diagramBase64 || null);
+  }, [body, bodyEn, diagramBase64, initialStatus]);
 
   useEffect(() => {
     if (status !== "generating") return;
@@ -664,6 +601,7 @@ export function LessonContent({
         const data = await res.json();
         setContent(data.body ?? data.bodyZh ?? "");
         setContentEnState(data.bodyEn ?? "");
+        setDiagramData(data.diagramBase64 || null);
         setStatus("ready");
         router.refresh();
       } else {
@@ -713,6 +651,22 @@ export function LessonContent({
 
   return (
     <div className="space-y-6">
+      {diagramData && contentType === "main" ? (
+        <Card className="overflow-hidden border-primary/15">
+          <CardContent className="flex flex-col items-center px-4 py-5 sm:px-6">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+              <GitBranch className="h-4 w-4" />
+              <span>{lang === "en" ? "Visual Guide" : "\u8bb2\u89e3\u56fe"}</span>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`data:image/png;base64,${diagramData}`}
+              alt={lang === "en" ? "Lesson diagram" : "\u6b63\u6587\u8bb2\u89e3\u56fe"}
+              className="max-h-[500px] w-full max-w-3xl object-contain"
+            />
+          </CardContent>
+        </Card>
+      ) : null}
       <LessonGuide contentType={contentType} lang={lang} />
 
       {parsedContent.intro && parsedContent.sections.length > 0 ? (
@@ -738,7 +692,7 @@ export function LessonContent({
         {isCompleted ? (
           <div className="flex items-center gap-2 rounded-full border border-green-500/30 bg-green-50 px-5 py-2.5 text-sm font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
             <CheckCircle2 className="h-4 w-4" />
-            {lang === "en" ? "Completed" : "已完成"}
+            {lang === "en" ? "Completed" : "\u5df2\u5b8c\u6210"}
           </div>
         ) : (
           <Button
@@ -751,10 +705,11 @@ export function LessonContent({
             ) : (
               <CheckCircle2 className="h-4 w-4" />
             )}
-            {lang === "en" ? "Mark as Read" : "标记为已读"}
+            {lang === "en" ? "Mark as Read" : "\u6807\u8bb0\u4e3a\u5df2\u8bfb"}
           </Button>
         )}
       </div>
     </div>
   );
 }
+

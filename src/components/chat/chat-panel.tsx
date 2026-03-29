@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { isCreateCourseOption } from "@/lib/ai/conversation-language";
+import { normalizeMarkdownMath } from "@/lib/markdown-math";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
 import type { ChatMessage } from "@/types";
@@ -220,8 +223,11 @@ export function ChatPanel({
                             className="rounded-2xl border border-border/40 bg-muted/40 px-4 py-3 text-sm leading-relaxed shadow-sm dark:border-white/10 dark:bg-white/[0.06]"
                           >
                             <div className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:my-2 prose-strong:text-foreground prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 dark:prose-invert">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {part.value}
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeKatex]}
+                              >
+                                {normalizeMarkdownMath(part.value)}
                               </ReactMarkdown>
                             </div>
                           </div>
