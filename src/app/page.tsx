@@ -62,19 +62,6 @@ const TOPICS = [
 
 const OFFICIAL_SAMPLE_COURSES = getExampleCourses();
 
-function StatCard({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="home-shell-progress rounded-[1.5rem] border border-white/60 px-5 py-4 backdrop-blur dark:border-white/10">
-      <div className="text-2xl font-semibold tracking-tight text-foreground dark:text-white">
-        {value}
-      </div>
-      <div className="mt-1 text-sm text-muted-foreground dark:text-white/60">
-        {label}
-      </div>
-    </div>
-  );
-}
-
 export default function HomePage() {
   const { lang } = useLanguage();
   const { data: session } = useSession();
@@ -612,32 +599,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-        {session?.user ? (
-          <section className="relative container mx-auto px-4 pb-12">
-            <div className="home-shell-progress rounded-[2.3rem] border border-slate-200/70 px-5 py-4 dark:border-white/10 sm:px-6 sm:py-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex min-h-[88px] max-w-3xl items-center">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="home-badge-progress inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                      <Target className="h-3.5 w-3.5" />
-                      {text("继续你的学习", "Keep learning")}
-                    </div>
-                    <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
-                      {text("继续学习", "Continue Learning")}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-xl">
-                  <StatCard value={String(stats?.activeProjects ?? "--")} label={text("进行中的项目", "Active projects")} />
-                  <StatCard value={String(stats?.completedItems ?? "--")} label={text("已完成学习项", "Completed learning items")} />
-                  <StatCard value={stats ? `${stats.overallPercent}%` : "--"} label={text("整体平均进度", "Average progress")} />
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : null}
 
         <section id="product-preview" className="relative overflow-hidden pb-24 pt-10">
           <div className="home-preview-stage absolute inset-0" />

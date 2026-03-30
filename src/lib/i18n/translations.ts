@@ -150,6 +150,7 @@ const translations = {
   "login.title": { zh: "Pandora AI", en: "Pandora AI" },
   "login.subtitle": { zh: "使用你的账号登录以继续", en: "Sign in to continue" },
   "login.google": { zh: "使用 Google 登录", en: "Sign in with Google" },
+  "login.wechat": { zh: "使用微信登录", en: "Sign in with WeChat" },
   "login.guest": { zh: "游客试用", en: "Try as Guest" },
   "guest.banner": {
     zh: "你正在以游客身份试用，数据不会被保存。",

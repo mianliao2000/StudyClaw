@@ -10,7 +10,11 @@ import { GuestBanner } from "./guest-banner";
 import { UserMenu } from "./user-menu";
 import { RecentStudyCapsule } from "./recent-study-capsule";
 
-export function Header() {
+interface HeaderProps {
+  homeCapsule?: React.ReactNode;
+}
+
+export function Header({ homeCapsule }: HeaderProps) {
   const { data: session } = useSession();
   const { lang, setLang, theme, setTheme } = useLanguage();
 
@@ -44,6 +48,10 @@ export function Header() {
               Pandora AI
             </span>
           </Link>
+
+          {homeCapsule ? (
+            <div className="hidden min-w-0 shrink sm:flex">{homeCapsule}</div>
+          ) : null}
 
           {/* Spacer */}
           <div className="flex-1" />

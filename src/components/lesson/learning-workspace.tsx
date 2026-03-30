@@ -150,12 +150,12 @@ export function LearningWorkspace({
           onPointerDown={handlePointerDown}
           className="relative h-2.5 shrink-0 touch-none cursor-row-resize bg-transparent transition-colors hover:bg-primary/10"
         >
-          <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 bg-slate-300 dark:bg-white/20" />
+          <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 bg-slate-700 dark:bg-white" />
         </div>
       )}
 
       <div
-        className="min-h-0 shrink-0 border-t bg-background transition-[height] duration-200"
+        className="min-h-0 shrink-0 bg-background transition-[height] duration-200"
         style={{
           height: isAssistantHidden ? 0 : isAssistantExpanded ? "100%" : "var(--assistant-height)",
           transitionDuration: isDragging ? "0ms" : undefined,
