@@ -30,6 +30,17 @@ interface QuizViewProps {
   bodyEn?: string;
   status: string;
   isCompleted?: boolean;
+  mode?: "project" | "example";
+  projectContext?: {
+    projectId?: string;
+    chapterId?: string;
+    subchapterId?: string;
+  };
+  allowGeneration?: boolean;
+  allowCompletionTracking?: boolean;
+  allowVisitTracking?: boolean;
+  allowLastPathPersistence?: boolean;
+  persistQuizState?: boolean;
 }
 
 function parseQuiz(text: string): QuizQuestion[] {
@@ -62,12 +73,26 @@ function saveQuizState(contentId: string, answers: Record<number, number>, submi
   );
 }
 
-export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCompleted: initialCompleted = false }: QuizViewProps) {
+export function QuizView({
+  contentId,
+  body,
+  bodyEn,
+  status: initialStatus,
+  isCompleted: initialCompleted = false,
+  mode = "project",
+  projectContext,
+  allowGeneration = true,
+  allowCompletionTracking = true,
+  allowVisitTracking = true,
+  allowLastPathPersistence = true,
+  persistQuizState = true,
+}: QuizViewProps) {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
-  const projectId = params.projectId as string;
+  const projectId =
+    projectContext?.projectId ?? (mode === "project" ? (params.projectId as string) : undefined);
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
   const [status, setStatus] = useState(initialStatus);
@@ -75,10 +100,14 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
   const [submitted, setSubmitted] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  const { isCompleted, markCompleted } = useMarkCompleted(contentId, initialCompleted);
+  const { isCompleted, markCompleted } = useMarkCompleted(contentId, initialCompleted, {
+    enabled: allowCompletionTracking,
+    projectId,
+  });
 
   // Restore saved quiz state on mount; always sync score to DB via direct fetch
   useEffect(() => {
+    if (!persistQuizState) return;
     const saved = loadQuizState(contentId);
     if (!saved?.submitted) return;
     setAnswers(saved.answers);
@@ -95,14 +124,14 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
       if (res.ok) router.refresh();
     }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentId]);
+  }, [contentId, persistQuizState]);
 
   // Persist quiz state when answers or submitted change
   useEffect(() => {
-    if (submitted) {
+    if (persistQuizState && submitted) {
       saveQuizState(contentId, answers, submitted);
     }
-  }, [contentId, answers, submitted]);
+  }, [contentId, answers, persistQuizState, submitted]);
 
   useEffect(() => {
     setContent(body);
@@ -121,8 +150,13 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
   }, [router, status]);
 
   useEffect(() => {
-    const chapterId = params.chapterId as string | undefined;
-    const subchapterId = params.subchapterId as string | undefined;
+    if (!allowVisitTracking) return;
+    const chapterId =
+      projectContext?.chapterId ??
+      (mode === "project" ? (params.chapterId as string | undefined) : undefined);
+    const subchapterId =
+      projectContext?.subchapterId ??
+      (mode === "project" ? (params.subchapterId as string | undefined) : undefined);
     if (!contentId || !projectId || !chapterId || !subchapterId) return;
 
     fetch("/api/progress", {
@@ -138,16 +172,27 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
     }).catch(() => {
       // Silent ? visit tracking is best-effort
     });
-  }, [contentId, params.chapterId, params.subchapterId, projectId]);
+  }, [
+    allowVisitTracking,
+    contentId,
+    mode,
+    params.chapterId,
+    params.subchapterId,
+    projectContext?.chapterId,
+    projectContext?.subchapterId,
+    projectId,
+  ]);
 
   useEffect(() => {
+    if (!allowLastPathPersistence) return;
     if (typeof window === "undefined" || !projectId || !pathname) return;
     window.localStorage.setItem(`studyclaw:last-project-path:${projectId}`, pathname);
-  }, [pathname, projectId]);
+  }, [allowLastPathPersistence, pathname, projectId]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleGenerate = async () => {
+    if (!allowGeneration) return;
     setStatus("generating");
     setErrorMessage(null);
     try {
@@ -186,6 +231,14 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
   }
 
   if (status === "pending" || status === "error" || !content) {
+    if (!allowGeneration) {
+      return (
+        <div className="text-center py-10 text-muted-foreground">
+          <p>{lang === "en" ? "This sample quiz is not available yet." : "这份示例测验暂时不可用。"}</p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center py-20">
         {status === "error" && errorMessage ? (
@@ -211,10 +264,18 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
   if (questions.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        <p>{t("quiz.formatError")}</p>
-        <Button onClick={handleGenerate} variant="outline" className="mt-4">
-          {t("quiz.regenerate")}
-        </Button>
+        <p>
+          {allowGeneration
+            ? t("quiz.formatError")
+            : lang === "en"
+              ? "This sample quiz is not available yet."
+              : "这份示例测验暂时不可用。"}
+        </p>
+        {allowGeneration ? (
+          <Button onClick={handleGenerate} variant="outline" className="mt-4">
+            {t("quiz.regenerate")}
+          </Button>
+        ) : null}
       </div>
     );
   }
@@ -225,6 +286,7 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
   const quizScoreState = getQuizScoreState(score, questions.length);
 
   const handleRegenerate = async () => {
+    if (!allowGeneration) return;
     setIsRegenerating(true);
     try {
       const res = await fetch("/api/generate", {
@@ -238,7 +300,9 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
         setContentEnState(data.bodyEn ?? "");
         setAnswers({});
         setSubmitted(false);
-        window.localStorage.removeItem(`${QUIZ_STATE_PREFIX}${contentId}`);
+        if (persistQuizState) {
+          window.localStorage.removeItem(`${QUIZ_STATE_PREFIX}${contentId}`);
+        }
         router.refresh();
       }
     } catch {
@@ -250,22 +314,24 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          disabled={!submitted || isRegenerating}
-          onClick={handleRegenerate}
-        >
-          {isRegenerating ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <RefreshCw className="h-3.5 w-3.5" />
-          )}
-          {lang === "en" ? "New Quiz" : "生成新测验"}
-        </Button>
-      </div>
+      {allowGeneration ? (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={!submitted || isRegenerating}
+            onClick={handleRegenerate}
+          >
+            {isRegenerating ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
+            {lang === "en" ? "New Quiz" : "生成新测验"}
+          </Button>
+        </div>
+      ) : null}
 
       {submitted && (
         <Card className="dark:bg-card/80">
@@ -295,7 +361,9 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
                 onClick={() => {
                   setAnswers({});
                   setSubmitted(false);
-                  window.localStorage.removeItem(`${QUIZ_STATE_PREFIX}${contentId}`);
+                  if (persistQuizState) {
+                    window.localStorage.removeItem(`${QUIZ_STATE_PREFIX}${contentId}`);
+                  }
                 }}
               >
                 {t("quiz.retry")}
@@ -381,7 +449,9 @@ export function QuizView({ contentId, body, bodyEn, status: initialStatus, isCom
           <Button
             onClick={() => {
               setSubmitted(true);
-              const correctCount = questions.filter((q) => answers[q.id] === q.correctAnswer).length;
+              const correctCount = questions.filter(
+                (q) => answers[q.id] === q.correctAnswer
+              ).length;
               const pct = Math.round((correctCount / questions.length) * 100);
               markCompleted(pct);
             }}

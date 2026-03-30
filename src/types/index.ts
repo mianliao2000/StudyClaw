@@ -50,6 +50,56 @@ export interface SubchapterInfo {
   }[];
 }
 
+export interface ExampleLesson {
+  id: string;
+  contentType: ContentType;
+  lang: "zh";
+  status: "ready";
+  body: string;
+  bodyEn?: string;
+  diagramBase64?: string | null;
+}
+
+export interface ExampleSubchapter {
+  id: string;
+  slug: string;
+  title: string;
+  titleEn?: string;
+  orderIndex: number;
+  learningObjective: string;
+  learningObjectiveEn?: string;
+  lessons: Record<ContentType, ExampleLesson>;
+  contents: {
+    id: string;
+    contentType: ContentType;
+    status: "ready";
+    lang: "zh";
+  }[];
+}
+
+export interface ExampleChapter {
+  id: string;
+  slug: string;
+  title: string;
+  titleEn?: string;
+  orderIndex: number;
+  subchapters: ExampleSubchapter[];
+}
+
+export interface ExampleCourse {
+  id: string;
+  slug: string;
+  title: string;
+  titleEn?: string;
+  topic: string;
+  topicEn?: string;
+  description: string;
+  descriptionEn?: string;
+  goals: string[];
+  goalsEn?: string[];
+  chapters: ExampleChapter[];
+}
+
 export interface PlanStructure {
   title: string;
   titleEn?: string;

@@ -70,6 +70,17 @@ export async function generateContentById(
     const subchapter = content.subchapter;
     const isSummaryChapter = isCourseSummaryChapter(chapter);
 
+    // Fetch file summaries for this project
+    const fileSummaries = await prisma.planningFileUpload.findMany({
+      where: { projectId: project.id, status: "ready" },
+      select: { fileName: true, summary: true },
+    });
+    const fileSummariesText = fileSummaries.length > 0
+      ? "Reference materials uploaded by the user:\n" +
+        fileSummaries.map((f) => `--- ${f.fileName} ---\n${f.summary}`).join("\n\n") +
+        "\n\nWhen generating content, incorporate relevant information from these materials where appropriate."
+      : "";
+
     let prompt: string;
     const vars: Record<string, string> = {
       projectTitle: project.title,
@@ -80,6 +91,7 @@ export async function generateContentById(
       lessonContent: "",
       contentDetailInstruction: getContentDetailInstruction(userPrefs?.contentDetail),
       quizCount: String(userPrefs?.quizCount ?? 5),
+      fileSummaries: fileSummariesText,
     };
 
     let courseWideLessonContent = "";

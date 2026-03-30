@@ -40,6 +40,16 @@ interface LessonContentProps {
   contentType: string;
   isCompleted?: boolean;
   diagramBase64?: string | null;
+  mode?: "project" | "example";
+  projectContext?: {
+    projectId?: string;
+    chapterId?: string;
+    subchapterId?: string;
+  };
+  allowGeneration?: boolean;
+  allowCompletionTracking?: boolean;
+  allowVisitTracking?: boolean;
+  allowLastPathPersistence?: boolean;
 }
 
 interface LessonSection {
@@ -526,20 +536,37 @@ export function LessonContent({
   contentType,
   isCompleted: initialCompleted = false,
   diagramBase64,
+  mode = "project",
+  projectContext,
+  allowGeneration = true,
+  allowCompletionTracking = true,
+  allowVisitTracking = true,
+  allowLastPathPersistence = true,
 }: LessonContentProps) {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
-  const projectId = params.projectId as string;
-  const chapterId = params.chapterId as string;
-  const subchapterId = params.subchapterId as string;
+  const projectId =
+    projectContext?.projectId ?? (mode === "project" ? (params.projectId as string) : undefined);
+  const chapterId =
+    projectContext?.chapterId ?? (mode === "project" ? (params.chapterId as string) : undefined);
+  const subchapterId =
+    projectContext?.subchapterId ??
+    (mode === "project" ? (params.subchapterId as string) : undefined);
   const [content, setContent] = useState(body);
   const [contentEnState, setContentEnState] = useState(bodyEn || "");
   const [status, setStatus] = useState(initialStatus);
   const [diagramData, setDiagramData] = useState(diagramBase64 || null);
 
-  const { isCompleted, isMarking, markCompleted } = useMarkCompleted(contentId, initialCompleted);
+  const { isCompleted, isMarking, markCompleted } = useMarkCompleted(
+    contentId,
+    initialCompleted,
+    {
+      enabled: allowCompletionTracking,
+      projectId,
+    }
+  );
 
   const displayContent = lang === "en" && contentEnState ? contentEnState : content;
   const typeLabel = typeKeys[contentType] ? t(typeKeys[contentType]) : contentType;
@@ -563,6 +590,7 @@ export function LessonContent({
   }, [router, status]);
 
   useEffect(() => {
+    if (!allowVisitTracking) return;
     if (!contentId || !projectId || !chapterId || !subchapterId) return;
 
     fetch("/api/progress", {
@@ -578,16 +606,18 @@ export function LessonContent({
     }).catch(() => {
       // Silent ? visit tracking is best-effort
     });
-  }, [chapterId, contentId, projectId, subchapterId]);
+  }, [allowVisitTracking, chapterId, contentId, projectId, subchapterId]);
 
   useEffect(() => {
+    if (!allowLastPathPersistence) return;
     if (typeof window === "undefined" || !projectId || !pathname) return;
     window.localStorage.setItem(`studyclaw:last-project-path:${projectId}`, pathname);
-  }, [pathname, projectId]);
+  }, [allowLastPathPersistence, pathname, projectId]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleGenerate = async () => {
+    if (!allowGeneration) return;
     setStatus("generating");
     setErrorMessage(null);
     try {
@@ -630,6 +660,18 @@ export function LessonContent({
   }
 
   if (status === "pending" || status === "error" || !content) {
+    if (!allowGeneration) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <p className="mb-4 text-center text-muted-foreground">
+            {lang === "en"
+              ? "This sample lesson is not available yet."
+              : "这节示例课内容暂时不可用。"}
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center py-20">
         {status === "error" && errorMessage ? (
@@ -688,27 +730,29 @@ export function LessonContent({
         <FallbackLessonBody intro={parsedContent.intro || displayContent} />
       )}
 
-      <div className="flex justify-center pt-4 pb-2">
-        {isCompleted ? (
-          <div className="flex items-center gap-2 rounded-full border border-green-500/30 bg-green-50 px-5 py-2.5 text-sm font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
-            <CheckCircle2 className="h-4 w-4" />
-            {lang === "en" ? "Completed" : "\u5df2\u5b8c\u6210"}
-          </div>
-        ) : (
-          <Button
-            onClick={() => markCompleted()}
-            disabled={isMarking}
-            className="gap-2 rounded-full px-6"
-          >
-            {isMarking ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
+      {allowCompletionTracking ? (
+        <div className="flex justify-center pt-4 pb-2">
+          {isCompleted ? (
+            <div className="flex items-center gap-2 rounded-full border border-green-500/30 bg-green-50 px-5 py-2.5 text-sm font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
               <CheckCircle2 className="h-4 w-4" />
-            )}
-            {lang === "en" ? "Mark as Read" : "\u6807\u8bb0\u4e3a\u5df2\u8bfb"}
-          </Button>
-        )}
-      </div>
+              {lang === "en" ? "Completed" : "\u5df2\u5b8c\u6210"}
+            </div>
+          ) : (
+            <Button
+              onClick={() => markCompleted()}
+              disabled={isMarking}
+              className="gap-2 rounded-full px-6"
+            >
+              {isMarking ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              {lang === "en" ? "Mark as Read" : "\u6807\u8bb0\u4e3a\u5df2\u8bfb"}
+            </Button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

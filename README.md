@@ -5,6 +5,7 @@ Pandora AI is a bilingual AI learning platform for turning a broad learning goal
 ## Core Features
 
 - AI planning conversation that narrows a topic through guided dialogue
+- Official sample courses that are preloaded and can be opened instantly from the homepage
 - Structured course generation with chapters and subchapters
 - Bilingual experience with Chinese and English UI and course content
 - Lesson generation for:
@@ -13,6 +14,7 @@ Pandora AI is a bilingual AI learning platform for turning a broad learning goal
   - quizzes
 - In-course AI tutor for follow-up questions during study
 - Learning progress tracking for each project
+- Add an official sample course into "My Projects" as a real learning project
 - Guest trial mode and Google sign-in
 - Responsive homepage, dashboard, and learning workspace
 
@@ -25,6 +27,24 @@ Pandora AI is a bilingual AI learning platform for turning a broad learning goal
 5. Confirm the course
 6. Study lesson content, summaries, and quizzes
 7. Continue asking questions through the AI tutor
+
+## Official Sample Courses
+
+The homepage includes official sample courses that are fully prepared in advance, so learners can click and start immediately without waiting for generation.
+
+Current sample catalog:
+
+- AI Agent Systems
+- Large Language Models: Principles and Applications
+- Quantitative Finance: Research and Strategy
+- Power Electronics Systems
+
+Sample course behavior:
+
+- Publicly browsable course overview, lessons, summaries, and quizzes
+- Bilingual lesson content in Chinese and English
+- Temporary sample-course tutor chat for signed-in or guest sessions
+- One-click import into a private project for persistent progress and tutoring
 
 ## Tech Stack
 
@@ -63,6 +83,10 @@ Pandora AI is a bilingual AI learning platform for turning a broad learning goal
   Summary page
 - `/projects/[projectId]/chapters/[chapterId]/subchapters/[subchapterId]/quiz`
   Quiz page
+- `/examples/[courseSlug]`
+  Official sample course overview
+- `/examples/[courseSlug]/chapters/[chapterSlug]/subchapters/[subchapterSlug]/[lessonType]`
+  Official sample course lesson pages
 
 ## Local Development
 

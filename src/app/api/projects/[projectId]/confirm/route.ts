@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import os from "os";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateContentById } from "@/lib/ai/generate-content";
@@ -81,6 +84,29 @@ export async function POST(
       console.error(`Initial lesson generation failed for ${firstMainContent.id}:`, error);
     });
   }
+
+  // Clean up physical files but keep summaries in the database
+  void (async () => {
+    const uploads = await prisma.planningFileUpload.findMany({
+      where: { projectId },
+      select: { id: true, filePath: true },
+    });
+    for (const upload of uploads) {
+      if (upload.filePath) {
+        try { fs.unlinkSync(upload.filePath); } catch { /* ignore */ }
+      }
+    }
+    if (uploads.length > 0) {
+      await prisma.planningFileUpload.updateMany({
+        where: { projectId },
+        data: { filePath: null },
+      });
+    }
+    const uploadDir = path.join(os.tmpdir(), "studyclaw-uploads", projectId);
+    try { fs.rmSync(uploadDir, { recursive: true, force: true }); } catch { /* ignore */ }
+  })().catch((error) => {
+    console.error("Post-confirm file cleanup failed:", error);
+  });
 
   return NextResponse.json({
     redirectTo: `/projects/${projectId}/chapters/${firstChapter.id}/subchapters/${firstSubchapter.id}/main`,

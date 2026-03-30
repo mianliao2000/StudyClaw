@@ -247,6 +247,25 @@ export async function POST(req: Request) {
     });
   }
 
+  // Fetch file summaries for planning mode
+  let fileSummariesSystemMessage: string | null = null;
+  if (mode === "planning") {
+    const fileSummaries = await prisma.planningFileUpload.findMany({
+      where: { projectId: thread.projectId, status: "ready" },
+      select: { fileName: true, summary: true },
+    });
+    if (fileSummaries.length > 0) {
+      fileSummariesSystemMessage = [
+        "The user uploaded reference files for this course. Here are their summaries:",
+        ...fileSummaries.map(
+          (f, i) => `\nFile ${i + 1}: "${f.fileName}"\n${f.summary}`,
+        ),
+        "\nUse these summaries as background context when discussing the course plan.",
+        "Reference specific file content when relevant to the user's questions.",
+      ].join("\n");
+    }
+  }
+
   const aiMessages: AIMessage[] = [
     { role: "system", content: systemPrompt },
     ...(mode === "tutoring" && sharedTutoringMemory.length > 0
@@ -267,6 +286,9 @@ export async function POST(req: Request) {
               ) || "",
           },
         ]
+      : []),
+    ...(fileSummariesSystemMessage
+      ? [{ role: "system" as const, content: fileSummariesSystemMessage }]
       : []),
     ...thread.messages
       .filter(

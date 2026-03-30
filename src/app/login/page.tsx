@@ -1,19 +1,38 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 
+function sanitizeNextPath(rawValue: string | null) {
+  if (!rawValue || !rawValue.startsWith("/") || rawValue.startsWith("//")) {
+    return "/dashboard";
+  }
+
+  return rawValue;
+}
+
 export default function LoginPage() {
   const { t } = useLanguage();
   const router = useRouter();
-  const { update } = useSession();
+  const searchParams = useSearchParams();
+  const nextPath = useMemo(
+    () => sanitizeNextPath(searchParams.get("next")),
+    [searchParams]
+  );
+  const { status, update } = useSession();
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    router.replace(nextPath);
+    router.refresh();
+  }, [nextPath, router, status]);
 
   async function handleGuestLogin() {
     setGuestLoading(true);
@@ -22,7 +41,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/guest", { method: "POST" });
       if (res.ok) {
         await update();
-        router.replace("/dashboard");
+        router.replace(nextPath);
         router.refresh();
         return;
       }
@@ -60,7 +79,7 @@ export default function LoginPage() {
             <Button
               className="w-full"
               variant="outline"
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={() => signIn("google", { callbackUrl: nextPath })}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path

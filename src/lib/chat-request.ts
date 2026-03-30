@@ -20,12 +20,16 @@ export function getFriendlyChatNetworkError(language: ConversationLanguage) {
     : "请求没有成功到达服务器，请稍后再试。";
 }
 
-export async function postChatRequestWithRetry(payload: unknown) {
+export async function postChatRequestWithRetry(
+  payload: unknown,
+  options?: { endpoint?: string }
+) {
+  const endpoint = options?.endpoint ?? "/api/chat";
   let lastError: unknown;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      return await fetch("/api/chat", {
+      return await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

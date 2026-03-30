@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { cleanupStaleUploads } from "@/lib/files/cleanup-stale";
 import { NextResponse } from "next/server";
 import type { PlanStructure } from "@/types";
 
@@ -85,6 +86,10 @@ export async function POST(req: Request) {
       },
     },
     include: { chatThreads: true },
+  });
+
+  void cleanupStaleUploads().catch((error) => {
+    console.error("Stale upload cleanup failed:", error);
   });
 
   void prisma.learningProject.deleteMany({

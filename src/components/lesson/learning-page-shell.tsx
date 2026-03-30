@@ -11,7 +11,7 @@ const ASSISTANT_EXPANDED_STORAGE_KEY = "pandora:learning-assistant-expanded";
 
 interface LearningPageShellProps {
   content: React.ReactNode;
-  tutoring: {
+  tutoring?: {
     threadId?: string;
     projectId: string;
     chapterId: string;
@@ -24,11 +24,17 @@ interface LearningPageShellProps {
     initialMessages: ChatMessage[];
     conversationLanguage?: ConversationLanguage | null;
   };
+  assistant?: (controls: {
+    isExpanded: boolean;
+    onToggleExpanded: () => void;
+    onHide: () => void;
+  }) => React.ReactNode;
 }
 
 export function LearningPageShell({
   content,
   tutoring,
+  assistant,
 }: LearningPageShellProps) {
   const [isAssistantExpanded, setIsAssistantExpanded] = useState(false);
   const [isAssistantHidden, setIsAssistantHidden] = useState(false);
@@ -55,6 +61,20 @@ export function LearningPageShell({
     );
   }, [isAssistantHidden]);
 
+  const handleToggleExpanded = () =>
+    setIsAssistantExpanded((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsAssistantHidden(false);
+      }
+      return next;
+    });
+
+  const handleHideAssistant = () => {
+    setIsAssistantExpanded(false);
+    setIsAssistantHidden(true);
+  };
+
   return (
     <LearningWorkspace
       content={content}
@@ -62,23 +82,20 @@ export function LearningPageShell({
       isAssistantHidden={isAssistantHidden}
       onShowAssistant={() => setIsAssistantHidden(false)}
       assistant={
-        <TutoringChat
-          {...tutoring}
-          isExpanded={isAssistantExpanded}
-          onToggleExpanded={() =>
-            setIsAssistantExpanded((prev) => {
-              const next = !prev;
-              if (next) {
-                setIsAssistantHidden(false);
-              }
-              return next;
+        assistant
+          ? assistant({
+              isExpanded: isAssistantExpanded,
+              onToggleExpanded: handleToggleExpanded,
+              onHide: handleHideAssistant,
             })
-          }
-          onHide={() => {
-            setIsAssistantExpanded(false);
-            setIsAssistantHidden(true);
-          }}
-        />
+          : tutoring ? (
+          <TutoringChat
+            {...tutoring}
+            isExpanded={isAssistantExpanded}
+            onToggleExpanded={handleToggleExpanded}
+            onHide={handleHideAssistant}
+          />
+        ) : null
       }
     />
   );

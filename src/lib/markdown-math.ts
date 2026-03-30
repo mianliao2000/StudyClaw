@@ -41,6 +41,50 @@ function isCompactMathAtom(text: string) {
   );
 }
 
+function containsCjk(text: string) {
+  return /[\u4e00-\u9fff]/u.test(text);
+}
+
+function hasStandaloneProse(text: string) {
+  return /[\u4e00-\u9fff]{2,}/u.test(text) || /[A-Za-z]{4,}/.test(text);
+}
+
+function splitTrailingCompactMathAtom(text: string) {
+  const trimmed = text.trim();
+  const minIndex = Math.max(1, trimmed.length - 32);
+
+  for (let index = minIndex; index < trimmed.length; index += 1) {
+    const prefix = trimmed.slice(0, index).trimEnd();
+    const atom = trimmed.slice(index).trimStart();
+
+    if (!prefix || !atom) continue;
+    if (!containsCjk(prefix)) continue;
+    if (!hasStandaloneProse(prefix)) continue;
+    if (/[=<>+\-*/]/.test(prefix)) continue;
+    if (isCompactMathAtom(atom)) return { prefix, atom };
+  }
+
+  return null;
+}
+
+function splitLeadingCompactMathAtom(text: string) {
+  const trimmed = text.trim();
+  const maxIndex = Math.min(trimmed.length, 32);
+
+  for (let index = 1; index <= maxIndex; index += 1) {
+    const atom = trimmed.slice(0, index).trimEnd();
+    const suffix = trimmed.slice(index).trimStart();
+
+    if (!atom || !suffix) continue;
+    if (!containsCjk(suffix)) continue;
+    if (!hasStandaloneProse(suffix)) continue;
+    if (/[=<>+\-*/]/.test(suffix)) continue;
+    if (isCompactMathAtom(atom)) return { atom, suffix };
+  }
+
+  return null;
+}
+
 function shouldStartBareMath(markdown: string, index: number) {
   const char = markdown[index];
 
@@ -134,10 +178,63 @@ function repairDanglingInlineLatex(markdown: string) {
   return result;
 }
 
+function repairMixedInlineMathWithCjk(markdown: string) {
+  return markdown.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (match, inner: string) => {
+    if (!containsCjk(inner)) return match;
+
+    const trailingAtom = splitTrailingCompactMathAtom(inner);
+    if (trailingAtom) {
+      return `${trailingAtom.prefix} $${trailingAtom.atom}$`;
+    }
+
+    const leadingAtom = splitLeadingCompactMathAtom(inner);
+    if (leadingAtom) {
+      return `$${leadingAtom.atom}$ ${leadingAtom.suffix}`;
+    }
+
+    return match;
+  });
+}
+
 function unwrapNonMathInlineDollarRuns(markdown: string) {
   return markdown.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (match, inner: string) => {
     return looksLikeMathExpression(inner) ? match : inner;
   });
+}
+
+function repairDisplayMathTrailingInlineRuns(markdown: string) {
+  return markdown.replace(/\$\$([\s\S]*?)\$\$\$([^$\n]+?)\$(?!\$)/g, (_, expr: string, trailing: string) => {
+    const trailingAtom = splitTrailingCompactMathAtom(trailing);
+    if (trailingAtom) {
+      return "$$" + expr.trim() + "$$ " + trailingAtom.prefix + " $" + trailingAtom.atom + "$";
+    }
+
+    const leadingAtom = splitLeadingCompactMathAtom(trailing);
+    if (leadingAtom) {
+      return "$$" + expr.trim() + "$$ $" + leadingAtom.atom + "$ " + leadingAtom.suffix;
+    }
+
+    return (
+      "$$" +
+      expr.trim() +
+      "$$ " +
+      (looksLikeMathExpression(trailing) ? "$" + trailing.trim() + "$" : trailing.trim())
+    );
+  });
+}
+
+function insertSpacingAroundCompactInlineMath(markdown: string) {
+  return markdown
+    .replace(/([\u4e00-\u9fff])(\$([^$\n]+)\$)/gu, (match, prefix: string, run: string, inner: string) => {
+      return isCompactMathAtom(inner) ? `${prefix} ${run}` : match;
+    })
+    .replace(/(\$([^$\n]+)\$)([\u4e00-\u9fff])/gu, (match, run: string, inner: string, suffix: string) => {
+      return isCompactMathAtom(inner) ? `${run} ${suffix}` : match;
+    });
+}
+
+function insertSpacingAfterDisplayMath(markdown: string) {
+  return markdown.replace(/(\$\$)([\u4e00-\u9fff])/gu, "$1 $2");
 }
 
 function readBareMathEnd(markdown: string, start: number) {
@@ -301,12 +398,16 @@ export function normalizeMarkdownMath(markdown: string) {
     .replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, expr: string) => `\n\n$$${expr.trim()}$$\n\n`)
     .replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (_, expr: string) => `$${expr.trim()}$`);
 
+  normalized = repairDisplayMathTrailingInlineRuns(normalized);
   normalized = repairDanglingInlineLatex(normalized);
+  normalized = repairMixedInlineMathWithCjk(normalized);
   normalized = unwrapNonMathInlineDollarRuns(normalized);
   normalized = wrapBareMathRuns(normalized);
   normalized = wrapMathInParentheses(normalized);
+  normalized = insertSpacingAfterDisplayMath(normalized);
+  normalized = insertSpacingAroundCompactInlineMath(normalized);
 
   return normalized
-    .replace(/\$\$\s+([\s\S]*?)\s+\$\$/g, (_, expr: string) => `$$${expr.trim()}$$`)
-    .replace(/\$\s+([^$]*?)\s+\$/g, (_, expr: string) => `$${expr.trim()}$`);
+    .replace(/(?<!\$)\$\$\s+([\s\S]*?)\s+\$\$(?!\$)/g, (_, expr: string) => `$$${expr.trim()}$$`)
+    .replace(/(?<!\$)\$\s+([^$]*?)\s+\$(?!\$)/g, (_, expr: string) => `$${expr.trim()}$`);
 }

@@ -19,6 +19,7 @@ interface SubchapterHeaderProps {
   subchapterTitleEn?: string | null;
   subchapterOrderIndex: number;
   learningObjective?: string | null;
+  learningObjectiveEn?: string | null;
 }
 
 export function SubchapterHeader({
@@ -30,6 +31,7 @@ export function SubchapterHeader({
   subchapterTitleEn,
   subchapterOrderIndex,
   learningObjective,
+  learningObjectiveEn,
 }: SubchapterHeaderProps) {
   const { t, lang } = useLanguage();
   const pageTypeLabel = t(pageTitleKeys[contentType]);
@@ -55,9 +57,10 @@ export function SubchapterHeader({
       <p className="mt-2 text-sm font-semibold text-primary sm:text-base">
         {pageTypeLabel}
       </p>
-      {contentType === "main" && learningObjective && (
+      {contentType === "main" && (learningObjective || learningObjectiveEn) && (
         <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          {t("lesson.goal")}: {learningObjective}
+          {t("lesson.goal")}:{" "}
+          {lang === "en" && learningObjectiveEn ? learningObjectiveEn : learningObjective}
         </p>
       )}
     </div>

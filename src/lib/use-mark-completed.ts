@@ -3,14 +3,25 @@
 import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-export function useMarkCompleted(contentId: string, initialCompleted: boolean) {
+interface UseMarkCompletedOptions {
+  enabled?: boolean;
+  projectId?: string;
+}
+
+export function useMarkCompleted(
+  contentId: string,
+  initialCompleted: boolean,
+  options?: UseMarkCompletedOptions
+) {
   const params = useParams();
   const router = useRouter();
-  const projectId = params.projectId as string;
+  const projectId = options?.projectId ?? (params.projectId as string | undefined);
+  const enabled = options?.enabled ?? true;
   const [isCompleted, setIsCompleted] = useState(initialCompleted);
   const [isMarking, setIsMarking] = useState(false);
 
   const markCompleted = useCallback(async (quizScore?: number) => {
+    if (!enabled) return;
     if (isMarking || !contentId || !projectId) return;
     setIsMarking(true);
 
@@ -37,7 +48,7 @@ export function useMarkCompleted(contentId: string, initialCompleted: boolean) {
     } finally {
       setIsMarking(false);
     }
-  }, [contentId, isMarking, projectId, router]);
+  }, [contentId, enabled, isMarking, projectId, router]);
 
   return { isCompleted, isMarking, markCompleted };
 }

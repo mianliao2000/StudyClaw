@@ -97,6 +97,7 @@ model LearningProject {
   chapters      Chapter[]
   chatThreads   ProjectChatThread[]
   progress      ProgressState?
+  uploadedFiles PlanningFileUpload[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -160,6 +161,21 @@ model ProjectChatMessage {
   content   String
   metadata  String?
   createdAt DateTime @default(now())
+}
+
+model PlanningFileUpload {
+  id        String   @id @default(cuid())
+  projectId String
+  project   LearningProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fileName  String
+  fileSize  Int
+  mimeType  String
+  filePath  String?
+  summary   String?
+  summaryEn String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProgressState {

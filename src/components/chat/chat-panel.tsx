@@ -26,6 +26,9 @@ interface ChatPanelProps {
   animatePrimaryOption?: boolean;
   wideLayout?: boolean;
   headerSlot?: React.ReactNode;
+  leftSlot?: React.ReactNode;
+  footerSlot?: React.ReactNode;
+  hideComposer?: boolean;
 }
 
 type ParsedPart =
@@ -130,6 +133,9 @@ export function ChatPanel({
   animatePrimaryOption = false,
   wideLayout = false,
   headerSlot,
+  leftSlot,
+  footerSlot,
+  hideComposer = false,
 }: ChatPanelProps) {
   const { lang } = useLanguage();
   const [input, setInput] = useState("");
@@ -326,26 +332,36 @@ export function ChatPanel({
       )}
 
       <div className="shrink-0 border-t border-border/50 bg-background p-2 dark:border-white/10">
-        <div className="flex items-center gap-1.5">
-          <Textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="min-h-[36px] max-h-28 flex-1 resize-none bg-input/50 px-3 py-2 text-sm dark:border-white/15 dark:bg-white/[0.06] dark:text-white dark:placeholder:text-white/40"
-            rows={1}
-          />
-          <Button
-            size="icon"
-            className="h-9 w-9 shrink-0"
-            onClick={handleSubmit}
-            disabled={!input.trim() || isLoading}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-          {headerSlot}
-        </div>
+        {footerSlot ? (
+          <div className="flex items-center gap-1.5">
+            <div className="min-w-0 flex-1">{footerSlot}</div>
+            {headerSlot}
+          </div>
+        ) : hideComposer ? (
+          headerSlot ? <div className="flex justify-end">{headerSlot}</div> : null
+        ) : (
+          <div className="flex items-center gap-1.5">
+            {leftSlot}
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              className="min-h-[36px] max-h-28 flex-1 resize-none bg-input/50 px-3 py-2 text-sm dark:border-white/15 dark:bg-white/[0.06] dark:text-white dark:placeholder:text-white/40"
+              rows={1}
+            />
+            <Button
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={handleSubmit}
+              disabled={!input.trim() || isLoading}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+            {headerSlot}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -232,7 +232,9 @@ ${FORMULA_GENERATION_RULES}
 
 The content should feel intuitive, structured, and professional.
 
-{contentDetailInstruction}`;
+{contentDetailInstruction}
+
+{fileSummaries}`;
 
 export function getContentDetailInstruction(level?: string): string {
   switch (level) {
@@ -410,6 +412,27 @@ Requirements:
 - For numbers, units, and short plain-language phrases inside JSON, keep them outside math mode unless they are part of a true symbolic expression.
 
 ${FORMULA_GENERATION_RULES}`;
+
+export const FILE_SUMMARY_PROMPT = `You are a learning-material analyst. A user uploaded a file to help plan a learning course.
+
+File name: {fileName}
+
+Extracted text (may be truncated):
+{extractedText}
+
+Generate a concise but thorough summary of this file's key content, main concepts, and how it could inform course design. Include:
+1. What the document is about (1-2 sentences)
+2. Key topics and concepts covered (bullet points)
+3. Level of complexity / target audience
+4. Notable methodologies, frameworks, or structures mentioned
+
+Generate both Chinese and English:
+---LANG:zh---
+(Chinese summary, 300-500 words)
+---LANG:en---
+(English summary, 300-500 words)
+
+Focus on content that would be useful for course planning and lesson generation.`;
 
 export function fillTemplate(
   template: string,

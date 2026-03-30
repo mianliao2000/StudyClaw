@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { Button } from "@/components/ui/button";
+import { FileUploadButton } from "@/components/chat/file-upload-button";
+import {
+  UploadedFilesBar,
+  type UploadedFileInfo,
+} from "@/components/chat/uploaded-files-bar";
 import { useLanguage } from "@/lib/i18n";
 import {
   detectConversationLanguage,
@@ -484,6 +489,9 @@ export default function PlanPage() {
   const [hasInjectedRevisionPrompt, setHasInjectedRevisionPrompt] =
     useState(false);
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const isNavigatingToReviewRef = useRef(false);
 
   const fallbackLanguage = (lang === "en" ? "en" : "zh") as ConversationLanguage;
   const activeLanguage = conversationLanguage ?? fallbackLanguage;
@@ -527,6 +535,24 @@ export default function PlanPage() {
   const rememberConversationLanguage = useCallback((text: string) => {
     setConversationLanguage((previous) => previous ?? detectConversationLanguage(text));
   }, []);
+
+  const fetchUploadedFiles = useCallback(() => {
+    fetch(`/api/projects/${projectId}/files`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setUploadedFiles(data);
+      })
+      .catch(() => {});
+  }, [projectId]);
+
+  const handleDeleteFile = useCallback(
+    (fileId: string) => {
+      fetch(`/api/projects/${projectId}/files/${fileId}`, { method: "DELETE" })
+        .then(() => fetchUploadedFiles())
+        .catch(() => {});
+    },
+    [fetchUploadedFiles, projectId],
+  );
 
   const enterDecisionLoop = useCallback(
     (
@@ -577,6 +603,7 @@ export default function PlanPage() {
         throw new Error(errorMessage);
       }
 
+      isNavigatingToReviewRef.current = true;
       router.push(`/projects/${projectId}/review`);
     },
     [activeLanguage, projectId, router]
@@ -1213,6 +1240,24 @@ export default function PlanPage() {
     threadId,
   ]);
 
+  // Fetch uploaded files on mount
+  useEffect(() => {
+    fetchUploadedFiles();
+  }, [fetchUploadedFiles]);
+
+  // Cleanup files and conversation on navigation away
+  useEffect(() => {
+    const cleanup = () => {
+      if (isNavigatingToReviewRef.current) return;
+      navigator.sendBeacon(`/api/projects/${projectId}/files/cleanup`);
+    };
+    window.addEventListener("beforeunload", cleanup);
+    return () => {
+      window.removeEventListener("beforeunload", cleanup);
+      cleanup();
+    };
+  }, [projectId]);
+
   const userMessageCount = messages.filter((m) => m.role === "user").length;
   const planningProgress = Math.min(userMessageCount, MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE);
 
@@ -1268,6 +1313,27 @@ export default function PlanPage() {
         </div>
       )}
 
+      <UploadedFilesBar
+        projectId={projectId}
+        files={uploadedFiles}
+        lang={activeLanguage}
+        onRefresh={fetchUploadedFiles}
+        onDelete={handleDeleteFile}
+      />
+
+      {uploadError && (
+        <div className="border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-xs text-destructive">
+          {uploadError}
+          <button
+            type="button"
+            className="ml-2 underline"
+            onClick={() => setUploadError(null)}
+          >
+            {activeLanguage === "en" ? "Dismiss" : "关闭"}
+          </button>
+        </div>
+      )}
+
       <ChatPanel
         messages={messages}
         onSend={handleSend}
@@ -1282,6 +1348,17 @@ export default function PlanPage() {
         className="flex-1"
         animatePrimaryOption={
           decisionLoopStage === "decision_with_create" && !isLoading
+        }
+        leftSlot={
+          <FileUploadButton
+            projectId={projectId}
+            fileCount={uploadedFiles.length}
+            maxFiles={3}
+            disabled={isCreating}
+            lang={activeLanguage}
+            onUploadComplete={fetchUploadedFiles}
+            onError={setUploadError}
+          />
         }
       />
     </main>

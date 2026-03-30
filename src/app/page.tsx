@@ -7,7 +7,8 @@ import { useEffect, useState, useTransition } from "react";
 import {
   ArrowRight,
   BookOpen,
-  Bot,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   FileText,
   Frown,
@@ -17,22 +18,16 @@ import {
   Target,
   Wand2,
   XCircle,
-  type LucideIcon,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
+import { getExampleCourses } from "@/lib/examples/catalog";
 import { useLanguage } from "@/lib/i18n";
 
 type HomeStats = {
   activeProjects: number;
   completedItems: number;
   overallPercent: number;
-};
-
-type SimpleCard = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
 };
 
 type PreviewMessage = {
@@ -65,6 +60,8 @@ const TOPICS = [
   { zh: "计算机体系结构", en: "Computer Architecture" },
 ] as const;
 
+const OFFICIAL_SAMPLE_COURSES = getExampleCourses();
+
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
     <div className="home-shell-progress rounded-[1.5rem] border border-white/60 px-5 py-4 backdrop-blur dark:border-white/10">
@@ -85,9 +82,47 @@ export default function HomePage() {
   const [prompt, setPrompt] = useState("");
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [isLaunchingProject, setIsLaunchingProject] = useState(false);
+  const [featuredCourseIndex, setFeaturedCourseIndex] = useState(0);
+  const [isFeaturedHovered, setIsFeaturedHovered] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isZh = lang === "zh";
   const text = (zh: string, en: string) => (isZh ? zh : en);
+  const officialSampleCards = OFFICIAL_SAMPLE_COURSES.map((course) => {
+    const chapterCount = course.chapters.length;
+    const lessonCount = course.chapters.reduce(
+      (total, chapter) => total + chapter.subchapters.length,
+      0
+    );
+
+    return {
+      ...course,
+      chapterCount,
+      lessonCount,
+      chapterPreview: course.chapters.slice(0, 3),
+    };
+  });
+  const featuredCourse = officialSampleCards[featuredCourseIndex] ?? null;
+  const featuredCourseAccentClass =
+    [
+      "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300",
+      "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+      "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
+    ][featuredCourseIndex % 4];
+  const featuredCourseShellClass =
+    [
+      "border-cyan-200/80 bg-cyan-50/75 dark:border-cyan-500/20 dark:bg-cyan-500/10",
+      "border-amber-200/80 bg-amber-50/75 dark:border-amber-500/20 dark:bg-amber-500/10",
+      "border-emerald-200/80 bg-emerald-50/75 dark:border-emerald-500/20 dark:bg-emerald-500/10",
+      "border-sky-200/80 bg-sky-50/75 dark:border-sky-500/20 dark:bg-sky-500/10",
+    ][featuredCourseIndex % 4];
+  const featuredCourseSurfaceClass =
+    [
+      "border-cyan-200/70 bg-cyan-50/80 dark:border-cyan-500/20 dark:bg-cyan-500/10",
+      "border-amber-200/70 bg-amber-50/80 dark:border-amber-500/20 dark:bg-amber-500/10",
+      "border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-500/20 dark:bg-emerald-500/10",
+      "border-sky-200/70 bg-sky-50/80 dark:border-sky-500/20 dark:bg-sky-500/10",
+    ][featuredCourseIndex % 4];
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -113,6 +148,18 @@ export default function HomePage() {
       mounted = false;
     };
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (officialSampleCards.length <= 1 || isFeaturedHovered) return;
+
+    const intervalId = window.setInterval(() => {
+      setFeaturedCourseIndex((currentIndex) =>
+        (currentIndex + 1) % officialSampleCards.length
+      );
+    }, 6000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isFeaturedHovered, officialSampleCards.length]);
 
   const launchPrompt = async (nextPrompt: string) => {
     const normalized = nextPrompt.trim();
@@ -156,55 +203,6 @@ export default function HomePage() {
       setIsLaunchingProject(false);
     }
   };
-
-  const scrollToPreview = () => {
-    const previewSection = document.getElementById("product-preview");
-    if (!previewSection) return;
-
-    const headerOffset = 96;
-    const targetTop =
-      previewSection.getBoundingClientRect().top + window.scrollY - headerOffset;
-
-    window.scrollTo({
-      top: Math.max(targetTop, 0),
-      behavior: "smooth",
-    });
-  };
-
-  const evidenceCards: SimpleCard[] = [
-    {
-      title: text("启发式对话", "Guided dialogue"),
-      description: text(
-        "用问题和选项帮你收窄方向",
-        "Narrows direction through questions and options"
-      ),
-      icon: MessageSquare,
-    },
-    {
-      title: text("生成课程结构", "Course structure"),
-      description: text(
-        "把目标拆成章节和小节",
-        "Turns a goal into chapters and sections"
-      ),
-      icon: BookOpen,
-    },
-    {
-      title: text("每章都有材料", "Materials in every chapter"),
-      description: text(
-        "正文、总结和测验一起生成",
-        "Lessons, summaries, and quizzes are generated together"
-      ),
-      icon: FileText,
-    },
-    {
-      title: text("还能继续辅导", "Tutoring continues"),
-      description: text(
-        "学到中途也能继续追问",
-        "You can keep asking while learning"
-      ),
-      icon: Bot,
-    },
-  ];
 
   const previewConversation: PreviewMessage[] = isZh
     ? [
@@ -309,17 +307,36 @@ export default function HomePage() {
 
   const localizedTopics = TOPICS.map((topic) => (isZh ? topic.zh : topic.en));
   const scrollingTopics = [...localizedTopics, ...localizedTopics];
-  const firstName = session?.user?.name?.split(" ")[0];
-  const evidenceIconClasses = [
-    "home-tone-dialogue",
-    "home-tone-structure",
-    "home-tone-material",
-    "home-tone-tutor",
-  ] as const;
   const flowToneClasses = [
     "home-tone-goal",
     "home-tone-choice",
     "home-tone-deliver",
+  ] as const;
+  const planningSteps = [
+    {
+      title: text("先说目标", "Say the goal"),
+      detail: text(
+        "输入你想学的方向、项目目标或当前难点",
+        "Start with the topic, project, or challenge you want to learn"
+      ),
+      icon: Search,
+    },
+    {
+      title: text("再做选择", "Choose the direction"),
+      detail: text(
+        "AI 用启发式问题和选项帮你收窄范围",
+        "AI uses guided questions and options to narrow the path"
+      ),
+      icon: Target,
+    },
+    {
+      title: text("得到课程", "Get the course"),
+      detail: text(
+        "直接拿到章节、正文、总结、测验和 AI 辅导",
+        "Receive chapters, lessons, summaries, quizzes, and AI tutoring"
+      ),
+      icon: Wand2,
+    },
   ] as const;
   const compareToneMeta = {
     positive: {
@@ -345,8 +362,8 @@ export default function HomePage() {
         <div className="home-hero-orb-left pointer-events-none absolute left-[-8rem] top-36 h-72 w-72 rounded-full blur-3xl" />
         <div className="home-hero-orb-right pointer-events-none absolute right-[-8rem] top-24 h-80 w-80 rounded-full blur-3xl" />
 
-        <section className="relative container mx-auto px-4 pb-18 pt-18 sm:pt-24">
-          <div className="grid items-start gap-10 xl:grid-cols-[1.05fr_0.95fr]">
+        <section className="relative container mx-auto px-4 pb-10 pt-18 sm:pt-24">
+          <div className="grid items-start gap-8 xl:grid-cols-[1.12fr_0.88fr]">
             <div className="max-w-3xl">
               <div className="home-badge-hero inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium">
                 <Sparkles className="h-4 w-4" />
@@ -375,135 +392,220 @@ export default function HomePage() {
                   <textarea
                     value={prompt}
                     onChange={(event) => setPrompt(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" || event.shiftKey) return;
+                      if (event.nativeEvent.isComposing) return;
+                      if (isPending || isLaunchingProject || !prompt.trim()) return;
+
+                      event.preventDefault();
+                      launchPrompt(prompt);
+                    }}
                     placeholder={text(
                       "告诉 AI 你想学什么，例如：我想系统学习 AI Agent 开发",
                       "Tell AI what you want to learn, for example: I want to systematically learn AI agent development"
                     )}
-                    className="min-h-[108px] flex-1 resize-none rounded-[1.4rem] border border-border/60 bg-background/80 px-5 py-4 text-sm leading-7 text-foreground outline-none transition-colors placeholder:text-muted-foreground/80 focus:border-primary/35 focus:ring-2 focus:ring-primary/12 dark:border-white/10 dark:bg-black/15 dark:text-white dark:placeholder:text-white/38"
+                    className="min-h-[76px] flex-1 resize-none rounded-[1.4rem] border border-border/60 bg-background/80 px-5 py-3 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-muted-foreground/80 focus:border-primary/35 focus:ring-2 focus:ring-primary/12 dark:border-white/10 dark:bg-black/15 dark:text-white dark:placeholder:text-white/38"
                   />
-                  <div className="flex w-full flex-col gap-3 lg:w-[13.5rem]">
+                  <div className="flex w-full flex-col justify-center lg:w-auto lg:self-center">
                     <Button
                       type="submit"
                       size="lg"
                       disabled={isPending || isLaunchingProject || !prompt.trim()}
-                      className="h-14 rounded-[1.25rem] px-6 text-sm shadow-lg shadow-primary/20"
+                      className="h-12 rounded-[1.25rem] px-6 text-sm shadow-lg shadow-primary/20 lg:w-auto"
                     >
                       {isLaunchingProject
                         ? text("正在启动对话", "Starting the conversation")
                         : text("开始规划课程", "Plan My Course")}
                     </Button>
-                    <Button
-                      type="button"
-                      size="lg"
-                      variant="outline"
-                      className="h-14 w-full rounded-[1.25rem] border-slate-300/70 bg-white/78 px-6 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-100 dark:hover:bg-slate-800/60"
-                      onClick={scrollToPreview}
-                    >
-                        {text("先看功能预览", "Preview the Product")}
-                    </Button>
                   </div>
                 </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-2.5">
-                  <span className="mr-1 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  {text("示例：", "Examples:")}
-                  </span>
-                  {[text("AI Agent开发", "AI Agent Development"), text("大语言模型", "Large Language Models"), text("自媒体运营", "Content Creation"), text("电路设计", "Circuit Design")].map((quickPrompt) => (
-                    <button
-                      key={quickPrompt}
-                      type="button"
-                      onClick={() => launchPrompt(quickPrompt)}
-                      className="home-chip-soft rounded-full border px-4 py-2 text-sm font-medium transition-all hover:-translate-y-0.5"
-                    >
-                      {quickPrompt}
-                    </button>
-                  ))}
-                </div>
               </form>
+
             </div>
 
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-0 translate-y-6 rounded-[2.4rem] bg-[linear-gradient(135deg,oklch(0.93_0.02_240_/_0.35),oklch(0.93_0.025_270_/_0.2))] blur-2xl dark:bg-[linear-gradient(135deg,oklch(0.24_0.025_240_/_0.34),oklch(0.18_0.03_260_/_0.22))]" />
-              <div className="home-shell-flow relative rounded-[2.4rem] border border-slate-300/60 p-6 dark:border-slate-700/70">
-                <div className="home-badge-flow mb-5 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                  <Wand2 className="h-3.5 w-3.5" />
-                  {text("规划流程", "Planning flow")}
-                </div>
-                <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
-                  {text("几轮对话，收窄方向", "A few turns, then a clear direction")}
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground dark:text-white/65">
-                  {text(
-                  "通常几轮之后，就能得到课程方案",
-                  "Usually a few turns are enough to get a course plan"
-                  )}
-                </p>
-
-                <div className="mt-8 space-y-4">
-                  {[
-                    {
-                      title: text("先说目标", "Say the goal"),
-                      detail: text("输入你想学的方向、项目目标或当前难点", "Start with the topic, project, or challenge you want to learn"),
-                      icon: Search,
-                    },
-                    {
-                      title: text("再做选择", "Choose the direction"),
-                      detail: text("AI 用启发式问题和选项帮你收窄范围", "AI uses guided questions and options to narrow the path"),
-                      icon: Target,
-                    },
-                    {
-                      title: text("得到课程", "Get the course"),
-                      detail: text("直接拿到章节、正文、总结、测验和 AI 辅导", "Receive chapters, lessons, summaries, quizzes, and AI tutoring"),
-                      icon: Wand2,
-                    },
-                  ].map((step, index) => (
-                    <div key={step.title} className="home-flow-step flex items-start gap-4 rounded-[1.6rem] border border-slate-300/50 px-4 py-4 dark:border-slate-700/70">
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${flowToneClasses[index]}`}>
-                        <step.icon className="h-5 w-5" />
+            <div className="relative xl:pt-10">
+              {featuredCourse ? (
+                <div
+                  className={`rounded-[1.9rem] border p-3.5 ${featuredCourseShellClass}`}
+                  onMouseEnter={() => setIsFeaturedHovered(true)}
+                  onMouseLeave={() => setIsFeaturedHovered(false)}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-1 items-center justify-center gap-3 sm:pl-10">
+                      <div className="home-badge-neutral inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        {text("点开即学", "Start Instantly")}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300/80">
-                            0{index + 1}
-                          </span>
-                          <h3 className="text-base font-semibold dark:text-white">{step.title}</h3>
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground dark:text-white/62">
-                          {step.detail}
-                        </p>
+                      <div className="text-lg font-bold tracking-normal text-foreground sm:text-xl dark:text-white">
+                        {text("精选示例课", "Featured Sample Courses")}
                       </div>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label={text("上一门示例课", "Previous sample course")}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background/80 text-foreground transition-colors hover:border-primary/30 hover:text-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        onClick={() =>
+                          setFeaturedCourseIndex((currentIndex) =>
+                            currentIndex === 0
+                              ? officialSampleCards.length - 1
+                              : currentIndex - 1
+                          )
+                        }
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={text("下一门示例课", "Next sample course")}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background/80 text-foreground transition-colors hover:border-primary/30 hover:text-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        onClick={() =>
+                          setFeaturedCourseIndex((currentIndex) =>
+                            (currentIndex + 1) % officialSampleCards.length
+                          )
+                        }
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/examples/${featuredCourse.slug}`}
+                    className={`group mt-3 block rounded-[1.5rem] p-3.5 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 ${featuredCourseSurfaceClass}`}
+                  >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start gap-3">
+                          <div className={`inline-flex rounded-2xl p-3 ${featuredCourseAccentClass}`}>
+                            <BookOpen className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-lg font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary dark:text-white">
+                              {isZh
+                                ? featuredCourse.title
+                                : featuredCourse.titleEn || featuredCourse.title}
+                            </h3>
+                            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground dark:text-white/62">
+                              {isZh
+                                ? featuredCourse.description
+                                : featuredCourse.descriptionEn || featuredCourse.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-2.5 overflow-hidden text-xs font-medium text-muted-foreground dark:text-white/68">
+                          <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+                            {featuredCourse.chapterPreview.slice(0, 2).map((chapter, chapterIndex) => (
+                              <span
+                                key={chapter.slug}
+                                className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 dark:border-white/10 dark:bg-white/5 dark:text-white/85"
+                              >
+                                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary dark:bg-primary/20">
+                                  {chapterIndex + 1}
+                                </span>
+                                <span className="truncate">
+                                  {isZh ? chapter.title : chapter.titleEn || chapter.title}
+                                </span>
+                              </span>
+                            ))}
+                            <span className="shrink-0 text-sm tracking-[0.2em] text-muted-foreground/80 dark:text-white/45">
+                              ...
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-muted-foreground dark:border-white/10 dark:bg-white/5 dark:text-white/65">
+                            {text(
+                              `${featuredCourse.chapterCount} 章`,
+                              `${featuredCourse.chapterCount} chapters`
+                            )}
+                          </span>
+                          <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-muted-foreground dark:border-white/10 dark:bg-white/5 dark:text-white/65">
+                            {text(
+                              `${featuredCourse.lessonCount} 小节`,
+                              `${featuredCourse.lessonCount} lessons`
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-xs font-medium text-muted-foreground dark:text-white/55">
+                          {text("完整正文 / 总结 / 测验", "Lessons / summaries / quizzes")}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-center gap-3">
+                      <div className="text-xs font-medium text-muted-foreground dark:text-white/55 sm:hidden">
+                        {text(
+                          "完整正文 / 总结 / 测验",
+                          "Lessons / summaries / quizzes"
+                        )}
+                      </div>
+                      <span className="inline-flex items-center gap-2 rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/15 transition-transform group-hover:translate-x-0.5">
+                        {text("立即学习", "Start Learning")}
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </Link>
+
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    {officialSampleCards.map((course, index) => (
+                      <button
+                        key={course.slug}
+                        type="button"
+                        aria-label={`${text("切换到", "Go to")} ${isZh ? course.title : course.titleEn || course.title}`}
+                        className={`h-2.5 rounded-full transition-all ${
+                          featuredCourseIndex === index
+                            ? "w-8 bg-primary"
+                            : "w-2.5 bg-border hover:bg-primary/35 dark:bg-white/15 dark:hover:bg-primary/45"
+                        }`}
+                        onClick={() => setFeaturedCourseIndex(index)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
           </div>
         </section>
 
-        <section className="relative container mx-auto px-4 pb-18">
-          <div className="home-shell-neutral rounded-[2.3rem] border border-border/60 p-6 dark:border-white/10 sm:p-8">
-            <div className="mb-7 max-w-3xl">
-              <div className="home-badge-neutral inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                <Sparkles className="h-3.5 w-3.5" />
-                {text("不只是聊天", "More than chat")}
-              </div>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
+        <section className="relative container mx-auto px-4 pb-10">
+          <div className="home-shell-neutral rounded-[2.1rem] border border-border/60 p-5 dark:border-white/10 sm:p-6">
+            <div className="mb-5 max-w-4xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="home-badge-neutral inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+                  <Wand2 className="h-3.5 w-3.5" />
+                  {text("规划课程", "Plan the Course")}
+                </div>
+                <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
                 {text(
-                  "不是回答，是课程",
-                  "Not answers. A course."
+                  "先收窄方向，再生成课程",
+                  "Narrow the direction, then generate the course"
                 )}
-              </h2>
+                </h2>
+              </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {evidenceCards.map((item, index) => (
-                <div key={item.title} className="home-evidence-card rounded-[1.8rem] border border-border/60 p-5 transition-all hover:-translate-y-1 dark:border-white/10">
-                  <div className={`mb-4 inline-flex rounded-2xl p-3 ${evidenceIconClasses[index]}`}>
-                    <item.icon className="h-5 w-5" />
+            <div className="grid gap-3 xl:grid-cols-3">
+              {planningSteps.map((step, index) => (
+                <div
+                  key={step.title}
+                  className="home-flow-step rounded-[1.45rem] border border-border/60 px-4 py-4 dark:border-white/10"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`inline-flex rounded-2xl p-2.5 ${flowToneClasses[index]}`}>
+                      <step.icon className="h-4.5 w-4.5" />
+                    </div>
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300/80">
+                      0{index + 1}
+                    </span>
+                    <h3 className="text-base font-semibold dark:text-white">{step.title}</h3>
                   </div>
-                  <h3 className="text-base font-semibold dark:text-white">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground dark:text-white/62">
-                    {item.description}
+                  <p className="mt-2 text-sm leading-5 text-muted-foreground dark:text-white/62">
+                    {step.detail}
                   </p>
                 </div>
               ))}
@@ -512,19 +614,19 @@ export default function HomePage() {
         </section>
 
         {session?.user ? (
-          <section className="relative container mx-auto px-4 pb-18">
-            <div className="home-shell-progress rounded-[2.3rem] border border-slate-200/70 p-6 dark:border-white/10 sm:p-8">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-3xl">
-                  <div className="home-badge-progress inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                    <Target className="h-3.5 w-3.5" />
-                    {text("继续你的学习", "Keep learning")}
+          <section className="relative container mx-auto px-4 pb-12">
+            <div className="home-shell-progress rounded-[2.3rem] border border-slate-200/70 px-5 py-4 dark:border-white/10 sm:px-6 sm:py-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex min-h-[88px] max-w-3xl items-center">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="home-badge-progress inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+                      <Target className="h-3.5 w-3.5" />
+                      {text("继续你的学习", "Keep learning")}
+                    </div>
+                    <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
+                      {text("继续学习", "Continue Learning")}
+                    </h2>
                   </div>
-                  <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
-                    {firstName
-                      ? `${firstName}${text("，首页更像你的学习入口", ", the homepage now feels more like your learning entry point")}`
-                      : text("首页更像你的学习入口", "The homepage now feels more like your learning entry point")}
-                  </h2>
                 </div>
 
                 <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-xl">
@@ -705,14 +807,16 @@ export default function HomePage() {
 
         <section className="relative container mx-auto px-4 pb-20">
           <div className="home-shell-compare rounded-[2.3rem] border border-border/60 p-6 dark:border-white/10 sm:p-8">
-            <div className="mb-8 max-w-4xl">
-              <div className="home-badge-compare inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                <Target className="h-3.5 w-3.5" />
-                {text("对比", "Compare")}
+            <div className="mb-8 max-w-5xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="home-badge-compare inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+                  <Target className="h-3.5 w-3.5" />
+                  {text("对比", "Compare")}
+                </div>
+                <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance dark:text-white">
+                  {text("为什么选 Pandora AI", "Why choose Pandora AI")}
+                </h2>
               </div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance dark:text-white">
-                {text("为什么选 Pandora AI", "Why choose Pandora AI")}
-              </h2>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
