@@ -604,9 +604,12 @@ export default function PlanPage() {
       }
 
       isNavigatingToReviewRef.current = true;
-      router.push(`/projects/${projectId}/review`);
+      // Browser extensions can mutate the live DOM and break App Router
+      // transitions with NotFoundError during React reconciliation.
+      // Use a hard navigation here because this page is a transient step.
+      window.location.assign(`/projects/${projectId}/review`);
     },
-    [activeLanguage, projectId, router]
+    [activeLanguage, projectId]
   );
 
   const runPlanningAI = useCallback(

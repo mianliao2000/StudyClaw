@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Loader2, Sparkles, Target } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +45,6 @@ export function PlanReviewContent({
   goalsEn,
   chapters,
 }: PlanReviewContentProps) {
-  const router = useRouter();
   const { lang } = useLanguage();
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -68,7 +66,9 @@ export function PlanReviewContent({
       }
 
       const data = (await res.json()) as { redirectTo?: string };
-      router.push(data.redirectTo || `/projects/${projectId}`);
+      // Use a hard navigation to avoid extension-mutated DOM breaking
+      // client-side route transitions during this confirmation step.
+      window.location.assign(data.redirectTo || `/projects/${projectId}`);
     } catch (error) {
       console.error(error);
       setIsConfirming(false);
