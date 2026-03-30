@@ -132,7 +132,7 @@ export default function LoginPage() {
     setGuestError(null);
 
     const isGuest = Boolean((session?.user as any)?.isGuest);
-    const redirectTo = `/auth/complete-login?next=${encodeURIComponent(nextPath)}`;
+    const redirectTo = `${window.location.origin}/auth/complete-login?next=${encodeURIComponent(nextPath)}`;
 
     if (isGuest) {
       const prepared = await fetch("/api/auth/guest/prepare-oauth", {
