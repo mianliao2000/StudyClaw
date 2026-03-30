@@ -2,14 +2,20 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getProviders, signIn, useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { getProviders, signIn, signOut, useSession } from "next-auth/react";
 import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 
 function sanitizeNextPath(rawValue: string | null) {
-  if (!rawValue || !rawValue.startsWith("/") || rawValue.startsWith("//")) {
+  if (
+    !rawValue ||
+    !rawValue.startsWith("/") ||
+    rawValue.startsWith("//") ||
+    rawValue === "/login" ||
+    rawValue.startsWith("/login?")
+  ) {
     return "/dashboard";
   }
 
@@ -18,22 +24,72 @@ function sanitizeNextPath(rawValue: string | null) {
 
 export default function LoginPage() {
   const { t, lang } = useLanguage();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(
     () => sanitizeNextPath(searchParams.get("next")),
     [searchParams]
   );
-  const { status, update } = useSession();
+  const authError = searchParams.get("error");
+  const { data: session, status, update } = useSession();
   const [wechatEnabled, setWechatEnabled] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
+  const [restoringGuest, setRestoringGuest] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    router.replace(nextPath);
-    router.refresh();
-  }, [nextPath, router, status]);
+    if ((session?.user as any)?.isGuest) return;
+    window.location.replace(nextPath);
+  }, [nextPath, session?.user, status]);
+
+  useEffect(() => {
+    if (!authError || status === "authenticated" || restoringGuest) {
+      return;
+    }
+
+    let cancelled = false;
+    setRestoringGuest(true);
+
+    fetch("/api/auth/guest/restore", { method: "POST" })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as { restored?: boolean } | null;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.restored) {
+          window.location.replace(nextPath);
+          return;
+        }
+        setGuestError(
+          authError === "OAuthAccountNotLinked"
+            ? lang === "en"
+              ? "This Google account could not be used for sign-in."
+              : "这个 Google 账号这次没有登录成功。"
+            : lang === "en"
+              ? "Sign-in was not completed."
+              : "这次登录没有完成。"
+        );
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setGuestError(
+            lang === "en"
+              ? "Could not restore guest mode."
+              : "未能恢复游客状态。"
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setRestoringGuest(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authError, lang, nextPath, restoringGuest, status]);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,8 +118,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/guest", { method: "POST" });
       if (res.ok) {
         await update();
-        router.replace(nextPath);
-        router.refresh();
+        window.location.replace(nextPath);
         return;
       }
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -71,6 +126,32 @@ export default function LoginPage() {
     } finally {
       setGuestLoading(false);
     }
+  }
+
+  async function handleOAuthLogin(provider: "google" | "wechat") {
+    setGuestError(null);
+
+    const isGuest = Boolean((session?.user as any)?.isGuest);
+    const redirectTo = `/auth/complete-login?next=${encodeURIComponent(nextPath)}`;
+
+    if (isGuest) {
+      const prepared = await fetch("/api/auth/guest/prepare-oauth", {
+        method: "POST",
+      });
+
+      if (!prepared.ok) {
+        setGuestError(
+          lang === "en"
+            ? "Could not pause guest mode before sign-in."
+            : "在登录前暂时退出游客状态失败。"
+        );
+        return;
+      }
+
+      await signOut({ redirect: false });
+    }
+
+    await signIn(provider, { redirectTo });
   }
 
   return (
@@ -100,7 +181,7 @@ export default function LoginPage() {
             <Button
               className="w-full"
               variant="outline"
-              onClick={() => signIn("google", { callbackUrl: nextPath })}
+              onClick={() => handleOAuthLogin("google")}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -126,7 +207,7 @@ export default function LoginPage() {
             <Button
               className="w-full"
               variant="outline"
-              onClick={() => signIn("wechat", { callbackUrl: nextPath })}
+              onClick={() => handleOAuthLogin("wechat")}
               disabled={!wechatEnabled}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
