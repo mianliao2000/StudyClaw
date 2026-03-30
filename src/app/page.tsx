@@ -413,7 +413,7 @@ export default function HomePage() {
             <div className="relative xl:pt-10">
               {featuredCourse ? (
                 <div
-                  className={`rounded-[1.9rem] border p-3.5 ${featuredCourseShellClass}`}
+                  className={`group rounded-[1.9rem] border p-3.5 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 ${featuredCourseShellClass}`}
                   onMouseEnter={() => setIsFeaturedHovered(true)}
                   onMouseLeave={() => setIsFeaturedHovered(false)}
                 >
@@ -459,7 +459,7 @@ export default function HomePage() {
 
                   <Link
                     href={`/examples/${featuredCourse.slug}`}
-                    className={`group mt-3 block rounded-[1.5rem] p-3.5 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 ${featuredCourseSurfaceClass}`}
+                    className="mt-3 block rounded-[1.25rem] p-3.5 transition-all"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
@@ -503,34 +503,9 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-muted-foreground dark:border-white/10 dark:bg-white/5 dark:text-white/65">
-                            {text(
-                              `${featuredCourse.chapterCount} 章`,
-                              `${featuredCourse.chapterCount} chapters`
-                            )}
-                          </span>
-                          <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-muted-foreground dark:border-white/10 dark:bg-white/5 dark:text-white/65">
-                            {text(
-                              `${featuredCourse.lessonCount} 小节`,
-                              `${featuredCourse.lessonCount} lessons`
-                            )}
-                          </span>
-                        </div>
-                        <div className="text-xs font-medium text-muted-foreground dark:text-white/55">
-                          {text("完整正文 / 总结 / 测验", "Lessons / summaries / quizzes")}
-                        </div>
-                      </div>
                     </div>
 
                     <div className="mt-3 flex items-center justify-center gap-3">
-                      <div className="text-xs font-medium text-muted-foreground dark:text-white/55 sm:hidden">
-                        {text(
-                          "完整正文 / 总结 / 测验",
-                          "Lessons / summaries / quizzes"
-                        )}
-                      </div>
                       <span className="inline-flex items-center gap-2 rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/15 transition-transform group-hover:translate-x-0.5">
                         {text("立即学习", "Start Learning")}
                         <ArrowRight className="h-4 w-4" />
@@ -567,9 +542,9 @@ export default function HomePage() {
                   <Wand2 className="h-3.5 w-3.5" />
                   {text("规划课程", "Plan the Course")}
                 </div>
-                <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl lang-en:text-xl lang-en:sm:text-2xl text-balance dark:text-white">
+                <h2 className="text-xl font-semibold tracking-tight sm:text-2xl lang-en:text-lg lang-en:sm:text-xl text-balance dark:text-white">
                 {text(
-                  "先收窄方向，再生成课程",
+                  "先收窄，再成课",
                   "Narrow the direction, then generate the course"
                 )}
                 </h2>
@@ -596,6 +571,80 @@ export default function HomePage() {
                   </p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-6 border-t border-border/50 pt-5 dark:border-white/10">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+                <div className="home-badge-neutral inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {text("热门主题", "Popular topics")}
+                </div>
+
+                <div className="topic-marquee relative min-w-0 flex-1 overflow-hidden pb-2">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-background/90 via-background/60 to-transparent dark:from-background dark:via-background/80" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-background/90 via-background/60 to-transparent dark:from-background dark:via-background/80" />
+
+                <div className="topic-track flex w-max gap-4 pr-4">
+                  {scrollingTopics.map((topic, index) => (
+                    <Link
+                      key={`${topic}-${index}`}
+                      href={`/projects/new?prompt=${encodeURIComponent(topic)}`}
+                      className="home-topic-chip group flex shrink-0 items-center gap-3 rounded-full border px-5 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5"
+                    >
+                      <span>{topic}</span>
+                      <ArrowRight className="home-arrow-cool h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  ))}
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative container mx-auto px-4 pb-20">
+          <div className="home-shell-compare rounded-[2.3rem] border border-border/60 p-6 dark:border-white/10 sm:p-8">
+            <div className="mb-8 max-w-5xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="home-badge-compare inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+                  <Target className="h-3.5 w-3.5" />
+                  {text("对比", "Compare")}
+                </div>
+                <h2 className="text-xl font-semibold tracking-tight sm:text-2xl lang-en:text-lg lang-en:sm:text-xl text-balance dark:text-white">
+                  {text("为什么选 Pandora AI", "Why choose Pandora AI")}
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              {compareCards.map((card) => {
+                const toneMeta = compareToneMeta[card.tone];
+                const ToneIcon = toneMeta.Icon;
+
+                return (
+                  <div
+                    key={card.title}
+                    className={
+                      card.accent
+                        ? "home-compare-card-accent rounded-[1.8rem] border border-emerald-200/70 p-5 dark:border-emerald-300/18"
+                        : "home-compare-card rounded-[1.8rem] border border-border/60 p-5 dark:border-white/10"
+                    }
+                  >
+                    <h3 className="text-xl font-semibold dark:text-white">{card.title}</h3>
+                    <div className="mt-6 divide-y divide-slate-200/80 dark:divide-white/10">
+                      {card.points.map((point) => (
+                        <div
+                          key={point}
+                          className="home-compare-row flex items-center gap-3 py-4 text-sm font-medium text-slate-700 first:pt-0 last:pb-0 dark:text-white/84"
+                        >
+                          <ToneIcon className={`h-4 w-4 shrink-0 ${toneMeta.iconClass}`} />
+                          <span>{point}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -766,83 +815,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="relative container mx-auto px-4 pb-20">
-          <div className="home-shell-compare rounded-[2.3rem] border border-border/60 p-6 dark:border-white/10 sm:p-8">
-            <div className="mb-8 max-w-5xl">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="home-badge-compare inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                  <Target className="h-3.5 w-3.5" />
-                  {text("对比", "Compare")}
-                </div>
-                <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lang-en:text-2xl lang-en:sm:text-3xl text-balance dark:text-white">
-                  {text("为什么选 Pandora AI", "Why choose Pandora AI")}
-                </h2>
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-3">
-              {compareCards.map((card) => {
-                const toneMeta = compareToneMeta[card.tone];
-                const ToneIcon = toneMeta.Icon;
-
-                return (
-                  <div
-                    key={card.title}
-                    className={
-                      card.accent
-                        ? "home-compare-card-accent rounded-[1.8rem] border border-emerald-200/70 p-5 dark:border-emerald-300/18"
-                        : "home-compare-card rounded-[1.8rem] border border-border/60 p-5 dark:border-white/10"
-                    }
-                  >
-                    <h3 className="text-xl font-semibold dark:text-white">{card.title}</h3>
-                    <div className="mt-6 divide-y divide-slate-200/80 dark:divide-white/10">
-                      {card.points.map((point) => (
-                        <div
-                          key={point}
-                          className="home-compare-row flex items-center gap-3 py-4 text-sm font-medium text-slate-700 first:pt-0 last:pb-0 dark:text-white/84"
-                        >
-                          <ToneIcon className={`h-4 w-4 shrink-0 ${toneMeta.iconClass}`} />
-                          <span>{point}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="relative container mx-auto px-4 pb-20">
-          <div className="home-topic-shell rounded-[2rem] border border-slate-200/60 p-5 dark:border-white/10 sm:p-6">
-          <div className="mb-6 max-w-3xl">
-            <h2 className="text-2xl font-semibold tracking-tight text-balance dark:text-white">
-              {text("热门主题", "Popular topics")}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground dark:text-white/62">
-              {text("也可以直接从这里开始", "You can also start here")}
-            </p>
-          </div>
-
-          <div className="topic-marquee relative overflow-hidden pb-3">
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-background/90 via-background/60 to-transparent dark:from-background dark:via-background/80" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-background/90 via-background/60 to-transparent dark:from-background dark:via-background/80" />
-
-            <div className="topic-track flex w-max gap-4 pr-4">
-              {scrollingTopics.map((topic, index) => (
-                <Link
-                  key={`${topic}-${index}`}
-                  href={`/projects/new?prompt=${encodeURIComponent(topic)}`}
-                  className="home-topic-chip group flex shrink-0 items-center gap-3 rounded-full border px-5 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5"
-                >
-                  <span>{topic}</span>
-                  <ArrowRight className="home-arrow-cool h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              ))}
-            </div>
-          </div>
-          </div>
-        </section>
       </main>
 
       <footer className="relative border-t border-border/50 py-8">
