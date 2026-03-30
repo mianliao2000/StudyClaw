@@ -20,6 +20,8 @@ import {
 } from "@/lib/ai/conversation-language";
 import {
   getFriendlyChatNetworkError,
+  getFriendlyChatTimeoutError,
+  isChatTimeoutError,
   isNetworkFetchError,
   postChatRequestWithRetry,
 } from "@/lib/chat-request";
@@ -39,6 +41,25 @@ type DecisionQuestion = {
 type DecisionLoopStage = "divergence_only" | "decision_with_create";
 
 const MAX_GUIDED_OPTION_ROUNDS_BEFORE_CREATE = 4;
+const CHAT_STREAM_IDLE_TIMEOUT_MS = 30_000;
+const PLAN_GENERATION_STREAM_IDLE_TIMEOUT_MS = 60_000;
+const CHAT_REQUEST_TIMEOUT_MS = 60_000;
+
+function readStreamChunkWithTimeout(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  timeoutMs: number
+) {
+  return new Promise<ReadableStreamReadResult<Uint8Array>>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error("AI response stream timed out."));
+    }, timeoutMs);
+
+    reader
+      .read()
+      .then(resolve, reject)
+      .finally(() => window.clearTimeout(timeoutId));
+  });
+}
 
 function getGuidedQuestions(language: ConversationLanguage): FixedQuestion[] {
   return language === "en"
@@ -652,6 +673,9 @@ export default function PlanPage() {
       const nextDecisionLoopStage =
         decisionLoopStageOverride ?? decisionLoopStage;
       const nextQuestionIndex = currentQuestionIndexOverride ?? currentQuestionIndex;
+      const streamIdleTimeoutMs = generatingPlan
+        ? PLAN_GENERATION_STREAM_IDLE_TIMEOUT_MS
+        : CHAT_STREAM_IDLE_TIMEOUT_MS;
       const nextGuidedQuestion =
         !nextIsFreeMode &&
         !nextIsDecisionLoop &&
@@ -692,6 +716,8 @@ export default function PlanPage() {
               hasEnoughInformation: nextIsDecisionLoop || Boolean(coursePlan),
             },
           },
+        }, {
+          timeoutMs: CHAT_REQUEST_TIMEOUT_MS,
         });
 
         if (!response.ok) {
@@ -712,6 +738,10 @@ export default function PlanPage() {
         const decoder = new TextDecoder();
         let fullText = "";
 
+        if (!reader) {
+          throw new Error("The AI response stream did not start correctly.");
+        }
+
         setMessages((prev) => [
           ...prev,
           {
@@ -722,10 +752,13 @@ export default function PlanPage() {
           },
         ]);
 
-        while (reader) {
-          const { done, value } = await reader.read();
+        while (true) {
+          const { done, value } = await readStreamChunkWithTimeout(
+            reader,
+            streamIdleTimeoutMs
+          );
           if (done) break;
-          fullText += decoder.decode(value);
+          fullText += decoder.decode(value, { stream: true });
 
           if (!generatingPlan) {
             setMessages((prev) =>
@@ -737,6 +770,8 @@ export default function PlanPage() {
             );
           }
         }
+
+        fullText += decoder.decode();
 
         const plan = extractPlan(fullText);
         const responseOptions = extractOptionsFromMessage(fullText);
@@ -813,11 +848,13 @@ export default function PlanPage() {
         );
       } catch (error) {
         console.error("[runPlanningAI] Full error:", error);
-        const displayMessage = isNetworkFetchError(error)
-          ? getFriendlyChatNetworkError(nextLanguage)
-          : error instanceof Error && error.message
-            ? error.message
-            : getAssistantErrorMessage(nextLanguage);
+        const displayMessage = isChatTimeoutError(error)
+          ? getFriendlyChatTimeoutError(nextLanguage)
+          : isNetworkFetchError(error)
+            ? getFriendlyChatNetworkError(nextLanguage)
+            : error instanceof Error && error.message
+              ? error.message
+              : getAssistantErrorMessage(nextLanguage);
         setMessages((prev) => [
           ...prev,
           {
