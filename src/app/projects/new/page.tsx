@@ -1,49 +1,83 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useLanguage } from "@/lib/i18n";
+import { useEffect, useRef, useState } from "react";
 
 export default function NewProjectPage() {
-  const router = useRouter();
-  const { t } = useLanguage();
+  const hasStartedRef = useRef(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
+
     const initialPrompt =
       new URLSearchParams(window.location.search).get("prompt")?.trim() || "";
 
-    fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: initialPrompt || "新学习项目",
-        topic: initialPrompt || "待定",
-      }),
-    })
-      .then(async (response) => {
+    const createProject = async () => {
+      try {
+        const response = await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: initialPrompt || "New Learning Project",
+            topic: initialPrompt || "TBD",
+          }),
+        });
+
         if (response.status === 401) {
-          router.replace("/login");
-          return null;
+          window.location.replace("/login");
+          return;
         }
 
-        return response.json();
-      })
-      .then((project) => {
-        if (!project?.id) return;
+        if (!response.ok) {
+          throw new Error(`Failed to create project: ${response.status}`);
+        }
+
+        const project = (await response.json()) as { id?: string };
+        if (!project?.id) {
+          throw new Error("Project id missing from create response");
+        }
 
         const nextUrl = initialPrompt
           ? `/projects/${project.id}/plan?start=${encodeURIComponent(initialPrompt)}`
           : `/projects/${project.id}/plan`;
 
-        router.replace(nextUrl);
-      });
-  }, [router]);
+        // This page is only a transient launcher, so a hard redirect is
+        // more reliable than a client-side transition here.
+        window.location.replace(nextUrl);
+      } catch (cause) {
+        console.error("[projects/new] Failed to create project:", cause);
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Failed to create project. Please retry."
+        );
+        hasStartedRef.current = false;
+      }
+    };
+
+    void createProject();
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">
-        {t("misc.creatingProject")}
-      </p>
+      <div className="space-y-3 text-center">
+        <p className="text-muted-foreground">
+          Creating project and starting conversation...
+        </p>
+        {error ? (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{error}</p>
+            <button
+              type="button"
+              className="text-sm underline underline-offset-4"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
