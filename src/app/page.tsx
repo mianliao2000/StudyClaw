@@ -79,6 +79,10 @@ export default function HomePage() {
   const currentQuery = searchParams.toString();
   const currentPath = currentQuery ? `${pathname}?${currentQuery}` : pathname;
   const loginHref = `/login?next=${encodeURIComponent(currentPath)}`;
+  const heroPromptPlaceholder = text(
+    "告诉AI任何你想学的东西\n例如：我想系统学习AI Agent开发",
+    "Tell AI what you want to learn\nFor example: I want to systematically learn AI agent development"
+  );
   const officialSampleCards = OFFICIAL_SAMPLE_COURSES.map((course) => {
     const chapterCount = course.chapters.length;
     const lessonCount = course.chapters.reduce(
@@ -381,23 +385,28 @@ export default function HomePage() {
                 }}
               >
                 <div className="flex flex-col gap-3 lg:flex-row">
-                  <textarea
-                    value={prompt}
-                    onChange={(event) => setPrompt(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key !== "Enter" || event.shiftKey) return;
-                      if (event.nativeEvent.isComposing) return;
-                      if (isPending || isLaunchingProject || !prompt.trim()) return;
-
-                      event.preventDefault();
-                      launchPrompt(prompt);
-                    }}
-                    placeholder={text(
-                      "告诉 AI 任何你想学的东西，例如：我想系统学习 AI Agent 开发",
-                      "Tell AI what you want to learn, for example: I want to systematically learn AI agent development"
+                  <div className="relative flex-1">
+                    {!prompt && (
+                      <div className="pointer-events-none absolute inset-x-5 top-3 z-10 whitespace-pre-line text-sm leading-6 text-muted-foreground/80 dark:text-white/38">
+                        {heroPromptPlaceholder}
+                      </div>
                     )}
-                    className="min-h-[76px] flex-1 resize-none rounded-[1.4rem] border border-border/60 bg-background/80 px-5 py-3 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-muted-foreground/80 focus:border-primary/35 focus:ring-2 focus:ring-primary/12 dark:border-white/10 dark:bg-black/15 dark:text-white dark:placeholder:text-white/38"
-                  />
+                    <textarea
+                      value={prompt}
+                      onChange={(event) => setPrompt(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" || event.shiftKey) return;
+                        if (event.nativeEvent.isComposing) return;
+                        if (isPending || isLaunchingProject || !prompt.trim()) return;
+
+                        event.preventDefault();
+                        launchPrompt(prompt);
+                      }}
+                      placeholder=""
+                      aria-label={heroPromptPlaceholder.replace("\n", " ")}
+                      className="min-h-[76px] w-full resize-none rounded-[1.4rem] border border-border/60 bg-background/80 px-5 py-3 text-sm leading-6 text-foreground outline-none transition-colors focus:border-primary/35 focus:ring-2 focus:ring-primary/12 dark:border-white/10 dark:bg-black/15 dark:text-white"
+                    />
+                  </div>
                   <div className="flex w-full flex-col justify-center lg:w-auto lg:self-center">
                     <Button
                       type="submit"
