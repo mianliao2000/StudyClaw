@@ -144,6 +144,95 @@ http://localhost:3000
 corepack pnpm build
 ```
 
+## Testing
+
+Automated health checks verify the production site after every deploy. Tests run against a live URL — they do **not** mock the database or AI layer.
+
+> Tests target the **built app** (`pnpm start`), not the dev server (`pnpm dev`). Running against `pnpm dev` may produce false failures due to dev-mode SSR differences.
+
+### Smoke Tests (HTTP layer, no browser)
+
+Fast checks (~30 s) that verify pages load and APIs respond correctly. Safe to run at any time — no AI calls are triggered.
+
+```powershell
+$env:PRODUCTION_URL="https://pandora-ai.up.railway.app"; pnpm test:smoke
+```
+
+Checks performed:
+
+| Check | What it verifies |
+|---|---|
+| Page availability | `/`, `/login`, `/about`, `/examples/ai-agent-development` return 200 |
+| Guest auth flow | `POST /api/auth/guest` returns `{ success: true }` and sets a session cookie |
+| Protected endpoints | `/api/chat`, `/api/generate`, `/api/projects` return 401 for unauthenticated requests |
+| Authenticated pages | `/dashboard` and `/projects/[id]/plan` load correctly with a guest session |
+
+### E2E Tests (Playwright, Chromium)
+
+Browser-level tests that exercise real user flows. Requires Chromium installed locally.
+
+```powershell
+# Install Chromium once
+pnpm exec playwright install chromium
+
+$env:PRODUCTION_URL="https://pandora-ai.up.railway.app"; pnpm test:e2e
+```
+
+Flows covered:
+
+- Homepage loads with a visible heading
+- About page shows content
+- Example course page loads without auth
+- Guest login → redirects to `/dashboard`
+- `/projects/new` creates a project and redirects to the planning page
+- Google OAuth button redirects to `accounts.google.com`
+
+### Run Both Together
+
+```powershell
+$env:PRODUCTION_URL="https://pandora-ai.up.railway.app"; pnpm test:all
+```
+
+### AI Probe (optional, costs money)
+
+Tests that all three AI features can actually reach the configured model. Creates and then deletes a real guest project.
+
+```powershell
+$env:PRODUCTION_URL="https://pandora-ai.up.railway.app"; pnpm test:ai-probe
+```
+
+Probes:
+
+1. Planning chat (对话框) — sends a message, verifies streaming starts
+2. Content generation (正文生成) — confirms a lesson, generates main content, verifies body is returned
+3. AI tutor (AI助手) — sends a tutoring message, verifies streaming starts
+
+### CI/CD — GitHub Actions
+
+The workflow at [`.github/workflows/production-health.yml`](./.github/workflows/production-health.yml) runs automatically after every push to `main`.
+
+**How it works:**
+
+1. After a push, the workflow watches the GitHub Deployments API until Railway reports the deploy as `success` (up to 15 minutes). This ensures tests run against the new code, not the old version still serving traffic during a rolling deploy.
+2. Runs smoke tests.
+3. Runs E2E tests.
+4. Uploads a Playwright HTML report as a build artifact (retained 14 days).
+
+**Manual trigger:**
+
+Go to **Actions → Production Health Check → Run workflow**. Two optional flags:
+
+- `skip_delay` — skips the Railway wait, runs immediately
+- `run_ai_probe` — also runs the AI probe (triggers real AI calls)
+
+**Required GitHub secret:**
+
+| Secret | Value |
+|---|---|
+| `PRODUCTION_URL` | `https://pandora-ai.up.railway.app` |
+
+Add it at: Repository **Settings → Secrets and variables → Actions → New repository secret**.
+
 ## Core Environment Variables
 
 ### App and Auth
