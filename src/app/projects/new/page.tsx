@@ -25,7 +25,8 @@ export default function NewProjectPage() {
         });
 
         if (response.status === 401) {
-          window.location.replace("/login");
+          const nextPath = `${window.location.pathname}${window.location.search}`;
+          window.location.replace(`/login?next=${encodeURIComponent(nextPath)}`);
           return;
         }
 

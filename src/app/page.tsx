@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useTransition } from "react";
 import {
@@ -66,6 +66,8 @@ export default function HomePage() {
   const { lang } = useLanguage();
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [prompt, setPrompt] = useState("");
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [isLaunchingProject, setIsLaunchingProject] = useState(false);
@@ -74,6 +76,9 @@ export default function HomePage() {
   const [isPending, startTransition] = useTransition();
   const isZh = lang === "zh";
   const text = (zh: string, en: string) => (isZh ? zh : en);
+  const currentQuery = searchParams.toString();
+  const currentPath = currentQuery ? `${pathname}?${currentQuery}` : pathname;
+  const loginHref = `/login?next=${encodeURIComponent(currentPath)}`;
   const officialSampleCards = OFFICIAL_SAMPLE_COURSES.map((course) => {
     const chapterCount = course.chapters.length;
     const lessonCount = course.chapters.reduce(
@@ -165,7 +170,7 @@ export default function HomePage() {
       });
 
       if (response.status === 401) {
-        router.push("/login");
+        router.push(loginHref);
         return;
       }
 
@@ -388,7 +393,7 @@ export default function HomePage() {
                       launchPrompt(prompt);
                     }}
                     placeholder={text(
-                      "告诉 AI 你想学什么，例如：我想系统学习 AI Agent 开发",
+                      "告诉 AI 任何你想学的东西，例如：我想系统学习 AI Agent 开发",
                       "Tell AI what you want to learn, for example: I want to systematically learn AI agent development"
                     )}
                     className="min-h-[76px] flex-1 resize-none rounded-[1.4rem] border border-border/60 bg-background/80 px-5 py-3 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-muted-foreground/80 focus:border-primary/35 focus:ring-2 focus:ring-primary/12 dark:border-white/10 dark:bg-black/15 dark:text-white dark:placeholder:text-white/38"

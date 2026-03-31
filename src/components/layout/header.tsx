@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CircleHelp, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,12 +18,18 @@ interface HeaderProps {
 export function Header({ homeCapsule }: HeaderProps) {
   const { data: session } = useSession();
   const { lang, setLang, theme, setTheme } = useLanguage();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const isChinese = lang === "zh";
   const isDark = theme === "dark";
   const aboutLabel = lang === "zh" ? "关于我们" : "About";
   const dashboardLabel = lang === "zh" ? "我的项目" : "My Projects";
   const loginLabel = lang === "zh" ? "登录" : "Login";
+
+  const query = searchParams.toString();
+  const nextPath = query ? `${pathname}?${query}` : pathname;
+  const loginHref = `/login?next=${encodeURIComponent(nextPath)}`;
 
   return (
     <>
@@ -140,7 +147,7 @@ export function Header({ homeCapsule }: HeaderProps) {
                 <UserMenu />
               </>
             ) : (
-              <Link href="/login">
+              <Link href={loginHref}>
                 <Button className="h-8 rounded-full px-3 text-[0.72rem] sm:h-9 sm:px-4 sm:text-xs lg:h-10 lg:text-sm">
                   {loginLabel}
                 </Button>

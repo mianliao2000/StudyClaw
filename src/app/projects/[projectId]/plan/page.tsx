@@ -797,6 +797,10 @@ export default function PlanPage() {
           return;
         }
 
+        const responseOffersCreate = responseOptions.some((option) =>
+          isCreateCourseOption(option, nextLanguage)
+        );
+
         if (responseOptions.length === 3 && nextIsDecisionLoop) {
           const resolvedStage = inferDecisionLoopStage(
             responseOptions,
@@ -846,6 +850,13 @@ export default function PlanPage() {
               : message
           )
         );
+
+        if (nextIsDecisionLoop && !generatingPlan && !responseOffersCreate) {
+          enterDecisionLoop(nextDecisionTrail, hasReturnedFromReview, {
+            notes: nextNotes,
+            language: nextLanguage,
+          });
+        }
       } catch (error) {
         console.error("[runPlanningAI] Full error:", error);
         const displayMessage = isChatTimeoutError(error)
