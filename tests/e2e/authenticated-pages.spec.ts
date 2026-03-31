@@ -5,7 +5,7 @@ import { test, expect, type Page } from "@playwright/test";
  * All tests share one guest login session (beforeAll).
  */
 
-let sharedPage: Page;
+let sharedPage: Page | undefined;
 
 test.beforeAll(async ({ browser }) => {
   sharedPage = await browser.newPage();
@@ -21,7 +21,7 @@ test.beforeAll(async ({ browser }) => {
 });
 
 test.afterAll(async () => {
-  await sharedPage.close();
+  await sharedPage?.close();
 });
 
 test("dashboard loads after guest login", async () => {
