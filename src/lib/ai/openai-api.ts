@@ -5,10 +5,12 @@ import { createThinkTagStreamSanitizer, stripThinkTags } from "./response-cleani
 export class OpenAIAPIProvider implements AIProvider {
   private client: OpenAI;
   private defaultModel: string;
+  private isMiniMax: boolean;
 
   constructor() {
     const isOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
     const isMiniMax = Boolean(process.env.MINIMAX_API_KEY);
+    this.isMiniMax = isMiniMax;
     const apiKey =
       process.env.OPENROUTER_API_KEY || process.env.MINIMAX_API_KEY || process.env.OPENAI_API_KEY;
     const baseURL =
@@ -42,11 +44,33 @@ export class OpenAIAPIProvider implements AIProvider {
     });
   }
 
+  private normalizeMessages(messages: AIMessage[]): AIMessage[] {
+    if (!this.isMiniMax) {
+      return messages;
+    }
+
+    const systemMessages = messages.filter((message) => message.role === "system");
+    if (systemMessages.length <= 1) {
+      return messages;
+    }
+
+    const mergedSystemMessage: AIMessage = {
+      role: "system",
+      content: systemMessages.map((message) => message.content).join("\n\n"),
+    };
+
+    return [
+      mergedSystemMessage,
+      ...messages.filter((message) => message.role !== "system"),
+    ];
+  }
+
   async chat(messages: AIMessage[], options?: AIOptions): Promise<ReadableStream<Uint8Array>> {
     const model = options?.model || this.defaultModel;
+    const normalizedMessages = this.normalizeMessages(messages);
     const response = await this.client.chat.completions.create({
       model,
-      messages,
+      messages: normalizedMessages,
       stream: true,
       ...(options?.reasoning && { reasoning_effort: options.reasoning }),
     });
@@ -75,9 +99,10 @@ export class OpenAIAPIProvider implements AIProvider {
 
   async generate(messages: AIMessage[], options?: AIOptions): Promise<string> {
     const model = options?.model || this.defaultModel;
+    const normalizedMessages = this.normalizeMessages(messages);
     const response = await this.client.chat.completions.create({
       model,
-      messages,
+      messages: normalizedMessages,
       ...(options?.reasoning && { reasoning_effort: options.reasoning }),
     });
     return stripThinkTags(response.choices[0]?.message?.content || "");

@@ -289,7 +289,7 @@ export function ChatPanel({
                               );
                             })}
                             {isLast && showClickableOptions && (
-                              <p className="mt-1 text-center text-base font-semibold text-foreground">
+                              <p className="mt-1 text-center text-sm font-medium text-muted-foreground dark:text-white/45">
                                 {lang === "en"
                                   ? "or type your own response below"
                                   : "也可以直接打字输入你的想法"}

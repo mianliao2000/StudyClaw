@@ -27,6 +27,25 @@ function hasValue(value?: string) {
   return Boolean(value?.trim());
 }
 
+function getExplicitProviderKind(): ProviderKind | null {
+  const raw = process.env.AI_PROVIDER || process.env.AI_PROVIDER_KIND;
+  if (!raw) return null;
+
+  const normalized = raw.trim().toLowerCase();
+  if (
+    normalized === "chatgpt" ||
+    normalized === "openrouter" ||
+    normalized === "minimax" ||
+    normalized === "openai" ||
+    normalized === "anthropic" ||
+    normalized === "auto"
+  ) {
+    return normalized;
+  }
+
+  return null;
+}
+
 function hasOpenRouterConfig() {
   return (
     hasValue(process.env.OPENROUTER_API_KEY) ||
@@ -70,6 +89,11 @@ function hasChatGPTConfig() {
 }
 
 export function getProviderKind(): ProviderKind {
+  const explicit = getExplicitProviderKind();
+  if (explicit && explicit !== "auto") {
+    return explicit;
+  }
+
   if (hasOpenRouterConfig()) return "openrouter";
   if (hasMiniMaxConfig()) return "minimax";
   if (hasOpenAIConfig()) return "openai";

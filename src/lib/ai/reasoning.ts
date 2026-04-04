@@ -32,6 +32,12 @@ function toReasoningLevel(value?: string | null): ReasoningLevel | null {
   return null;
 }
 
+export function sanitizeExplicitReasoning(
+  value?: string | null
+): ReasoningLevel | undefined {
+  return toReasoningLevel(value) ?? undefined;
+}
+
 export function resolveReasoningForTask(args: {
   task: ReasoningTask;
   userPreference?: string | null;
@@ -39,8 +45,9 @@ export function resolveReasoningForTask(args: {
 }): ReasoningLevel {
   const { task, userPreference, explicitReasoning } = args;
 
-  if (explicitReasoning) {
-    return explicitReasoning;
+  const explicit = sanitizeExplicitReasoning(explicitReasoning);
+  if (explicit) {
+    return explicit;
   }
 
   const recommended = TASK_REASONING[task];
